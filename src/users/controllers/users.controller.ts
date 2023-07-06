@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseInterceptors,
-  Post,
-  Param,
-  Body,
-} from "@nestjs/common";
+import { Controller, Get, UseInterceptors, Post, Param, Body } from "@nestjs/common";
 import { UsersService } from "../service/users.service";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { UserRequestDto } from "../dtos/users.create.dto";

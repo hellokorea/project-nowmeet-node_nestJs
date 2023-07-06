@@ -13,9 +13,7 @@ import { User } from "./users/entitiy/users.entity";
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (
-        configService: ConfigService
-      ): Promise<TypeOrmModuleOptions> => {
+      useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
         return {
           type: "mysql",
           host: configService.getOrThrow("DB_HOST"),
@@ -24,7 +22,7 @@ import { User } from "./users/entitiy/users.entity";
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
           entities: [User],
-          synchronize: false,
+          synchronize: true, // prob - false
         };
       },
       inject: [ConfigService],
