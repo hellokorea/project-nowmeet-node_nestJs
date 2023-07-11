@@ -1,7 +1,7 @@
 import { Controller, Get, UseInterceptors, Post, Param, Body } from "@nestjs/common";
 import { UsersService } from "../service/users.service";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
-import { UserRequestDto } from "../dtos/users.create.dto";
+import { UserCreateDto } from "../dtos/users.create.dto";
 
 @Controller("users")
 @UseInterceptors(SuccessInterceptor)
@@ -13,8 +13,8 @@ export class UsersController {
     return this.userService.getAllUsers();
   }
 
-  @Post()
-  createUser(@Body() body: UserRequestDto) {
+  @Post("signup")
+  createUser(@Body() body: UserCreateDto) {
     return this.userService.createUser(body);
   }
 }

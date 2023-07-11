@@ -26,7 +26,8 @@
     "@nestjs/jwt": "^10.1.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
-    "mysql2": "^3.4.3"
+    "mysql2": "^3.4.3",
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

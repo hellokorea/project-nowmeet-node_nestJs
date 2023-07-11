@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entitiy/users.entity";
-import { Repository } from "typeorm";
-import { UserRequestDto } from "./dtos/users.create.dto";
+import { FindOneOptions, Repository } from "typeorm";
+import { UserCreateDto } from "./dtos/users.create.dto";
+import { GoogleRequest } from "./../auth/auth.interface";
 
 @Injectable()
 export class UsersRepository {
@@ -12,7 +13,14 @@ export class UsersRepository {
     return await this.usersRepository.find();
   }
 
-  async create(user: UserRequestDto): Promise<User> {
+  async createUser(user: UserCreateDto): Promise<User> {
     return await this.usersRepository.save(user);
+  }
+
+  async findOneGetByEmail(email: string): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { email },
+    };
+    return await this.usersRepository.findOne(option);
   }
 }
