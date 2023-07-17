@@ -7,7 +7,7 @@ export class UserCreateDto {
 
   @IsString()
   @IsNotEmpty()
-  nickName: string;
+  nickname: string;
 
   @IsString()
   @IsNotEmpty()
@@ -32,4 +32,7 @@ export class UserCreateDto {
   @IsString()
   @IsNotEmpty()
   preference: string;
+
+  @IsString()
+  profileImage: string;
 }

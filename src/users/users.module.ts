@@ -5,11 +5,15 @@ import { UsersRepository } from "./users.repository";
 import { AuthModule } from "src/auth/auth.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./entitiy/users.entity";
+import { MulterModule } from "@nestjs/platform-express";
+import { multerOptions } from "src/common/utils/multer.options";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    //
+    MulterModule.registerAsync({
+      useFactory: multerOptions,
+    }),
     forwardRef(() => AuthModule),
   ],
 

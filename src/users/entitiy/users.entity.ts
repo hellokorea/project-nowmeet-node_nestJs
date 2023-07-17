@@ -1,5 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -11,7 +10,7 @@ export class User {
   email: string;
 
   @Column()
-  nickName: string;
+  nickname: string;
 
   @Column()
   sex: string;
@@ -30,4 +29,10 @@ export class User {
 
   @Column()
   preference: string;
+
+  @Column()
+  profileImage: string;
+
+  @CreateDateColumn()
+  createdAt: string;
 }

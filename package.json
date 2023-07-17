@@ -27,9 +27,11 @@
     "@nestjs/jwt": "^10.1.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/typeorm": "^10.0.0",
+    "@types/multer": "^1.4.7",
+    "body-parser": "^1.20.2",
     "mysql2": "^3.4.3",
     "passport-google-oauth20": "^2.0.0",
-    "@nestjs/typeorm": "^10.0.0",
     "passport-jwt": "^4.0.1",
     "typeorm": "^0.3.17"
   },

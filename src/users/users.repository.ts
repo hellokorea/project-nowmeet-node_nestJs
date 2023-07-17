@@ -3,7 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entitiy/users.entity";
 import { FindOneOptions, Repository } from "typeorm";
 import { UserCreateDto } from "./dtos/users.create.dto";
-import { GoogleRequest } from "./../auth/auth.interface";
 
 @Injectable()
 export class UsersRepository {
@@ -11,6 +10,13 @@ export class UsersRepository {
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find();
+  }
+
+  async findById(id: number): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { id },
+    };
+    return await this.usersRepository.findOne(option);
   }
 
   async createUser(user: UserCreateDto): Promise<User> {
@@ -22,5 +28,16 @@ export class UsersRepository {
       where: { email },
     };
     return await this.usersRepository.findOne(option);
+  }
+
+  async findOneGetByNickName(nickname: string): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { nickname },
+    };
+    return await this.usersRepository.findOne(option);
+  }
+
+  async updateUser(user: UserCreateDto): Promise<User> {
+    return await this.usersRepository.save(user);
   }
 }

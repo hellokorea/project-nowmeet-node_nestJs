@@ -14,13 +14,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // async validate(payload: Payload) {
-  //   const cat = this.userRepository.findCatByWithoutPassword(payload.sub);
+  async validate(payload: Payload) {
+    const user = this.userRepository.findById(payload.sub);
 
-  //   if (cat) {
-  //     return cat;
-  //   } else {
-  //     throw new UnauthorizedException("접근 오류");
-  //   }
-  // }
+    if (user) {
+      return user;
+    } else {
+      throw new UnauthorizedException("접근 오류");
+    }
+  }
 }
