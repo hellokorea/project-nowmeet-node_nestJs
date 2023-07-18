@@ -3,6 +3,7 @@ import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/users.create.dto";
 import { AuthService } from "src/auth/service/auth.service";
 import { User } from "../entitiy/users.entity";
+import { UserRequestDto } from "../dtos/users.request.dto";
 
 @Injectable()
 export class UsersService {
@@ -42,42 +43,42 @@ export class UsersService {
     return users;
   }
 
-  async getMyUserInfo(id: number, req: any) {
-    try {
-      const user = await this.usersRepository.findById(id);
-      const userId = req.user.id;
+  async getMyUserInfo(id: number, req: UserRequestDto) {
+    const user = await this.usersRepository.findById(id);
+    const userId = req.user.id;
 
-      if (user.id === userId) {
-        return user;
-      } else {
-        throw new UnauthorizedException();
-      }
-    } catch (error) {
-      throw new UnauthorizedException("요청 된 토큰이 유효하지 않습니다");
+    if (!user) {
+      throw new UnauthorizedException("존재하지 않는 유저 입니다");
     }
+
+    if (user.id === userId) {
+      return user;
+    }
+
+    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 
-  async putMyUserInfo(id: number, body: any, req: any) {
-    try {
-      const user = await this.usersRepository.findById(id);
-      const userId = req.user.id;
+  async putMyUserInfo(id: number, body: any, req: UserRequestDto) {
+    const user = await this.usersRepository.findById(id);
+    const userId = req.user.id;
 
-      if (user.id === userId) {
-        const { job, introduce, preference, profileImage } = body;
-
-        const updated = await this.usersRepository.updateUser({
-          ...user,
-          job: job || user.job,
-          introduce: introduce || user.introduce,
-          preference: preference || user.preference,
-          profileImage: profileImage || user.profileImage,
-        });
-        return updated;
-      } else {
-        throw new UnauthorizedException();
-      }
-    } catch (error) {
-      throw new UnauthorizedException("요청 된 토큰이 유효하지 않습니다");
+    if (!user) {
+      throw new UnauthorizedException("존재하지 않는 유저 입니다");
     }
+
+    if (user.id === userId) {
+      const { job, introduce, preference, profileImage } = body;
+
+      const updated = await this.usersRepository.updateUser({
+        ...user,
+        job: job || user.job,
+        introduce: introduce || user.introduce,
+        preference: preference || user.preference,
+        profileImage: profileImage || user.profileImage,
+      });
+      return updated;
+    }
+
+    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 }
