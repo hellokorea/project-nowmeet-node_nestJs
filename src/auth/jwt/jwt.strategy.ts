@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Param, Req, UnauthorizedException } from "@nestjs/common";
 import { Payload } from "./jwt.payload";
 import { UsersRepository } from "src/users/users.repository";
 
@@ -14,13 +14,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: Payload) {
-    const user = this.userRepository.findById(payload.sub);
+  async validate(payload: Payload, @Req() req: Request) {
+    const user = await this.userRepository.findById(payload.sub);
 
-    if (user) {
-      return user;
-    } else {
+    if (!user) {
       throw new UnauthorizedException("접근 오류");
     }
+
+    return user;
   }
 }

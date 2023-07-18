@@ -31,7 +31,7 @@ export class AuthService {
         }),
       };
     } catch (error) {
-      throw new UnauthorizedException("Invalid member information");
+      throw new UnauthorizedException("로그인 실패");
     }
   }
 }

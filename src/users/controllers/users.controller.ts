@@ -39,15 +39,14 @@ export class UsersController {
   }
 
   @Get("me/:id")
-  // @UseGuards(JwtAuthGuard)
-  getMyUserInfo(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.getMyUserInfo(id);
-    // 여기서 id, emial은 제외하고 보여주자.. 굳이 다 리스폰 할 필요 없다
+  @UseGuards(JwtAuthGuard)
+  getMyUserInfo(@Param("id", ParseIntPipe) id: number, @Req() req: any) {
+    return this.userService.getMyUserInfo(id, req);
   }
 
   @Put("me/revison/:id")
-  // @UseGuards(JwtAuthGuard)
-  putMyUserInfo(@Param("id", ParseIntPipe) id: number, @Body() body: any) {
-    return this.userService.putMyUserInfo(id, body);
+  @UseGuards(JwtAuthGuard)
+  putMyUserInfo(@Param("id", ParseIntPipe) id: number, @Body() body: any, @Req() req: any) {
+    return this.userService.putMyUserInfo(id, body, req);
   }
 }

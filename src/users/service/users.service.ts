@@ -20,7 +20,7 @@ export class UsersService {
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
 
     if (isExistNickname) {
-      throw new UnauthorizedException("Nickname is already exist");
+      throw new UnauthorizedException("이미 존재하는 닉네임 입니다");
     }
 
     // if (!files) {
@@ -42,36 +42,42 @@ export class UsersService {
     return users;
   }
 
-  async getMyUserInfo(id: number) {
+  async getMyUserInfo(id: number, req: any) {
     try {
       const user = await this.usersRepository.findById(id);
-      if (user.id === id) {
+      const userId = req.user.id;
+
+      if (user.id === userId) {
         return user;
+      } else {
+        throw new UnauthorizedException();
       }
     } catch (error) {
-      throw new UnauthorizedException("해당 유저 정보가 존재하지 않습니다");
+      throw new UnauthorizedException("요청 된 토큰이 유효하지 않습니다");
     }
   }
 
-  async putMyUserInfo(id: number, body: any) {
+  async putMyUserInfo(id: number, body: any, req: any) {
     try {
       const user = await this.usersRepository.findById(id);
+      const userId = req.user.id;
 
-      if (user.id === id) {
-        const { tall, job, introduce, preference, profileImage } = body;
+      if (user.id === userId) {
+        const { job, introduce, preference, profileImage } = body;
 
         const updated = await this.usersRepository.updateUser({
           ...user,
-          tall: tall || user.tall,
           job: job || user.job,
           introduce: introduce || user.introduce,
           preference: preference || user.preference,
           profileImage: profileImage || user.profileImage,
         });
         return updated;
+      } else {
+        throw new UnauthorizedException();
       }
     } catch (error) {
-      throw new UnauthorizedException("해당 유저 정보가 존재하지 않습니다");
+      throw new UnauthorizedException("요청 된 토큰이 유효하지 않습니다");
     }
   }
 }
