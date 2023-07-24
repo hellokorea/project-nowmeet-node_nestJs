@@ -2,8 +2,7 @@ import { Controller, Get, UseInterceptors, Request, Response, Post, UseGuards, R
 import { AuthGuard } from "@nestjs/passport";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { AuthService } from "../service/auth.service";
-import { GoogleRequest } from "../auth.interface";
-import { UserCreateDto } from "src/users/dtos/users.create.dto";
+import { GoogleRequest } from "../dots/auth.googleuser.dto";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)

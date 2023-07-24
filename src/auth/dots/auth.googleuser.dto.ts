@@ -1,4 +1,4 @@
-export interface GoogleUser {
+interface GoogleUser {
   email: string;
   // accesToekn: string;
 }
