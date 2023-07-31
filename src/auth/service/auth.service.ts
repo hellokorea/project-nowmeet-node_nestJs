@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UsersRepository } from "./../../users/users.repository";
-import { GoogleRequest } from "../dots/auth.googleuser.dto";
+import { GoogleRequest } from "../dtos/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()

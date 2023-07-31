@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Match } from "src/match/entity/match.entity";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -35,4 +36,10 @@ export class User {
 
   @CreateDateColumn()
   createdAt: string;
+
+  @OneToMany(() => Match, (match) => match.sender)
+  sendMatches: Match[];
+
+  @OneToMany(() => Match, (match) => match.receiver)
+  receivedMatches: Match[];
 }

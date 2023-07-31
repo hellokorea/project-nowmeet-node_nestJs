@@ -4,7 +4,7 @@ import { UsersService } from "./service/users.service";
 import { UsersRepository } from "./users.repository";
 import { AuthModule } from "src/auth/auth.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { User } from "./entitiy/users.entity";
+import { User } from "./entity/users.entity";
 import { MulterModule } from "@nestjs/platform-express";
 import { multerOptions } from "src/common/utils/multer.options";
 

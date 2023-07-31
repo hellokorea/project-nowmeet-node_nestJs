@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/users.create.dto";
 import { AuthService } from "src/auth/service/auth.service";
-import { User } from "../entitiy/users.entity";
+import { User } from "../entity/users.entity";
 import { UserRequestDto } from "../dtos/users.request.dto";
 
 @Injectable()

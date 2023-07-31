@@ -6,7 +6,9 @@ import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { LoggerMiddleware } from "./common/middleware/logging.middleware";
-import { User } from "./users/entitiy/users.entity";
+import { User } from "./users/entity/users.entity";
+import { MatchModule } from "./match/match.module";
+import { Match } from "./match/entity/match.entity";
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { User } from "./users/entitiy/users.entity";
           username: configService.getOrThrow("DB_USERNAME"),
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
-          entities: [User],
+          entities: [User, Match],
           synchronize: true, // prob - false
         };
       },
@@ -29,6 +31,7 @@ import { User } from "./users/entitiy/users.entity";
     }),
     UsersModule,
     AuthModule,
+    MatchModule,
   ],
   exports: [],
   controllers: [AppController],
