@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseInterceptors,
-  Post,
-  Body,
-  Req,
-  UploadedFiles,
-  Put,
-  Param,
-  UseGuards,
-  ParseIntPipe,
-} from "@nestjs/common";
+import { Controller, Get, UseInterceptors, Post, Req, Param, UseGuards, ParseIntPipe } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { MatchService } from "../service/match.service";
 import { UserRequestDto } from "src/users/dtos/users.request.dto";
@@ -29,7 +17,7 @@ export class MatchController {
 
   @Post("profile/:id/like")
   userLikeSend(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
-    return this.matchService.createMatch(id, req);
+    return this.matchService.sendLike(id, req);
   }
 
   @Get("me/sendbox")
@@ -38,17 +26,17 @@ export class MatchController {
   }
 
   @Get("me/recivebox")
-  getLikeReceiveBox() {
-    return "나에게 좋아요를 보낸 유저 조회";
+  getLikeReceiveBox(@Req() req: UserRequestDto) {
+    return this.matchService.getLikeReceiveBox(req);
   }
 
   @Post("me/recivebox/profile/:id/accept")
-  acceptLike() {
-    return "좋아요 수락";
+  acceptLike(@Param("id", ParseIntPipe) matchId: number, @Req() req: UserRequestDto) {
+    return this.matchService.matchAccept(matchId, req);
   }
 
-  @Post("me/recivebox/:id/reject")
-  rejectLike() {
-    return "좋아요 거절";
+  @Post("me/recivebox/profile/:id/reject")
+  rejectLike(@Param("id", ParseIntPipe) matchId: number, @Req() req: UserRequestDto) {
+    return this.matchService.matchReject(matchId, req);
   }
 }

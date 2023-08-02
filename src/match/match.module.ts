@@ -8,7 +8,7 @@ import { MatchRepository } from "./match.repository";
 
 @Module({
   imports: [TypeOrmModule.forFeature([Match]), forwardRef(() => UsersModule)],
-  exports: [],
+  exports: [MatchService],
   controllers: [MatchController],
   providers: [MatchService, MatchRepository],
 })

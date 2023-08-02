@@ -1,6 +1,12 @@
 import { User } from "src/users/entity/users.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
+export enum MatchState {
+  PENDING = "PENDING",
+  MATCH = "MATCH",
+  REJECT = "REJECT",
+}
+
 @Entity()
 export class Match {
   @PrimaryGeneratedColumn()
@@ -12,9 +18,12 @@ export class Match {
   @ManyToOne(() => User, (user) => user.receivedMatches)
   receiver: User;
 
-  @Column({ default: false })
-  accepted: boolean;
+  @Column({ type: "enum", enum: MatchState, default: MatchState.PENDING })
+  status: string;
 
   @CreateDateColumn()
   createdAt: string;
+
+  @Column()
+  expireMatch: Date;
 }
