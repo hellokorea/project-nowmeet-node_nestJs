@@ -10,14 +10,15 @@ import { MatchState } from "../entity/match.entity";
 export class MatchService {
   constructor(private readonly matchRepository: MatchRepository, private readonly usersRepository: UsersRepository) {}
 
-  async getUserProfile(id: number) {
-    const user = await this.usersRepository.findById(id);
+  async getUserProfile(profileId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const user = await this.usersRepository.findById(profileId);
 
     if (!user) {
       throw new UnauthorizedException("존재하지 않는 유저 입니다");
     }
 
-    const isMatchState = await this.matchRepository.findMatchByUserId(id);
+    const isMatchState = await this.matchRepository.findMatchByUserIds(profileId, loggedId);
     const userInfo = new UserProfileResponseDto(user);
 
     return {
@@ -42,7 +43,7 @@ export class MatchService {
     const isMatched = await this.matchRepository.isMatchFind(senderId, receiverId);
 
     if (isMatched.length > 0) {
-      return { matchId: isMatched[0]["id"], matchStatus: isMatched[0]["status"] };
+      throw new UnauthorizedException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
     } else {
       const newMatchData = await this.matchRepository.createMatch(senderId, receiverId);
       return {

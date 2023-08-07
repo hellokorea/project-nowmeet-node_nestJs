@@ -11,8 +11,8 @@ export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
   @Get("profile/:id")
-  getUserProfile(@Param("id", ParseIntPipe) id: number) {
-    return this.matchService.getUserProfile(id);
+  getUserProfile(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
+    return this.matchService.getUserProfile(id, req);
   }
 
   @Post("profile/:id/like")
