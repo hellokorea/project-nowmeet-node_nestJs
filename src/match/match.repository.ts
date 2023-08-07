@@ -36,6 +36,13 @@ export class MatchRepository {
       },
     });
   }
+  async findMatchByUserId(userId: number): Promise<Match> {
+    const option: FindOneOptions<Match> = {
+      where: { receiver: { id: userId } },
+    };
+
+    return await this.matchRepository.findOne(option);
+  }
 
   async findMatchById(matchId: number): Promise<Match> {
     const option: FindOneOptions<Match> = {

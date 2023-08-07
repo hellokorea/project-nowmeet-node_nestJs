@@ -17,7 +17,13 @@ export class MatchService {
       throw new UnauthorizedException("존재하지 않는 유저 입니다");
     }
 
-    return new UserProfileResponseDto(user);
+    const isMatchState = await this.matchRepository.findMatchByUserId(id);
+    const userInfo = new UserProfileResponseDto(user);
+
+    return {
+      user: userInfo,
+      matchStatus: isMatchState ? isMatchState.status : null,
+    };
   }
 
   async sendLike(receiverId: number, req: UserRequestDto) {
@@ -61,7 +67,7 @@ export class MatchService {
       }));
 
     if (!sendBox.length) {
-      return { undefined };
+      return null;
     }
 
     return sendBox;
@@ -80,7 +86,7 @@ export class MatchService {
       }));
 
     if (!receiveBox.length) {
-      return { undefined };
+      return null;
     }
 
     return receiveBox;
