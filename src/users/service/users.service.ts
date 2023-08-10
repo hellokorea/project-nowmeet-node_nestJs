@@ -4,10 +4,11 @@ import { UserCreateDto } from "../dtos/users.create.dto";
 import { AuthService } from "src/auth/service/auth.service";
 import { User } from "../entity/users.entity";
 import { UserRequestDto } from "../dtos/users.request.dto";
+import { MatchRepository } from "./../../match/match.repository";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository, private readonly authSerivce: AuthService) {}
+  constructor(private readonly usersRepository: UsersRepository, private readonly matchRepository: MatchRepository) {}
 
   async getAllUsers() {
     return this.usersRepository.findAll();
@@ -77,6 +78,25 @@ export class UsersService {
         profileImage: profileImage || user.profileImage,
       });
       return updated;
+    }
+
+    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
+  }
+
+  async deleteAccount(id: number, req: UserRequestDto) {
+    const user = await this.usersRepository.findById(id);
+    const userId = req.user.id;
+
+    if (!user) {
+      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+    }
+
+    if (user.id === userId) {
+      await this.matchRepository.deleteMatchesByUserId(id);
+
+      await this.usersRepository.deleteUser(user);
+
+      return { message: `userId.${id} 유저의 계정을 성공적으로 삭제 했습니다` };
     }
 
     throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");

@@ -10,6 +10,7 @@ import {
   Param,
   UseGuards,
   ParseIntPipe,
+  Delete,
 } from "@nestjs/common";
 import { UsersService } from "../service/users.service";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
@@ -27,7 +28,7 @@ export class UsersController {
   @Get()
   getAllUsers() {
     return this.userService.getAllUsers();
-  }
+  } //테스트
 
   @Post("signup")
   // @UseInterceptors(FilesInterceptor("profileImage", 6))
@@ -45,9 +46,15 @@ export class UsersController {
     return this.userService.getMyUserInfo(id, req);
   }
 
-  @Put("me/revison/:id")
+  @Put("me/:id/update")
   @UseGuards(JwtAuthGuard)
   putMyUserInfo(@Param("id", ParseIntPipe) id: number, @Body() body: any, @Req() req: UserRequestDto) {
     return this.userService.putMyUserInfo(id, body, req);
+  }
+
+  @Delete("me/:id/delete")
+  @UseGuards(JwtAuthGuard)
+  deleteAccount(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
+    return this.userService.deleteAccount(id, req);
   }
 }

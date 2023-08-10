@@ -9,7 +9,7 @@ export class MatchRepository {
 
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const CHECK_CYCLE: number = 24 * 60 * 60 * 1000;
-    const TEST_CYCLE: number = 10 * 1000;
+    const TEST_CYCLE: number = 30 * 1000;
 
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
@@ -62,7 +62,15 @@ export class MatchRepository {
     return this.matchRepository.find({ where: { expireMatch: LessThan(new Date()) } });
   }
 
-  async removeExpireMatch(match: Match) {
+  async removeExpireMatch(match: Match): Promise<void> {
     await this.matchRepository.remove(match);
+  }
+
+  async deleteMatchesByUserId(userId: number) {
+    const matches = await this.matchRepository.find({
+      where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
+    });
+
+    await this.matchRepository.remove(matches);
   }
 }

@@ -7,6 +7,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./entity/users.entity";
 import { MulterModule } from "@nestjs/platform-express";
 import { multerOptions } from "src/common/utils/multer.options";
+import { MatchModule } from "src/match/match.module";
 
 @Module({
   imports: [
@@ -15,12 +16,10 @@ import { multerOptions } from "src/common/utils/multer.options";
       useFactory: multerOptions,
     }),
     forwardRef(() => AuthModule),
+    forwardRef(() => MatchModule),
   ],
-
   exports: [UsersService, UsersRepository],
-
   controllers: [UsersController],
-
   providers: [UsersService, UsersRepository],
 })
 export class UsersModule {}

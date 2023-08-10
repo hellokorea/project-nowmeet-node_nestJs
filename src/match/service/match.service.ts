@@ -5,6 +5,7 @@ import { UsersRepository } from "./../../users/users.repository";
 import { UserProfileResponseDto } from "src/users/dtos/user.profile.dto";
 import { User } from "src/users/entity/users.entity";
 import { MatchState } from "../entity/match.entity";
+import * as moment from "moment";
 
 @Injectable()
 export class MatchService {
@@ -16,6 +17,10 @@ export class MatchService {
 
     if (!user) {
       throw new UnauthorizedException("존재하지 않는 유저 입니다");
+    }
+
+    if (user.id === loggedId) {
+      throw new UnauthorizedException("본인 프로필 조회 불가");
     }
 
     const isMatchState = await this.matchRepository.findMatchByUserIds(profileId, loggedId);
@@ -60,11 +65,12 @@ export class MatchService {
     const matched = await this.matchRepository.getSendMatch(usersId);
 
     const sendBox = matched
-      .filter((matchData) => matchData.status === MatchState.PENDING)
+      .filter((matchData) => matchData.status === MatchState.PENDING || MatchState.REJECT)
       .map((matchData) => ({
         matchId: matchData.id,
         isMatch: matchData.status,
         receiverId: matchData.receiver.id,
+        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
       }));
 
     if (!sendBox.length) {
@@ -84,6 +90,7 @@ export class MatchService {
         matchId: matchData.id,
         isMatch: matchData.status,
         senderId: matchData.sender.id,
+        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
       }));
 
     if (!receiveBox.length) {

@@ -40,4 +40,8 @@ export class UsersRepository {
   async updateUser(user: UserCreateDto): Promise<User> {
     return await this.usersRepository.save(user);
   }
+
+  async deleteUser(user: User): Promise<void> {
+    await this.usersRepository.remove(user);
+  }
 }
