@@ -9,6 +9,10 @@ import { LoggerMiddleware } from "./common/middleware/logging.middleware";
 import { User } from "./users/entity/users.entity";
 import { MatchModule } from "./match/match.module";
 import { Match } from "./match/entity/match.entity";
+import { ChatModule } from "./chat/chat.module";
+import { ChatRoom } from "./chat/entity/chats.entity";
+import { ChatMessage } from "./chat/entity/chatmessage.entity";
+import { DevMatch } from "./match/entity/devmatch.entity";
 
 @Module({
   imports: [
@@ -23,7 +27,7 @@ import { Match } from "./match/entity/match.entity";
           username: configService.getOrThrow("DB_USERNAME"),
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
-          entities: [User, Match],
+          entities: [User, Match, DevMatch, ChatRoom, ChatMessage],
           synchronize: true, // prob - false
         };
       },
@@ -32,6 +36,7 @@ import { Match } from "./match/entity/match.entity";
     UsersModule,
     AuthModule,
     MatchModule,
+    ChatModule,
   ],
   exports: [],
   controllers: [AppController],

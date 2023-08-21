@@ -11,7 +11,7 @@ export class AppService implements OnModuleInit {
 
     setInterval(async () => {
       await this.matchService.removeExpireMatches();
-    }, CHECK_CYCLE);
+    }, TEST_CYCLE);
   }
 
   getHello(): string {

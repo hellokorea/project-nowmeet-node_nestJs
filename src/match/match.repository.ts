@@ -2,10 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Match } from "./entity/match.entity";
 import { FindOneOptions, LessThan, Repository } from "typeorm";
+import { DevMatch } from "./entity/devmatch.entity";
 
 @Injectable()
 export class MatchRepository {
-  constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
+  constructor(
+    @InjectRepository(Match) private matchRepository: Repository<Match>,
+    @InjectRepository(DevMatch) private devMatchRepository: Repository<DevMatch>
+  ) {}
 
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const CHECK_CYCLE: number = 24 * 60 * 60 * 1000;
@@ -14,7 +18,7 @@ export class MatchRepository {
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + CHECK_CYCLE),
+      expireMatch: new Date(Date.now() + TEST_CYCLE),
     });
 
     return await this.matchRepository.save(newMatch);
@@ -39,7 +43,10 @@ export class MatchRepository {
 
   async findMatchByUserIds(profileId: number, loggedId: number): Promise<Match | null> {
     const option: FindOneOptions<Match> = {
-      where: [{ sender: { id: loggedId }, receiver: { id: profileId } }],
+      where: [
+        { sender: { id: loggedId }, receiver: { id: profileId } },
+        { sender: { id: profileId }, receiver: { id: loggedId } },
+      ],
     };
 
     return await this.matchRepository.findOne(option);
@@ -72,5 +79,30 @@ export class MatchRepository {
     });
 
     await this.matchRepository.remove(matches);
+  }
+
+  /*
+  -------------------------------------내부 DB 보관용 Dev_Match 로직
+  */
+  async findDevMatchById(matchId: number): Promise<DevMatch> {
+    const option: FindOneOptions<DevMatch> = {
+      where: { id: matchId },
+      relations: ["receiver", "sender"],
+    };
+
+    return await this.devMatchRepository.findOne(option);
+  }
+
+  async createDevMatch(senderId: number, receiverId: number): Promise<DevMatch> {
+    const newMatch = this.devMatchRepository.create({
+      sender: { id: senderId },
+      receiver: { id: receiverId },
+    });
+
+    return await this.devMatchRepository.save(newMatch);
+  }
+
+  async saveDevMatch(match: DevMatch): Promise<DevMatch> {
+    return await this.devMatchRepository.save(match);
   }
 }

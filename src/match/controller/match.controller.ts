@@ -39,4 +39,14 @@ export class MatchController {
   rejectLike(@Param("id", ParseIntPipe) matchId: number, @Req() req: UserRequestDto) {
     return this.matchService.matchReject(matchId, req);
   }
+
+  @Get("me/chatBox/all")
+  getChatRommsList(@Req() req: UserRequestDto) {
+    return this.matchService.getChatRommsList(req);
+  }
+
+  @Get("me/chatBox/:id")
+  getUserChatRoom() {
+    return "해당 유저와의 채팅방 화면";
+  }
 }
