@@ -46,7 +46,7 @@ export class MatchController {
   }
 
   @Get("me/chatBox/:id")
-  getUserChatRoom() {
-    return "해당 유저와의 채팅방 화면";
+  getUserChatRoom(@Param("id") chatId: number, @Req() req: UserRequestDto) {
+    return this.matchService.getUserChatRoom(chatId, req);
   }
 }

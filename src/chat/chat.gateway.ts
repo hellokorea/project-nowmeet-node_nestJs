@@ -5,12 +5,19 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  MessageBody,
+  ConnectedSocket,
 } from "@nestjs/websockets";
 import { Socket } from "socket.io";
 import { ChatRoom, ChatState } from "./entity/chats.entity";
 import { FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
-import { UnauthorizedException } from "@nestjs/common";
+import { UnauthorizedException, UseGuards, Req, InternalServerErrorException } from "@nestjs/common";
+import { SendMessageDto } from "./dtos/chat.dto";
+import { User } from "src/users/entity/users.entity";
+import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
+import { UserRequestDto } from "src/users/dtos/users.request.dto";
+import { UsersRepository } from "src/users/users.repository";
 
 @WebSocketGateway({ namespace: "chat" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -19,7 +26,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     @InjectRepository(ChatRoom) private chatRoomRepository: Repository<ChatRoom>,
-    @InjectRepository(ChatMessage) private chatMessageRepository: Repository<ChatMessage>
+    @InjectRepository(ChatMessage) private chatMessageRepository: Repository<ChatMessage>,
+    private readonly userRepository: UsersRepository
   ) {}
 
   async handleConnection() {
@@ -37,9 +45,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  async handleDisconnect() {
-    console.log("연결 끊김 커넥션");
-    // db 삭제 로직 추가
+  async handleDisconnect(matchId: number) {
+    console.log("연결 끊김 로직 시작");
+
+    const chat = await this.chatRoomRepository.find({ where: { matchId: matchId } });
+
+    await this.chatRoomRepository.remove(chat);
+
+    console.log("삭제 완료");
   }
 
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
@@ -82,6 +95,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`채팅 오픈 가능 시간이 종료되어 ${matchId}의 채팅방이 소멸 됩니다`);
 
       delete this.chatRoomTimers[matchId];
+
+      // await this.handleDisconnect(matchId); // 삭제 확인 테스트용
     }, TEST);
   }
 
@@ -109,16 +124,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /*
- --------------메시지
+ ^^--------------------------Message Rogic
   */
-
   @SubscribeMessage("message")
-  handleMessage(client: any, payload: any): string {
-    return "Hello world!";
+  @UseGuards(JwtAuthGuard)
+  async handleMessage(
+    @MessageBody() messageDto: SendMessageDto,
+    @ConnectedSocket() socket: Socket,
+    @Req() req: UserRequestDto
+  ) {
+    const userId = req.user.id;
+    const findUser = await this.userRepository.findById(userId);
+
+    if (!findUser) {
+      throw new UnauthorizedException("해당 유저가 존재하지 않습니다");
+    }
+
+    const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
+
+    if (!chatRoom) {
+      throw new UnauthorizedException("존재하지 않는 채팅방 입니다");
+    }
+
+    const message = new ChatMessage();
+    message.sender = findUser;
+    message.chatRoom = chatRoom;
+    message.content = messageDto.content;
+
+    try {
+      await this.chatMessageRepository.save(message);
+    } catch (error) {
+      throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
+    }
+
+    socket.broadcast.to(messageDto.chatRoomId.toString()).emit("new_message", message);
   }
 
   /*
- --------------레파지토리
+ ^^--------------------------Repository Rogic
   */
   async findChatsByUserId(userId: number): Promise<ChatRoom[]> {
     const chats = await this.chatRoomRepository.find({
@@ -130,9 +173,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async findChatsByUserIds(profileId: number, loggedId: number): Promise<ChatRoom | null> {
     const option: FindOneOptions<ChatRoom> = {
-      where: [{ senderId: loggedId }, { receiverId: profileId }, { senderId: profileId }, { receiverId: loggedId }],
+      where: [
+        { senderId: loggedId, receiverId: profileId },
+        { senderId: profileId, receiverId: loggedId },
+      ],
     };
 
     return await this.chatRoomRepository.findOne(option);
+  }
+
+  async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
+    return await this.chatRoomRepository.findOne({ where: { id: chatId } });
   }
 }

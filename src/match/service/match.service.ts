@@ -193,7 +193,7 @@ export class MatchService {
   }
 
   /*
-  --------------------------------------chat rogic
+  ^^--------------------------------------Chat Rogic
   */
 
   async getChatRommsList(req: UserRequestDto) {
@@ -208,5 +208,34 @@ export class MatchService {
     return findChats;
   }
 
-  async getUserChatRoom() {}
+  async getUserChatRoom(chatId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+
+    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
+
+    if (!findChat) {
+      throw new UnauthorizedException("해당 채팅방이 존재하지 않습니다");
+    }
+
+    const isUser = await this.chatGateway.findChatsByUserId(loggedId);
+
+    if (!isUser.length) {
+      throw new UnauthorizedException("유저 정보가 올바르지 않습니다");
+    }
+
+    let user: number;
+
+    if (loggedId === findChat.receiverId) {
+      user = findChat.senderId;
+    } else if (loggedId === findChat.senderId) {
+      user = findChat.receiverId;
+    }
+
+    return {
+      chatId: findChat.id,
+      matchedUserId: user,
+      chatStatus: findChat.status,
+      matchId: findChat.matchId,
+    };
+  }
 }
