@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Match } from "./entity/match.entity";
-import { FindOneOptions, LessThan, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, LessThan, Repository } from "typeorm";
 import { DevMatch } from "./entity/devmatch.entity";
 
 @Injectable()
@@ -18,7 +18,7 @@ export class MatchRepository {
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + TEST_CYCLE),
+      expireMatch: new Date(Date.now() + CHECK_CYCLE),
     });
 
     return await this.matchRepository.save(newMatch);
@@ -73,16 +73,17 @@ export class MatchRepository {
     await this.matchRepository.remove(match);
   }
 
-  async deleteMatchesByUserId(userId: number) {
-    const matches = await this.matchRepository.find({
+  async deleteMatchesByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    const matchRepository = txManager.getRepository(Match);
+    const matches = await matchRepository.find({
       where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
     });
 
-    await this.matchRepository.remove(matches);
+    await matchRepository.remove(matches);
   }
 
   /*
-  -------------------------------------내부 DB 보관용 Dev_Match 로직
+  ^^-------------------------------------내부 DB 보관용 Dev_Match 로직
   */
   async findDevMatchById(matchId: number): Promise<DevMatch> {
     const option: FindOneOptions<DevMatch> = {
@@ -104,5 +105,14 @@ export class MatchRepository {
 
   async saveDevMatch(match: DevMatch): Promise<DevMatch> {
     return await this.devMatchRepository.save(match);
+  }
+
+  async deleteDevMatchesByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    const devMatchRepository = txManager.getRepository(DevMatch);
+    const matches = await devMatchRepository.find({
+      where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
+    });
+
+    await devMatchRepository.remove(matches);
   }
 }

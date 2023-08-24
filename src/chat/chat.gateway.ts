@@ -10,14 +10,21 @@ import {
 } from "@nestjs/websockets";
 import { Socket } from "socket.io";
 import { ChatRoom, ChatState } from "./entity/chats.entity";
-import { FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
-import { UnauthorizedException, UseGuards, Req, InternalServerErrorException } from "@nestjs/common";
+import {
+  UnauthorizedException,
+  UseGuards,
+  Req,
+  InternalServerErrorException,
+  BadRequestException,
+  NotFoundException,
+} from "@nestjs/common";
 import { SendMessageDto } from "./dtos/chat.dto";
-import { User } from "src/users/entity/users.entity";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "src/users/dtos/users.request.dto";
 import { UsersRepository } from "src/users/users.repository";
+import { DevChatRoom } from "./entity/devchats.entity";
 
 @WebSocketGateway({ namespace: "chat" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -26,6 +33,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     @InjectRepository(ChatRoom) private chatRoomRepository: Repository<ChatRoom>,
+    @InjectRepository(DevChatRoom) private devChatRoomRepository: Repository<DevChatRoom>,
     @InjectRepository(ChatMessage) private chatMessageRepository: Repository<ChatMessage>,
     private readonly userRepository: UsersRepository
   ) {}
@@ -34,36 +42,52 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("매칭된 상대와 채팅방 오픈"); //채팅방 열기 클라 이벤트 받아야함
     this.socket.on("openchatroom", (data) => {
       const chat = data;
+
       const matchId = chat.id;
 
       if (chat) {
         chat.isOpen = ChatState.OPEN;
+        //dev_chat_room에도 반영 되어야함
+
         this.setChatRoomDisconnectTimer(matchId);
       } else {
-        throw new UnauthorizedException(`${matchId}번의 매치가 존재하지 않습니다`);
+        throw new NotFoundException(`${matchId}번의 매치가 존재하지 않습니다`);
       }
     });
   }
 
   async handleDisconnect(matchId: number) {
-    console.log("연결 끊김 로직 시작");
+    console.log("채팅방 데이터 삭제 로직 시작");
 
     const chat = await this.chatRoomRepository.find({ where: { matchId: matchId } });
 
     await this.chatRoomRepository.remove(chat);
 
-    console.log("삭제 완료");
+    console.log("채팅방 데이터 삭제 완료");
   }
 
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
+    const findChat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
+
+    if (findChat) {
+      throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
+    }
+
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
       senderId: senderId,
       receiverId: receiverId,
     });
 
+    const createDevChatRoom = this.devChatRoomRepository.create({
+      matchId: matchId,
+      senderId: senderId,
+      receiverId: receiverId,
+    }); //Dev
+
     const newChatRooms = await this.chatRoomRepository.save(createChatRoom);
-    console.log(newChatRooms);
+
+    await this.devChatRoomRepository.save(createDevChatRoom); //Dev
 
     await this.setChatRoomExpireTimer(matchId);
 
@@ -71,14 +95,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async setChatRoomExpireTimer(matchId: number) {
-    const CHAT_DISCONNECT_TIMER = 24 * 60 * 60 * 1000;
+    const CHAT_EXPIRE_TIMER = 12 * 60 * 60 * 1000;
     const TEST = 40 * 1000;
 
     this.chatRoomTimers[matchId] = setTimeout(async () => {
       const chat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
       if (!chat) {
-        throw new UnauthorizedException("존재하지 않은 매치 입니다.");
+        throw new NotFoundException("존재하지 않은 매치 입니다.");
       }
 
       if (chat.status !== ChatState.PENDING) {
@@ -96,19 +120,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       delete this.chatRoomTimers[matchId];
 
-      // await this.handleDisconnect(matchId); // 삭제 확인 테스트용
-    }, TEST);
+      await this.handleDisconnect(matchId);
+    }, CHAT_EXPIRE_TIMER);
   }
 
   async setChatRoomDisconnectTimer(matchId: number) {
-    const CHAT_DISCONNECT_TIMER = 24 * 60 * 60 * 1000;
+    const CHAT_DISCONNECT_TIMER = 12 * 60 * 60 * 1000;
     const TEST = 30 * 1000;
 
     this.chatRoomTimers[matchId] = setTimeout(async () => {
       const chat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
       if (!chat) {
-        throw new UnauthorizedException("존재하지 않은 매치 입니다.");
+        throw new NotFoundException("존재하지 않은 매치 입니다.");
       }
 
       this.socket.to(String(matchId)).emit("chatRoomDisconnect", {
@@ -120,7 +144,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`채팅 가능 시간이 종료되어 ${matchId}의 채팅방 연결이 끊깁니다`);
 
       delete this.chatRoomTimers[matchId];
-    }, TEST);
+
+      await this.handleDisconnect(matchId);
+    }, CHAT_DISCONNECT_TIMER);
   }
 
   /*
@@ -137,13 +163,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const findUser = await this.userRepository.findById(userId);
 
     if (!findUser) {
-      throw new UnauthorizedException("해당 유저가 존재하지 않습니다");
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
     }
 
     const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
 
     if (!chatRoom) {
-      throw new UnauthorizedException("존재하지 않는 채팅방 입니다");
+      throw new NotFoundException("존재하지 않는 채팅방 입니다");
     }
 
     const message = new ChatMessage();
@@ -184,5 +210,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
     return await this.chatRoomRepository.findOne({ where: { id: chatId } });
+  }
+
+  async deleteChatDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    const chatRoomRepository = txManager.getRepository(ChatRoom);
+    const chats = await chatRoomRepository.find({
+      where: [{ senderId: userId }, { receiverId: userId }],
+    });
+
+    await chatRoomRepository.remove(chats);
+  }
+
+  /*
+  ^^--------------- dev rogic
+   */
+  async deleteDevChatDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    const devChatRoomRepository = txManager.getRepository(DevChatRoom);
+    const chats = await devChatRoomRepository.find({
+      where: [{ senderId: userId }, { receiverId: userId }],
+    });
+
+    await devChatRoomRepository.remove(chats);
   }
 }

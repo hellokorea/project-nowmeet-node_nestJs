@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entity/users.entity";
-import { FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { UserCreateDto } from "./dtos/users.create.dto";
 
 @Injectable()
@@ -41,7 +41,12 @@ export class UsersRepository {
     return await this.usersRepository.save(user);
   }
 
-  async deleteUser(user: User): Promise<void> {
-    await this.usersRepository.remove(user);
+  async deleteUser(transactionalEntityManager: EntityManager, user: User): Promise<void> {
+    try {
+      await transactionalEntityManager.remove(User, user);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw new InternalServerErrorException("유저 삭제 중 오류가 발생했습니다.");
+    }
   }
 }

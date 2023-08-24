@@ -13,6 +13,7 @@ import { ChatModule } from "./chat/chat.module";
 import { ChatRoom } from "./chat/entity/chats.entity";
 import { ChatMessage } from "./chat/entity/chatmessage.entity";
 import { DevMatch } from "./match/entity/devmatch.entity";
+import { DevChatRoom } from "./chat/entity/devchats.entity";
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { DevMatch } from "./match/entity/devmatch.entity";
           username: configService.getOrThrow("DB_USERNAME"),
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
-          entities: [User, Match, DevMatch, ChatRoom, ChatMessage],
+          entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
           synchronize: true, // prob - false
         };
       },

@@ -1,14 +1,25 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/users.create.dto";
-import { AuthService } from "src/auth/service/auth.service";
-import { User } from "../entity/users.entity";
 import { UserRequestDto } from "../dtos/users.request.dto";
 import { MatchRepository } from "./../../match/match.repository";
+import { ChatGateway } from "src/chat/chat.gateway";
+import { Connection } from "typeorm";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository, private readonly matchRepository: MatchRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly matchRepository: MatchRepository,
+    private readonly chatGateway: ChatGateway,
+    private readonly connection: Connection
+  ) {}
 
   async getAllUsers() {
     return this.usersRepository.findAll();
@@ -22,7 +33,7 @@ export class UsersService {
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
 
     if (isExistNickname) {
-      throw new UnauthorizedException("이미 존재하는 닉네임 입니다");
+      throw new BadRequestException("이미 존재하는 닉네임 입니다");
     }
 
     // if (!files) {
@@ -49,7 +60,7 @@ export class UsersService {
     const userId = req.user.id;
 
     if (!user) {
-      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+      throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
     if (user.id === userId) {
@@ -64,7 +75,7 @@ export class UsersService {
     const userId = req.user.id;
 
     if (!user) {
-      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+      throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
     if (user.id === userId) {
@@ -88,17 +99,29 @@ export class UsersService {
     const userId = req.user.id;
 
     if (!user) {
-      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+      throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
     if (user.id === userId) {
-      await this.matchRepository.deleteMatchesByUserId(id);
+      try {
+        await this.connection.transaction(async (txManager) => {
+          await this.matchRepository.deleteMatchesByUserId(txManager, id);
+          await this.matchRepository.deleteDevMatchesByUserId(txManager, id);
+          await this.chatGateway.deleteChatDataByUserId(txManager, id);
+          await this.chatGateway.deleteDevChatDataByUserId(txManager, id);
+          await this.usersRepository.deleteUser(txManager, user);
+          console.log(`userId: ${id} 번 유저 데이터 전부 삭제 완료`);
+        });
+        console.log(`userId: ${id} 번 유저 계정 삭제 완료`);
 
-      await this.usersRepository.deleteUser(user);
+        return { message: `userId: ${id} 번 유저의 계정을 성공적으로 삭제 했습니다` };
+        //
+      } catch (error) {
+        console.error("Error during transaction:", error);
 
-      return { message: `userId.${id} 유저의 계정을 성공적으로 삭제 했습니다` };
+        throw new InternalServerErrorException(`userId: ${id} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
+      }
     }
-
     throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 }

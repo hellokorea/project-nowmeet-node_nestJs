@@ -8,6 +8,7 @@ import { User } from "./entity/users.entity";
 import { MulterModule } from "@nestjs/platform-express";
 import { multerOptions } from "src/common/utils/multer.options";
 import { MatchModule } from "src/match/match.module";
+import { ChatModule } from "src/chat/chat.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MatchModule } from "src/match/match.module";
     }),
     forwardRef(() => AuthModule),
     forwardRef(() => MatchModule),
+    forwardRef(() => ChatModule),
   ],
   exports: [UsersService, UsersRepository],
   controllers: [UsersController],

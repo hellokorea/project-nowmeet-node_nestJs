@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { MatchRepository } from "../match.repository";
 import { UserRequestDto } from "src/users/dtos/users.request.dto";
 import { UsersRepository } from "./../../users/users.repository";
@@ -21,11 +21,11 @@ export class MatchService {
     const user = await this.usersRepository.findById(profileId);
 
     if (!user) {
-      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+      throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
     if (user.id === loggedId) {
-      throw new UnauthorizedException("본인 프로필 조회 불가");
+      throw new BadRequestException("본인 프로필 조회 불가");
     }
 
     const isMatch = await this.matchRepository.findMatchByUserIds(profileId, loggedId);
@@ -53,20 +53,22 @@ export class MatchService {
     const user = await this.usersRepository.findById(receiverId);
 
     if (!user) {
-      throw new UnauthorizedException("존재하지 않는 유저 입니다");
+      throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
     if (receiverId === senderId) {
-      throw new UnauthorizedException("본인에게 좋아요를 보낼 수 없습니다");
+      throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");
     }
 
     const isMatched = await this.matchRepository.isMatchFind(senderId, receiverId);
 
     if (isMatched.length > 0) {
-      throw new UnauthorizedException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
+      throw new BadRequestException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
     } else {
-      await this.matchRepository.createDevMatch(senderId, receiverId); //dev
+      await this.matchRepository.createDevMatch(senderId, receiverId); //Dev
+
       const newMatchData = await this.matchRepository.createMatch(senderId, receiverId);
+
       return {
         matchId: newMatchData.id,
         senderId: newMatchData.sender.id,
@@ -120,19 +122,19 @@ export class MatchService {
   private async updateMatchStatus(matchId: number, req: UserRequestDto, newStatus: MatchState) {
     const loggedId = req.user.id;
 
-    const devMatch = await this.matchRepository.findDevMatchById(matchId); //dev
+    const devMatch = await this.matchRepository.findDevMatchById(matchId); //Dev
     const match = await this.matchRepository.findMatchById(matchId);
 
     if (!match) {
-      throw new UnauthorizedException("매치가 존재하지 않습니다");
+      throw new NotFoundException("매치가 존재하지 않습니다");
     }
 
     if (match.receiver.id !== loggedId) {
-      throw new UnauthorizedException("유저 정보가 일치하지 않습니다");
+      throw new BadRequestException("유저 정보가 일치하지 않습니다");
     }
 
-    devMatch.status = newStatus; //dev
-    await this.matchRepository.saveDevMatch(devMatch); //dev
+    devMatch.status = newStatus; //Dev
+    await this.matchRepository.saveDevMatch(devMatch); //Dev
 
     match.status = newStatus;
     const result = await this.matchRepository.saveMatch(match);
@@ -214,13 +216,13 @@ export class MatchService {
     const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
 
     if (!findChat) {
-      throw new UnauthorizedException("해당 채팅방이 존재하지 않습니다");
+      throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
     }
 
     const isUser = await this.chatGateway.findChatsByUserId(loggedId);
 
     if (!isUser.length) {
-      throw new UnauthorizedException("유저 정보가 올바르지 않습니다");
+      throw new BadRequestException("유저 정보가 올바르지 않습니다");
     }
 
     let user: number;
