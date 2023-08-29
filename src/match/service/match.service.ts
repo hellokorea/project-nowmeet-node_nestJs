@@ -1,9 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { MatchRepository } from "../match.repository";
 import { UserRequestDto } from "src/users/dtos/users.request.dto";
 import { UsersRepository } from "./../../users/users.repository";
 import { UserProfileResponseDto } from "src/users/dtos/user.profile.dto";
-import { User } from "src/users/entity/users.entity";
 import { MatchState } from "../entity/match.entity";
 import * as moment from "moment";
 import { ChatGateway } from "src/chat/chat.gateway";
@@ -129,6 +128,10 @@ export class MatchService {
       throw new NotFoundException("매치가 존재하지 않습니다");
     }
 
+    if (match.receiver.id === null || match.sender.id === null) {
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
+    }
+
     if (match.receiver.id !== loggedId) {
       throw new BadRequestException("유저 정보가 일치하지 않습니다");
     }
@@ -217,6 +220,10 @@ export class MatchService {
 
     if (!findChat) {
       throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
+    }
+
+    if (findChat.receiverId === null || findChat.senderId === null) {
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
     }
 
     const isUser = await this.chatGateway.findChatsByUserId(loggedId);

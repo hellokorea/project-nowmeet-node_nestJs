@@ -19,6 +19,7 @@ import { FilesInterceptor } from "@nestjs/platform-express";
 import { multerOptions } from "src/common/utils/multer.options";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "../dtos/users.request.dto";
+import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
 
 @Controller("users")
 @UseInterceptors(SuccessInterceptor)
@@ -31,13 +32,15 @@ export class UsersController {
   } //테스트
 
   @Post("signup")
-  // @UseInterceptors(FilesInterceptor("profileImage", 6))
-  createUser(
-    @Body() body: UserCreateDto //@UploadedFiles() files: Array<Express.Multer.File>
-  ) {
+  createUser(@Body() body: UserCreateDto) {
     return this.userService.createUser(
       body //file
     );
+  }
+
+  @Get("signup/nickname")
+  nicknameDuplicate(@Body() body: UserNicknameDuplicateDto) {
+    return this.userService.nicknameDuplicate(body);
   }
 
   @Get("me/:id")

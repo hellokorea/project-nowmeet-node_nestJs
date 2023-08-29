@@ -11,6 +11,7 @@ import { UserRequestDto } from "../dtos/users.request.dto";
 import { MatchRepository } from "./../../match/match.repository";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { Connection } from "typeorm";
+import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
 
 @Injectable()
 export class UsersService {
@@ -53,6 +54,18 @@ export class UsersService {
     });
 
     return users;
+  }
+
+  async nicknameDuplicate(body: UserNicknameDuplicateDto) {
+    const { nickname } = body;
+
+    const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
+
+    if (!isExistNickname) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   async getMyUserInfo(id: number, req: UserRequestDto) {
