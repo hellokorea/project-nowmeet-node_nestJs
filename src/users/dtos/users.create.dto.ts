@@ -32,7 +32,4 @@ export class UserCreateDto {
   @IsString()
   @IsNotEmpty()
   preference: string;
-
-  @IsString()
-  profileImage: string;
 }

@@ -11,12 +11,12 @@ import {
   UseGuards,
   ParseIntPipe,
   Delete,
+  UploadedFile,
 } from "@nestjs/common";
 import { UsersService } from "../service/users.service";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { UserCreateDto } from "../dtos/users.create.dto";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { multerOptions } from "src/common/utils/multer.options";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "../dtos/users.request.dto";
 import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
@@ -32,10 +32,9 @@ export class UsersController {
   } //테스트
 
   @Post("signup")
-  createUser(@Body() body: UserCreateDto) {
-    return this.userService.createUser(
-      body //file
-    );
+  @UseInterceptors(FilesInterceptor("profileImages"))
+  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: any) {
+    return this.userService.createUser(body, files);
   }
 
   @Get("signup/nickname")

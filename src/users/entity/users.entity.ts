@@ -31,9 +31,6 @@ export class User {
   @Column()
   preference: string;
 
-  @Column()
-  profileImage: string;
-
   @CreateDateColumn()
   createdAt: string;
 

@@ -26,10 +26,8 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  async createUser(
-    body: UserCreateDto //files: Array<Express.Multer.File>
-  ) {
-    const { email, nickname, sex, birthDate, tall, job, introduce, preference, profileImage } = body;
+  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
+    const { email, nickname, sex, birthDate, tall, job, introduce, preference } = body;
 
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
 
@@ -37,9 +35,9 @@ export class UsersService {
       throw new BadRequestException("이미 존재하는 닉네임 입니다");
     }
 
-    // if (!files) {
-    //   throw new UnauthorizedException("프로필 사진을 최소 1장 등록하세요");
-    // }
+    if (!files) {
+      throw new UnauthorizedException("프로필 사진을 최소 1장 등록하세요");
+    }
 
     const users = await this.usersRepository.createUser({
       email,
@@ -50,10 +48,9 @@ export class UsersService {
       job,
       introduce,
       preference,
-      profileImage,
     });
 
-    return users;
+    return { users, profileImages: files[0].path };
   }
 
   async nicknameDuplicate(body: UserNicknameDuplicateDto) {
@@ -99,7 +96,6 @@ export class UsersService {
         job: job || user.job,
         introduce: introduce || user.introduce,
         preference: preference || user.preference,
-        profileImage: profileImage || user.profileImage,
       });
       return updated;
     }
