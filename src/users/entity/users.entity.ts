@@ -28,8 +28,8 @@ export class User {
   @Column()
   introduce: string;
 
-  @Column()
-  preference: string;
+  @Column("simple-array")
+  preference: string[];
 
   @CreateDateColumn()
   createdAt: string;

@@ -7,7 +7,7 @@ export class UserProfileResponseDto {
   tall: string;
   job: string;
   introduce: string;
-  preference: string;
+  preference: string[];
   profileImage?: string;
 
   constructor(user: User) {
@@ -18,6 +18,5 @@ export class UserProfileResponseDto {
     this.job = user.job;
     this.introduce = user.introduce;
     this.preference = user.preference;
-    // this.profileImage = user.profileImage; .. 사진을 어떻게 가져올 것인가?
   }
 }

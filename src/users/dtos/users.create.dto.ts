@@ -31,5 +31,5 @@ export class UserCreateDto {
 
   @IsString()
   @IsNotEmpty()
-  preference: string;
+  preference: string[];
 }
