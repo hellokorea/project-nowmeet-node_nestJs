@@ -50,7 +50,7 @@ export class UsersService {
       preference,
     });
 
-    return { users, profileImages: files[0].path };
+    return users;
   }
 
   async nicknameDuplicate(body: UserNicknameDuplicateDto) {
