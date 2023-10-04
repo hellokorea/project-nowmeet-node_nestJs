@@ -31,6 +31,15 @@ export class User {
   @Column("simple-array")
   preference: string[];
 
+  @Column({ default: 0 })
+  gem: number;
+
+  @Column("decimal", { precision: 9, scale: 6 })
+  latitude: number;
+
+  @Column("decimal", { precision: 9, scale: 6 })
+  longitude: number;
+
   @CreateDateColumn()
   createdAt: string;
 

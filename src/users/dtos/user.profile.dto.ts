@@ -9,6 +9,8 @@ export class UserProfileResponseDto {
   introduce: string;
   preference: string[];
   profileImage?: string;
+  latitude: number;
+  longitude: number;
 
   constructor(user: User) {
     this.nickname = user.nickname;
@@ -18,5 +20,7 @@ export class UserProfileResponseDto {
     this.job = user.job;
     this.introduce = user.introduce;
     this.preference = user.preference;
+    this.latitude = user.latitude;
+    this.longitude = user.longitude;
   }
 }

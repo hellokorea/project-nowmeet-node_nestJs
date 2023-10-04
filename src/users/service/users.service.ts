@@ -27,7 +27,9 @@ export class UsersService {
   }
 
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
-    const { email, nickname, sex, birthDate, tall, job, introduce, preference } = body;
+    //위치 좌표 latitude: 37.78825,longitude: -122.4324,
+
+    const { email, nickname, sex, birthDate, tall, job, introduce, preference, latitude, longitude } = body;
 
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
 
@@ -48,6 +50,8 @@ export class UsersService {
       job,
       introduce,
       preference,
+      latitude,
+      longitude,
     });
 
     return users;
@@ -89,7 +93,7 @@ export class UsersService {
     }
 
     if (user.id === userId) {
-      const { job, introduce, preference, profileImage } = body;
+      const { job, introduce, preference } = body;
 
       const updated = await this.usersRepository.updateUser({
         ...user,

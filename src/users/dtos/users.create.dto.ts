@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class UserCreateDto {
   @IsEmail()
@@ -32,4 +32,10 @@ export class UserCreateDto {
   @IsString()
   @IsNotEmpty()
   preference: string[];
+
+  @IsNotEmpty()
+  latitude: number;
+
+  @IsNotEmpty()
+  longitude: number;
 }
