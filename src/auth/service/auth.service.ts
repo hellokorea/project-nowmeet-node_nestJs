@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { UsersRepository } from "./../../users/users.repository";
 import { GoogleRequest } from "../dtos/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
@@ -23,13 +23,18 @@ export class AuthService {
       //Jwt Generate
       const googlePayload = { email, sub: findUser.id };
 
-      return {
+      const signupData = {
         shouldSignUp: false,
         token: this.jwtService.sign(googlePayload, {
           secret: process.env.JWT_KEY,
           expiresIn: process.env.JWT_EXPIRES,
         }),
       };
+
+      const logger = new Logger();
+      logger.log(`LoginLog => Email : ${googlePayload.email} || JWT : ${signupData.token}`);
+
+      return signupData;
     } catch (error) {
       throw new UnauthorizedException("로그인 실패");
     }

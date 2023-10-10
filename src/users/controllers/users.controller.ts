@@ -31,6 +31,12 @@ export class UsersController {
     return this.userService.getAllUsers();
   } //테스트
 
+  @Get("location/:id/:x/:y")
+  //@UseGuards(JwtAuthGuard) //^^^^^^^^^^^^^^^^^^^^^^jwt
+  UserLocationRefresh(@Param("id", ParseIntPipe) id: number, @Param("x") x: string, @Param("y") y: string) {
+    return this.userService.UserLocationRefresh(id, x, y);
+  }
+
   @Post("signup")
   @UseInterceptors(FilesInterceptor("profileImages"))
   createUser(@Body() body: UserCreateDto, @UploadedFiles() files: any) {
@@ -42,21 +48,21 @@ export class UsersController {
     return this.userService.nicknameDuplicate(body);
   }
 
-  @Get("me/:id")
+  @Get("me")
   @UseGuards(JwtAuthGuard)
-  getMyUserInfo(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
-    return this.userService.getMyUserInfo(id, req);
+  getMyUserInfo(@Req() req: UserRequestDto) {
+    return this.userService.getMyUserInfo(req);
   }
 
-  @Put("me/:id/update")
+  @Put("me/update")
   @UseGuards(JwtAuthGuard)
-  putMyUserInfo(@Param("id", ParseIntPipe) id: number, @Body() body: any, @Req() req: UserRequestDto) {
-    return this.userService.putMyUserInfo(id, body, req);
+  putMyUserInfo(@Body() body: any, @Req() req: UserRequestDto) {
+    return this.userService.putMyUserInfo(body, req);
   }
 
-  @Delete("me/:id/delete")
+  @Delete("me/delete")
   @UseGuards(JwtAuthGuard)
-  deleteAccount(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
-    return this.userService.deleteAccount(id, req);
+  deleteAccount(@Req() req: UserRequestDto) {
+    return this.userService.deleteAccount(req);
   }
 }

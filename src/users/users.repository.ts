@@ -16,6 +16,15 @@ export class UsersRepository {
     const option: FindOneOptions<User> = {
       where: { id },
     };
+
+    return await this.usersRepository.findOne(option);
+  }
+
+  async findByNickname(nickname: string): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { nickname },
+    };
+
     return await this.usersRepository.findOne(option);
   }
 
@@ -39,6 +48,23 @@ export class UsersRepository {
 
   async updateUser(user: UserCreateDto): Promise<User> {
     return await this.usersRepository.save(user);
+  }
+
+  async findUserLocation(id: number): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { id },
+      select: ["latitude", "longitude"],
+    };
+    return await this.usersRepository.findOne(option);
+  }
+
+  async refreshUserLocation(id: number, x: number, y: number): Promise<User | null> {
+    const userLocation = await this.usersRepository.findOne({ where: { id } });
+
+    userLocation.latitude = x;
+    userLocation.longitude = y;
+
+    return await this.usersRepository.save(userLocation);
   }
 
   async deleteUser(transactionalEntityManager: EntityManager, user: User): Promise<void> {

@@ -26,9 +26,46 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
-    //위치 좌표 latitude: 37.78825,longitude: -122.4324,
+  async UserLocationRefresh(id: number, x: string, y: string) {
+    const user = await this.usersRepository.findById(id);
+    console.log(user);
 
+    const xCoordString = parseFloat(x).toFixed(6);
+    const yCoordString = parseFloat(y).toFixed(6);
+
+    const xCoordNumber = parseFloat(xCoordString);
+    const yCoordNumber = parseFloat(yCoordString);
+
+    console.log(`type : ${typeof xCoordNumber}, value: ${xCoordNumber}`);
+    console.log(`type : ${typeof yCoordNumber}, value: ${yCoordNumber}`);
+
+    if (!user) {
+      throw new NotFoundException("존재하지 않는 유저 입니다");
+    }
+
+    try {
+      const findUserLocation = await this.usersRepository.findUserLocation(id);
+
+      if (!findUserLocation) {
+        throw new NotFoundException("유저의 위치 정보 값이 존재하지 않습니다");
+      }
+      console.log(findUserLocation);
+
+      const locationRefresh = await this.usersRepository.refreshUserLocation(id, xCoordNumber, yCoordNumber);
+
+      return {
+        user: user.id,
+        latitude: locationRefresh.latitude,
+        longitude: locationRefresh.longitude,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+
+    //여기서부터 유저 좌표를 기준으로 다른 유저정보 뿌려주는 연산 로직 추가
+  }
+
+  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
     const { email, nickname, sex, birthDate, tall, job, introduce, preference, latitude, longitude } = body;
 
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
@@ -69,9 +106,9 @@ export class UsersService {
     }
   }
 
-  async getMyUserInfo(id: number, req: UserRequestDto) {
-    const user = await this.usersRepository.findById(id);
+  async getMyUserInfo(req: UserRequestDto) {
     const userId = req.user.id;
+    const user = await this.usersRepository.findById(userId);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
@@ -80,13 +117,11 @@ export class UsersService {
     if (user.id === userId) {
       return user;
     }
-
-    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 
-  async putMyUserInfo(id: number, body: any, req: UserRequestDto) {
-    const user = await this.usersRepository.findById(id);
+  async putMyUserInfo(body: any, req: UserRequestDto) {
     const userId = req.user.id;
+    const user = await this.usersRepository.findById(userId);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
@@ -103,13 +138,13 @@ export class UsersService {
       });
       return updated;
     }
-
-    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 
-  async deleteAccount(id: number, req: UserRequestDto) {
-    const user = await this.usersRepository.findById(id);
+  async deleteAccount(req: UserRequestDto) {
     const userId = req.user.id;
+    const user = await this.usersRepository.findById(userId);
+
+    console.log(userId);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
@@ -118,23 +153,22 @@ export class UsersService {
     if (user.id === userId) {
       try {
         await this.connection.transaction(async (txManager) => {
-          await this.matchRepository.deleteMatchesByUserId(txManager, id);
-          await this.matchRepository.deleteDevMatchesByUserId(txManager, id);
-          await this.chatGateway.deleteChatDataByUserId(txManager, id);
-          await this.chatGateway.deleteDevChatDataByUserId(txManager, id);
+          await this.matchRepository.deleteMatchesByUserId(txManager, user.id);
+          await this.matchRepository.deleteDevMatchesByUserId(txManager, user.id);
+          await this.chatGateway.deleteChatDataByUserId(txManager, user.id);
+          await this.chatGateway.deleteDevChatDataByUserId(txManager, user.id);
           await this.usersRepository.deleteUser(txManager, user);
-          console.log(`userId: ${id} 번 유저 데이터 전부 삭제 완료`);
+          console.log(`userId: ${userId} 번 유저 데이터 전부 삭제 완료`);
         });
-        console.log(`userId: ${id} 번 유저 계정 삭제 완료`);
+        console.log(`userId: ${userId} 번 유저 계정 삭제 완료`);
 
-        return { message: `userId: ${id} 번 유저의 계정을 성공적으로 삭제 했습니다` };
+        return { message: `userId: ${userId} 번 유저의 계정을 성공적으로 삭제 했습니다` };
         //
       } catch (error) {
         console.error("Error during transaction:", error);
 
-        throw new InternalServerErrorException(`userId: ${id} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
+        throw new InternalServerErrorException(`userId: ${userId} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
       }
     }
-    throw new UnauthorizedException("요청된 유저 토큰이 유효하지 않습니다");
   }
 }

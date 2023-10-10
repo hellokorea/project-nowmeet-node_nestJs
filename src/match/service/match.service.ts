@@ -15,20 +15,22 @@ export class MatchService {
     private readonly chatGateway: ChatGateway
   ) {}
 
-  async getUserProfile(profileId: number, req: UserRequestDto) {
+  async getUserProfile(nickname: string, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(profileId);
+    const user = await this.usersRepository.findByNickname(nickname);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
+    const profiledId = user.id;
+
     if (user.id === loggedId) {
       throw new BadRequestException("본인 프로필 조회 불가");
     }
 
-    const isMatch = await this.matchRepository.findMatchByUserIds(profileId, loggedId);
-    const isChats = await this.chatGateway.findChatsByUserIds(profileId, loggedId);
+    const isMatch = await this.matchRepository.findMatchByUserIds(profiledId, loggedId);
+    const isChats = await this.chatGateway.findChatsByUserIds(profiledId, loggedId);
 
     const userInfo = new UserProfileResponseDto(user);
 
@@ -46,14 +48,16 @@ export class MatchService {
     };
   }
 
-  async sendLike(receiverId: number, req: UserRequestDto) {
+  async sendLike(receiverNickname: string, req: UserRequestDto) {
     const senderId = req.user.id;
 
-    const user = await this.usersRepository.findById(receiverId);
+    const user = await this.usersRepository.findByNickname(receiverNickname);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
+
+    const receiverId = user.id;
 
     if (receiverId === senderId) {
       throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");

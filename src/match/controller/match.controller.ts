@@ -10,14 +10,14 @@ import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
-  @Get("profile/:id")
-  getUserProfile(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
-    return this.matchService.getUserProfile(id, req);
+  @Get("profile/:nickname")
+  getUserProfile(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
+    return this.matchService.getUserProfile(nickname, req);
   }
 
-  @Post("profile/:id/like")
-  userLikeSend(@Param("id", ParseIntPipe) id: number, @Req() req: UserRequestDto) {
-    return this.matchService.sendLike(id, req);
+  @Post("profile/:nickname/like")
+  userLikeSend(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
+    return this.matchService.sendLike(nickname, req);
   }
 
   @Get("me/sendbox")
