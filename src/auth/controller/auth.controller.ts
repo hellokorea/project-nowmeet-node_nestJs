@@ -18,4 +18,9 @@ export class AuthController {
   googleLoginCallback(@Req() req: GoogleRequest) {
     return this.authService.googleLogin(req);
   }
+
+  @Post("isuser")
+  isUserExist(@Body("email") email: string) {
+    return this.authService.isUserExist(email);
+  }
 }
