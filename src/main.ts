@@ -18,7 +18,7 @@ async function bootstrap() {
     ["/docs", "/docs-json"],
     expressBasicAuth({
       challenge: true,
-      users: { [process.env.SWAGGER_USER]: process.env.SWAGGER_PAWSSWORD },
+      users: { [process.env.SWAGGER_USER]: process.env.SWAGGER_PASSWORD },
     })
   );
 
