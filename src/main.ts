@@ -3,6 +3,7 @@ import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import { HttpExceptionFilter } from "./common/exceptions/http_exception.filter";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as expressBasicAuth from "express-basic-auth";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,13 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.use(
+    ["/docs", "/docs-json"],
+    expressBasicAuth({
+      challenge: true,
+      users: { [process.env.SWAGGER_USER]: process.env.SWAGGER_PAWSSWORD },
+    })
+  );
 
   //Swagger Setting
   const config = new DocumentBuilder()
@@ -30,7 +38,7 @@ async function bootstrap() {
   const PORT = process.env.PORT;
 
   await app.listen(PORT, () => {
-    console.log(`http://localhost:${PORT} `);
+    console.log(`http://localhost:${PORT}`);
   });
 }
 

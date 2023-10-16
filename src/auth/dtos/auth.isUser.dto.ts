@@ -5,6 +5,6 @@ export class IsUserResponseDto {
 }
 
 export class IsUserRequsetDto {
-  @ApiProperty({ example: "tnczl1234@gmail.com" })
+  @ApiProperty({ example: "test@gmail.com" })
   email: string;
 }
