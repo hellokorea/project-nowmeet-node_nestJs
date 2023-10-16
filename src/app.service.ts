@@ -14,8 +14,6 @@ export class AppService implements OnModuleInit {
     }, CHECK_CYCLE);
   }
 
-  //앱 실행 시 주변 유저 정보 Get
-
   getHello(): string {
     return "Hello World!";
   }

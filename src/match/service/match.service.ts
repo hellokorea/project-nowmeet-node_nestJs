@@ -205,7 +205,7 @@ export class MatchService {
   ^^--------------------------------------Chat Rogic
   */
 
-  async getChatRommsList(req: UserRequestDto) {
+  async getChatRoomsAllList(req: UserRequestDto) {
     const loggedId = req.user.id;
 
     const findChats = await this.chatGateway.findChatsByUserId(loggedId);
@@ -214,7 +214,27 @@ export class MatchService {
       return null;
     }
 
-    return findChats;
+    const chatList = findChats.map((chat) => {
+      let me: number;
+      let matchUserId: number;
+
+      if (loggedId === chat.receiverId || loggedId === chat.senderId) {
+        me = loggedId;
+        matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
+      } else {
+        throw new BadRequestException();
+      }
+
+      return {
+        chatId: chat.id,
+        matchId: chat.matchId,
+        me,
+        matchUserId,
+        chatStatus: chat.status,
+      };
+    });
+
+    return chatList;
   }
 
   async getUserChatRoom(chatId: number, req: UserRequestDto) {
@@ -246,9 +266,9 @@ export class MatchService {
 
     return {
       chatId: findChat.id,
-      matchedUserId: user,
-      chatStatus: findChat.status,
       matchId: findChat.matchId,
+      matchUserId: user,
+      chatStatus: findChat.status,
     };
   }
 }

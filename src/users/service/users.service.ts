@@ -26,9 +26,8 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  async UserLocationRefresh(id: number, x: string, y: string) {
-    const user = await this.usersRepository.findById(id);
-    console.log(user);
+  async UserLocationRefresh(nickname: string, x: string, y: string) {
+    const user = await this.usersRepository.findByNickname(nickname);
 
     const xCoordString = parseFloat(x).toFixed(6);
     const yCoordString = parseFloat(y).toFixed(6);
@@ -44,17 +43,17 @@ export class UsersService {
     }
 
     try {
-      const findUserLocation = await this.usersRepository.findUserLocation(id);
+      const findUserLocation = await this.usersRepository.findUserLocation(user.id);
 
       if (!findUserLocation) {
         throw new NotFoundException("유저의 위치 정보 값이 존재하지 않습니다");
       }
       console.log(findUserLocation);
 
-      const locationRefresh = await this.usersRepository.refreshUserLocation(id, xCoordNumber, yCoordNumber);
+      const locationRefresh = await this.usersRepository.refreshUserLocation(user.id, xCoordNumber, yCoordNumber);
 
       return {
-        user: user.id,
+        userId: user.id,
         latitude: locationRefresh.latitude,
         longitude: locationRefresh.longitude,
       };
