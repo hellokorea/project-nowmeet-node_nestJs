@@ -22,6 +22,7 @@ import { UserRequestDto } from "../dtos/users.request.dto";
 import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { PutMyInfoResponseDto } from "../dtos/user.putMyInfo.dto";
+import { RefreshLocationUserResDto } from "../dtos/user.locationResponse.dto";
 
 @ApiBearerAuth()
 @Controller("users")
@@ -35,13 +36,21 @@ export class UsersController {
     return this.userService.getAllUsers();
   }
 
-  @ApiResponse({ description: "개발 중 ..." })
+  @ApiResponse({
+    description: "유저의 좌표 위치를 최신화하고, 반경 2km 이내의 모든 유저 정보를 반환한다",
+    type: RefreshLocationUserResDto,
+  })
   @ApiOperation({ summary: "유저 위치 정보 최신화" })
   @ApiParam({ name: "nickname", description: "위치 정보 최신화 할 유저 닉네임 입력", type: String })
+  @UseGuards(JwtAuthGuard)
   @Get("location/:nickname/:x/:y")
-  // @UseGuards(JwtAuthGuard) //^^^^^^^^^^^^^^^^^^^^^^jwt
-  UserLocationRefresh(@Param("nickname") nickname: string, @Param("x") x: string, @Param("y") y: string) {
-    return this.userService.UserLocationRefresh(nickname, x, y);
+  UserLocationRefresh(
+    @Param("nickname") nickname: string,
+    @Param("x") x: string,
+    @Param("y") y: string,
+    @Req() req: UserRequestDto
+  ) {
+    return this.userService.refreshUserLocation(nickname, x, y, req);
   }
 
   @ApiResponse({ type: UserCreateDto })
@@ -60,23 +69,23 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: "내 프로필 정보 조회" })
-  @Get("me")
   @UseGuards(JwtAuthGuard)
+  @Get("me")
   getMyUserInfo(@Req() req: UserRequestDto) {
     return this.userService.getMyUserInfo(req);
   }
 
   @ApiOperation({ summary: "내 프로필 수정" })
   @ApiBody({ description: "직업, 소개, 취향 항목만 수정 가능", type: PutMyInfoResponseDto })
-  @Put("me/update")
   @UseGuards(JwtAuthGuard)
+  @Put("me/update")
   putMyUserInfo(@Body() body: any, @Req() req: UserRequestDto) {
     return this.userService.putMyUserInfo(body, req);
   }
 
   @ApiOperation({ summary: "내 계정 삭제" })
-  @Delete("me/delete")
   @UseGuards(JwtAuthGuard)
+  @Delete("me/delete")
   deleteAccount(@Req() req: UserRequestDto) {
     return this.userService.deleteAccount(req);
   }

@@ -26,11 +26,11 @@ export class UserProfileResponseDto {
   @ApiProperty({ example: "사진1, 사진2, 사진3" })
   profileImage?: string[];
 
-  @ApiProperty({ example: "-90.000000" })
-  latitude: number;
-
   @ApiProperty({ example: "180.000000" })
   longitude: number;
+
+  @ApiProperty({ example: "-90.000000" })
+  latitude: number;
 
   constructor(user: User) {
     this.nickname = user.nickname;
@@ -40,7 +40,7 @@ export class UserProfileResponseDto {
     this.job = user.job;
     this.introduce = user.introduce;
     this.preference = user.preference;
-    this.latitude = user.latitude;
     this.longitude = user.longitude;
+    this.latitude = user.latitude;
   }
 }

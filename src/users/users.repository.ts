@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entity/users.entity";
-import { EntityManager, FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, Repository, createQueryBuilder } from "typeorm";
 import { UserCreateDto } from "./dtos/users.create.dto";
 
 @Injectable()
@@ -50,23 +50,6 @@ export class UsersRepository {
     return await this.usersRepository.save(user);
   }
 
-  async findUserLocation(id: number): Promise<User | null> {
-    const option: FindOneOptions<User> = {
-      where: { id },
-      select: ["latitude", "longitude"],
-    };
-    return await this.usersRepository.findOne(option);
-  }
-
-  async refreshUserLocation(id: number, x: number, y: number): Promise<User | null> {
-    const userLocation = await this.usersRepository.findOne({ where: { id } });
-
-    userLocation.latitude = x;
-    userLocation.longitude = y;
-
-    return await this.usersRepository.save(userLocation);
-  }
-
   async deleteUser(transactionalEntityManager: EntityManager, user: User): Promise<void> {
     try {
       await transactionalEntityManager.remove(User, user);
@@ -74,5 +57,38 @@ export class UsersRepository {
       console.error("Error deleting user:", error);
       throw new InternalServerErrorException("유저 삭제 중 오류가 발생했습니다.");
     }
+  }
+
+  //--------------Location Rogic
+
+  async findUserLocation(id: number): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { id },
+      select: ["longitude", "latitude"],
+    };
+    return await this.usersRepository.findOne(option);
+  }
+
+  async refreshUserLocation(id: number, x: number, y: number): Promise<User | null> {
+    const userLocation = await this.usersRepository.findOne({ where: { id } });
+
+    userLocation.longitude = x;
+    userLocation.latitude = y;
+
+    return await this.usersRepository.save(userLocation);
+  }
+
+  async findUsersNearLocaction(longitude: number, latitude: number, radius: number): Promise<User[] | null> {
+    const distanceInMeters = radius * 1000;
+
+    return await this.usersRepository
+      .createQueryBuilder("user")
+      .where(`ST_Distance_Sphere(POINT(user.longitude, user.latitude), POINT(:longitude, :latitude)) < :distance`)
+      .setParameters({
+        longitude,
+        latitude,
+        distance: distanceInMeters,
+      })
+      .getMany();
   }
 }

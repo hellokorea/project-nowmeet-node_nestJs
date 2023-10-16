@@ -67,16 +67,16 @@ export class UserCreateDto {
   preference: string[];
 
   @ApiProperty({
-    example: "-90.000000",
-    description: "latitude",
-  })
-  @IsNotEmpty()
-  latitude: number;
-
-  @ApiProperty({
     example: "180.000000",
     description: "longitude",
   })
   @IsNotEmpty()
   longitude: number;
+
+  @ApiProperty({
+    example: "-90.000000",
+    description: "latitude",
+  })
+  @IsNotEmpty()
+  latitude: number;
 }

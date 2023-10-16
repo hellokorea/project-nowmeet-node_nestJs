@@ -12,6 +12,7 @@ import { MatchRepository } from "./../../match/match.repository";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { Connection } from "typeorm";
 import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
+import { UserProfileResponseDto } from "../dtos/user.profile.dto";
 
 @Injectable()
 export class UsersService {
@@ -26,46 +27,9 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  async UserLocationRefresh(nickname: string, x: string, y: string) {
-    const user = await this.usersRepository.findByNickname(nickname);
-
-    const xCoordString = parseFloat(x).toFixed(6);
-    const yCoordString = parseFloat(y).toFixed(6);
-
-    const xCoordNumber = parseFloat(xCoordString);
-    const yCoordNumber = parseFloat(yCoordString);
-
-    console.log(`type : ${typeof xCoordNumber}, value: ${xCoordNumber}`);
-    console.log(`type : ${typeof yCoordNumber}, value: ${yCoordNumber}`);
-
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
-    }
-
-    try {
-      const findUserLocation = await this.usersRepository.findUserLocation(user.id);
-
-      if (!findUserLocation) {
-        throw new NotFoundException("유저의 위치 정보 값이 존재하지 않습니다");
-      }
-      console.log(findUserLocation);
-
-      const locationRefresh = await this.usersRepository.refreshUserLocation(user.id, xCoordNumber, yCoordNumber);
-
-      return {
-        userId: user.id,
-        latitude: locationRefresh.latitude,
-        longitude: locationRefresh.longitude,
-      };
-    } catch (error) {
-      console.log(error);
-    }
-
-    //여기서부터 유저 좌표를 기준으로 다른 유저정보 뿌려주는 연산 로직 추가
-  }
-
+  //-----------------------Signup Rogic
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
-    const { email, nickname, sex, birthDate, tall, job, introduce, preference, latitude, longitude } = body;
+    const { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
     const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
 
@@ -86,8 +50,8 @@ export class UsersService {
       job,
       introduce,
       preference,
-      latitude,
       longitude,
+      latitude,
     });
 
     return users;
@@ -104,6 +68,66 @@ export class UsersService {
       return true;
     }
   }
+
+  //-----------------------Location Rogic
+
+  async refreshUserLocation(nickname: string, x: string, y: string, req: UserRequestDto) {
+    const xCoordString = parseFloat(x).toFixed(7);
+    const yCoordString = parseFloat(y).toFixed(7);
+
+    const xCoordNumber = parseFloat(xCoordString);
+    const yCoordNumber = parseFloat(yCoordString); //좌표 공통 함수로 뺄까,,
+
+    if (isNaN(xCoordNumber) || isNaN(yCoordNumber)) {
+      throw new BadRequestException("유효하지 않는 좌표 값입니다.");
+    }
+
+    if (yCoordNumber < -90 || yCoordNumber > 90 || xCoordNumber < -180 || xCoordNumber > 180) {
+      throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < x < 180 / -90 < y < 90");
+    }
+
+    const user = await this.usersRepository.findByNickname(nickname);
+    if (!user) {
+      throw new NotFoundException("존재하지 않는 유저 입니다");
+    }
+
+    const loggedId = req.user.id;
+    if (loggedId !== user.id) {
+      throw new UnauthorizedException("요청한 사용자의 권한이 없습니다.");
+    }
+
+    try {
+      const findMyLocation = await this.usersRepository.findUserLocation(user.id);
+
+      if (!findMyLocation) {
+        user.longitude = xCoordNumber;
+        user.latitude = yCoordNumber;
+      }
+
+      const refreshLocation = await this.usersRepository.refreshUserLocation(user.id, xCoordNumber, yCoordNumber);
+
+      const SEARCH_BOUNDARY = Number(process.env.SEARCH_BOUNDARY);
+
+      let nearbyUsers = await this.usersRepository.findUsersNearLocaction(xCoordNumber, yCoordNumber, SEARCH_BOUNDARY);
+
+      const responseUserList = nearbyUsers.map((user) => new UserProfileResponseDto(user));
+      const filteredResponseUserList = responseUserList.filter(
+        (responseUser) => user.nickname !== responseUser.nickname
+      );
+
+      return {
+        myId: user.id,
+        myLongitude: refreshLocation.longitude,
+        myLatitude: refreshLocation.latitude,
+        nearbyUsers: filteredResponseUserList,
+      };
+    } catch (error) {
+      console.error("refreshLocation error:", error);
+      throw new BadRequestException("위치 정보를 갱신하는 중 오류가 발생했습니다.");
+    }
+  }
+
+  //-----------------------My Account Rogic
 
   async getMyUserInfo(req: UserRequestDto) {
     const userId = req.user.id;

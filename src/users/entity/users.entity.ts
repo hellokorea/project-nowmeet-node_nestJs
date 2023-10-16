@@ -34,11 +34,11 @@ export class User {
   @Column({ default: 0 })
   gem: number;
 
-  @Column("decimal", { precision: 9, scale: 6 })
-  latitude: number;
-
-  @Column("decimal", { precision: 9, scale: 6 })
+  @Column("decimal", { precision: 10, scale: 7, default: null })
   longitude: number;
+
+  @Column("decimal", { precision: 10, scale: 7, default: null })
+  latitude: number;
 
   @CreateDateColumn()
   createdAt: string;
