@@ -76,7 +76,7 @@ export class UsersService {
     const yCoordString = parseFloat(y).toFixed(7);
 
     const xCoordNumber = parseFloat(xCoordString);
-    const yCoordNumber = parseFloat(yCoordString); //좌표 공통 함수로 뺄까,,
+    const yCoordNumber = parseFloat(yCoordString);
 
     if (isNaN(xCoordNumber) || isNaN(yCoordNumber)) {
       throw new BadRequestException("유효하지 않는 좌표 값입니다.");

@@ -9,6 +9,7 @@ import { MulterModule } from "@nestjs/platform-express";
 import { multerOptions } from "src/common/utils/multer.options";
 import { MatchModule } from "src/match/match.module";
 import { ChatModule } from "src/chat/chat.module";
+import { AppModule } from "src/app.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ChatModule } from "src/chat/chat.module";
     forwardRef(() => AuthModule),
     forwardRef(() => MatchModule),
     forwardRef(() => ChatModule),
+    forwardRef(() => AppModule), //Aws Service
   ],
   exports: [UsersService, UsersRepository],
   controllers: [UsersController],

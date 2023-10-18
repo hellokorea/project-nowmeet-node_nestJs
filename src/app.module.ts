@@ -14,6 +14,7 @@ import { ChatRoom } from "./chat/entity/chats.entity";
 import { ChatMessage } from "./chat/entity/chatmessage.entity";
 import { DevMatch } from "./match/entity/devmatch.entity";
 import { DevChatRoom } from "./chat/entity/devchats.entity";
+import { AwsService } from "./aws.service";
 
 @Module({
   imports: [
@@ -39,9 +40,9 @@ import { DevChatRoom } from "./chat/entity/devchats.entity";
     MatchModule,
     ChatModule,
   ],
-  exports: [],
+  exports: [AwsService],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AwsService],
 })
 export class AppModule implements NestModule {
   // private readonly isDev: boolean = process.env.MODE === "dev" ? true : false;

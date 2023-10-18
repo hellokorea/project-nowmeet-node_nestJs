@@ -23,18 +23,61 @@ import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { PutMyInfoResponseDto } from "../dtos/user.putMyInfo.dto";
 import { RefreshLocationUserResDto } from "../dtos/user.locationResponse.dto";
+import { AwsService } from "src/aws.service";
+import { DeleteResponseDto, UploadResponseDto } from "../dtos/user.profilesImages.dto";
 
 @ApiBearerAuth()
 @Controller("users")
 @UseInterceptors(SuccessInterceptor)
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(
+    private readonly userService: UsersService,
+    private readonly awsService: AwsService
+  ) {}
 
   @ApiOperation({ summary: "모든 유저 정보 조회 (테스트 용도)" })
   @Get()
   getAllUsers() {
     return this.userService.getAllUsers();
   }
+
+  //-----------------------Signup Rogic
+
+  @ApiResponse({ type: UserCreateDto })
+  @ApiOperation({ summary: "유저 회원가입" })
+  @UseInterceptors(FilesInterceptor("profileImages"))
+  @Post("signup")
+  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: Array<Express.Multer.File>) {
+    return this.userService.createUser(body, files);
+  }
+
+  @ApiResponse({ description: "true || false", type: Boolean })
+  @ApiOperation({ summary: "유저 회원가입 시 닉네임 중복 체크" })
+  @Get("signup/nickname")
+  nicknameDuplicate(@Body() body: UserNicknameDuplicateDto) {
+    return this.userService.nicknameDuplicate(body);
+  }
+
+  //-----------------------Profile Images Rogic
+
+  @ApiResponse({ type: UploadResponseDto, isArray: true })
+  @ApiOperation({ summary: "내 프로필 업데이트" })
+  @ApiBody({ description: "업데이트 할 파일들 추가", isArray: true })
+  @UseInterceptors(FilesInterceptor("profileImages"))
+  @Post("me/update/profileImages")
+  updateProfileImages(@UploadedFiles() files: Array<Express.Multer.File>) {
+    return this.awsService.uploadFilesToS3("usersProfileImges", files);
+  }
+
+  @ApiResponse({ description: "삭제 완료 시 파일 key 반환", type: DeleteResponseDto })
+  @ApiOperation({ summary: "내 프로필 이미지 삭제" })
+  @ApiBody({ description: "삭제 할 파일 Key 입력", type: DeleteResponseDto })
+  @Post("me/delete/profileImages")
+  deleteProfileImages(@Body("key") key: string) {
+    return this.awsService.deleteS3Object(key);
+  }
+
+  //-----------------------Location Rogic
 
   @ApiResponse({
     description: "유저의 좌표 위치를 최신화하고, 반경 2km 이내의 모든 유저 정보를 반환한다",
@@ -53,20 +96,7 @@ export class UsersController {
     return this.userService.refreshUserLocation(nickname, x, y, req);
   }
 
-  @ApiResponse({ type: UserCreateDto })
-  @ApiOperation({ summary: "유저 회원가입" })
-  @UseInterceptors(FilesInterceptor("profileImages"))
-  @Post("signup")
-  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: any) {
-    return this.userService.createUser(body, files);
-  }
-
-  @ApiResponse({ description: "true || false", type: Boolean })
-  @ApiOperation({ summary: "유저 회원가입 시 닉네임 중복 체크" })
-  @Get("signup/nickname")
-  nicknameDuplicate(@Body() body: UserNicknameDuplicateDto) {
-    return this.userService.nicknameDuplicate(body);
-  }
+  //-----------------------My Account Rogic
 
   @ApiOperation({ summary: "내 프로필 정보 조회" })
   @UseGuards(JwtAuthGuard)
@@ -85,7 +115,7 @@ export class UsersController {
 
   @ApiOperation({ summary: "내 계정 삭제" })
   @UseGuards(JwtAuthGuard)
-  @Delete("me/delete")
+  @Delete("me/delete/account")
   deleteAccount(@Req() req: UserRequestDto) {
     return this.userService.deleteAccount(req);
   }
