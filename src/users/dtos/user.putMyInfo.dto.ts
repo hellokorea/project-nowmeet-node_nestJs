@@ -22,4 +22,6 @@ export class PutMyInfoResponseDto {
   @IsString()
   @IsNotEmpty()
   preference: string[];
+
+  //프로필 이미지 추가
 }

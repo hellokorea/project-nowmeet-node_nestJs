@@ -32,6 +32,9 @@ export class UserProfileResponseDto {
   @ApiProperty({ example: "-90.000000" })
   latitude: number;
 
+  @ApiProperty({ example: "1.jpg, 2.png" })
+  profileImages: string[];
+
   constructor(user: User) {
     this.nickname = user.nickname;
     this.sex = user.sex;
@@ -42,5 +45,6 @@ export class UserProfileResponseDto {
     this.preference = user.preference;
     this.longitude = user.longitude;
     this.latitude = user.latitude;
+    this.profileImages = user.profileImages;
   }
 }

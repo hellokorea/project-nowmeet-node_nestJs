@@ -69,6 +69,8 @@ export class UsersController {
     return this.awsService.uploadFilesToS3("usersProfileImges", files);
   }
 
+  //회원 가입용 추가 말고 1개더 추가하자. 변경도하고 삭제도 한번 에 하는 api.
+
   @ApiResponse({ description: "삭제 완료 시 파일 key 반환", type: DeleteResponseDto })
   @ApiOperation({ summary: "내 프로필 이미지 삭제" })
   @ApiBody({ description: "삭제 할 파일 Key 입력", type: DeleteResponseDto })
@@ -84,16 +86,10 @@ export class UsersController {
     type: RefreshLocationUserResDto,
   })
   @ApiOperation({ summary: "유저 위치 정보 최신화" })
-  @ApiParam({ name: "nickname", description: "위치 정보 최신화 할 유저 닉네임 입력", type: String })
   @UseGuards(JwtAuthGuard)
-  @Get("location/:nickname/:x/:y")
-  UserLocationRefresh(
-    @Param("nickname") nickname: string,
-    @Param("x") x: string,
-    @Param("y") y: string,
-    @Req() req: UserRequestDto
-  ) {
-    return this.userService.refreshUserLocation(nickname, x, y, req);
+  @Get("location/:lon/:lat")
+  UserLocationRefresh(@Param("lon") lon: string, @Param("lat") lat: string, @Req() req: UserRequestDto) {
+    return this.userService.refreshUserLocation(lon, lat, req);
   }
 
   //-----------------------My Account Rogic

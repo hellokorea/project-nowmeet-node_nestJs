@@ -61,6 +61,7 @@ export class UserCreateDto {
   @ApiProperty({
     example: "게임, 독서, 술, 여행",
     description: "preference",
+    isArray: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -79,4 +80,12 @@ export class UserCreateDto {
   })
   @IsNotEmpty()
   latitude: number;
+
+  @ApiProperty({
+    example: "1.jpg, 2.png",
+    description: "profileImages",
+    isArray: true,
+  })
+  @IsNotEmpty()
+  profileImages: string[];
 }

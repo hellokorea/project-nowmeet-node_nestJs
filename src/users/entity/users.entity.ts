@@ -40,6 +40,9 @@ export class User {
   @Column("decimal", { precision: 10, scale: 7, default: null })
   latitude: number;
 
+  @Column("simple-array")
+  profileImages: string[];
+
   @CreateDateColumn()
   createdAt: string;
 

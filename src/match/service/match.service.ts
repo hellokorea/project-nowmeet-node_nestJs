@@ -85,14 +85,14 @@ export class MatchService {
     const loggedId = req.user.id;
     const matched = await this.matchRepository.getSendMatch(loggedId);
 
-    const sendBox = matched
-      .filter((matchData) => matchData.status === MatchState.PENDING || MatchState.REJECT)
-      .map((matchData) => ({
-        matchId: matchData.id,
-        isMatch: matchData.status,
-        receiverId: matchData.receiver.id,
-        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-      }));
+    const sendBox = matched.map((matchData) => ({
+      matchId: matchData.id,
+      isMatch: matchData.status,
+      receiverId: matchData.receiver.id,
+      receiverNickname: matchData.receiver.nickname,
+      // profileImages:
+      expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+    }));
 
     if (!sendBox.length) {
       return null;

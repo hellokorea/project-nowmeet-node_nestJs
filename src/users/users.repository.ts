@@ -91,4 +91,12 @@ export class UsersRepository {
       })
       .getMany();
   }
+
+  //--------------s3 Bucket Rogic
+
+  async upddateProfilesImg(keys: string[]): Promise<string[]> {
+    console.log(keys);
+    const userProfiles = await this.usersRepository.create();
+    return ["1", "2"];
+  }
 }
