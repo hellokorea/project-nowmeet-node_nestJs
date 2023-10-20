@@ -1,50 +1,40 @@
 import * as path from "path";
-import * as AWS from "aws-sdk";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PromiseResult } from "aws-sdk/lib/request";
-import { UsersRepository } from "src/users/users.repository";
+import { S3RequestPresigner } from "@aws-sdk/s3-request-presigner";
+import { createRequest } from "@aws-sdk/util-create-request";
+import { formatUrl } from "@aws-sdk/util-format-url";
 
 @Injectable()
 export class AwsService {
-  private readonly awsS3: AWS.S3;
+  private readonly s3Client: S3Client;
   public readonly S3_BUCKET_NAME: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly usersRepository: UsersRepository
-  ) {
-    this.awsS3 = new AWS.S3({
-      accessKeyId: this.configService.get("AWS_S3_ACCESS_KEY"),
-      secretAccessKey: this.configService.get("AWS_S3_SECRET_KEY"),
+  constructor(private readonly configService: ConfigService) {
+    this.s3Client = new S3Client({
+      credentials: {
+        accessKeyId: this.configService.get("AWS_S3_FULL_ACCESS_KEY"),
+        secretAccessKey: this.configService.get("AWS_S3_FULL_SECRET_KEY"),
+      },
       region: this.configService.get("AWS_S3_REGION"),
     });
     this.S3_BUCKET_NAME = this.configService.get("AWS_S3_BUCKET_NAME");
   }
 
-  async uploadFilesToS3(
-    folder: string,
-    files: Array<Express.Multer.File>
-  ): Promise<
-    Array<{
-      key: string;
-      s3Object: PromiseResult<AWS.S3.PutObjectOutput, AWS.AWSError>;
-      contentType: string;
-    }>
-  > {
+  async uploadFilesToS3(folder: string, files: Array<Express.Multer.File>) {
     try {
       const uploadPromises = files.map(async (file) => {
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
-        const s3Object = await this.awsS3
-          .putObject({
-            Bucket: this.S3_BUCKET_NAME,
-            Key: key,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          })
-          .promise();
+        const putCommand = new PutObjectCommand({
+          Bucket: this.S3_BUCKET_NAME,
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        });
 
+        const s3Object = await this.s3Client.send(putCommand);
         return { key, s3Object, contentType: file.mimetype };
       });
 
@@ -74,33 +64,38 @@ export class AwsService {
   }
 
   async createPreSignedUrl(keys: string[]) {
+    const signer = new S3RequestPresigner({
+      ...this.s3Client.config,
+    });
+
     const signedUrls = await Promise.all(
-      keys.map((key) => {
-        const signedUrlParams = {
+      keys.map(async (key) => {
+        const command = new GetObjectCommand({
           Bucket: this.S3_BUCKET_NAME,
           Key: key,
-          Expires: 60 * 5,
-        };
+        });
 
-        return this.awsS3.getSignedUrl("getObject", signedUrlParams);
+        // Pre-sign the command
+        const request = await createRequest(this.s3Client, command);
+        const signedUrl = formatUrl(
+          await signer.presign(request, {
+            expiresIn: 60 * 5,
+          })
+        );
+        return signedUrl;
       })
     );
-
     return signedUrls;
   }
 
   async deleteFilesFromS3(keys: string[]) {
-    console.log(keys.length);
-    console.log(keys);
     try {
       const deletePromises = keys.map((key) => {
-        console.log(key);
-        return this.awsS3
-          .deleteObject({
-            Bucket: this.S3_BUCKET_NAME,
-            Key: key,
-          })
-          .promise();
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: this.S3_BUCKET_NAME,
+          Key: key,
+        });
+        return this.s3Client.send(deleteCommand);
       });
       await Promise.all(deletePromises);
     } catch (error) {
