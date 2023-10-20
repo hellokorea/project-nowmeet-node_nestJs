@@ -1,15 +1,15 @@
 import { Controller, Get, UseInterceptors, Post, Req, Param, UseGuards, ParseIntPipe } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { MatchService } from "../service/match.service";
-import { UserRequestDto } from "src/users/dtos/users.request.dto";
+import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { UserProfileResponseDto } from "src/users/dtos/user.profile.dto";
-import { SendLikeResponseDto } from "../dtos/match.sendLikeResonse.dto";
-import { ReceiveBoxResponseDto, SendBoxResponseDto } from "../dtos/match.likeBoxResponse.dto";
-import { MatchAcceptResponseDto, MatchRejectResponseDto } from "../dtos/match.matchResultResponse.dto";
+import { SendLikeResponseDto } from "../dtos/request/match.sendLikeResonse.dto";
+import { ReceiveBoxResponseDto, SendBoxResponseDto } from "../dtos/response/match.likeBoxResponse.dto";
+import { MatchAcceptResponseDto, MatchRejectResponseDto } from "../dtos/response/match.matchResultResponse.dto";
 import { ChatAllListResponseDto } from "./../../chat/dtos/chat.listAllResopnse.dto";
 import { ChatRoomResponseDto } from "src/chat/dtos/chat.chatRoomResponse.dto";
+import { GetProfileResponseDto } from "src/users/dtos/response/user.getProfiles.dto";
 
 @ApiBearerAuth()
 @Controller("match")
@@ -19,8 +19,8 @@ export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
   @ApiResponse({
-    description: "유저 DB 내 정보 반환",
-    type: UserProfileResponseDto,
+    description: "유저 DB 내 정보 반환 / id, gem 항목은 제거",
+    type: GetProfileResponseDto,
   })
   @ApiOperation({ summary: "유저 프로필 조회" })
   @ApiParam({ name: "nickname", description: "유저 닉네임 입력", type: String })
@@ -41,7 +41,7 @@ export class MatchController {
   }
 
   @ApiResponse({
-    description: "보낸 좋아요 >= 1 시 PENDING Status 일 때 해당 유저 정보 및 매칭 정보 반환 / 0일 때 null 반환",
+    description: "매칭 정보 반환 / 0일 때 null 반환",
     type: SendBoxResponseDto,
     isArray: true,
   })
@@ -84,6 +84,7 @@ export class MatchController {
     return this.matchService.matchReject(matchId, req);
   }
 
+  //Chat
   @ApiResponse({
     description: "있으면 채팅 관련 정보 배열로 모두 반환 / 없으면 null",
     type: ChatAllListResponseDto,

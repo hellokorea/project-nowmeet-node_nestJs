@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { User } from "../entity/users.entity";
+import { User } from "../../entity/users.entity";
 
 export class UserProfileResponseDto {
   @ApiProperty({ example: "홍길동" })
@@ -23,17 +23,22 @@ export class UserProfileResponseDto {
   @ApiProperty({ example: "이것, 저것, 그것, 무엇" })
   preference: string[];
 
-  @ApiProperty({ example: "사진1, 사진2, 사진3" })
-  profileImage?: string[];
-
   @ApiProperty({ example: "180.000000" })
   longitude: number;
 
   @ApiProperty({ example: "-90.000000" })
   latitude: number;
 
-  @ApiProperty({ example: "1.jpg, 2.png" })
+  @ApiProperty({
+    example:
+      "profileImages/1697729883735_%EA%B9%80%EC%A0%95%EB%8F%99%EB%8B%98.jpg,profileImages/1697729883735_%EA%B9%80%EC%A0%95%EB%8F%99%EB%8B%98.jpg ",
+  })
   profileImages: string[];
+
+  @ApiProperty({
+    example: "https://nowmeet-profileimg-s3-bucket.s3.ap-northeast-2.amazonaws.com/profileImages/...",
+  })
+  PreSignedUrl: string[];
 
   constructor(user: User) {
     this.nickname = user.nickname;

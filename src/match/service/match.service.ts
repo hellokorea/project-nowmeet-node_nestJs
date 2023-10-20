@@ -1,18 +1,20 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { MatchRepository } from "../match.repository";
-import { UserRequestDto } from "src/users/dtos/users.request.dto";
+import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "./../../users/users.repository";
-import { UserProfileResponseDto } from "src/users/dtos/user.profile.dto";
+import { UserProfileResponseDto } from "src/users/dtos/response/user.profile.dto";
 import { MatchState } from "../entity/match.entity";
 import * as moment from "moment";
 import { ChatGateway } from "src/chat/chat.gateway";
+import { AwsService } from "src/aws.service";
 
 @Injectable()
 export class MatchService {
   constructor(
     private readonly matchRepository: MatchRepository,
     private readonly usersRepository: UsersRepository,
-    private readonly chatGateway: ChatGateway
+    private readonly chatGateway: ChatGateway,
+    private readonly awsService: AwsService
   ) {}
 
   async getUserProfile(nickname: string, req: UserRequestDto) {
@@ -24,7 +26,7 @@ export class MatchService {
     }
 
     const profiledId = user.id;
-
+    console.log("object");
     if (user.id === loggedId) {
       throw new BadRequestException("본인 프로필 조회 불가");
     }
@@ -42,56 +44,31 @@ export class MatchService {
       matchStatus = MatchState.MATCH;
     }
 
+    const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
+
     return {
       user: userInfo,
       matchStatus: matchStatus,
+      PreSignedUrl: preSignedUrl,
     };
-  }
-
-  async sendLike(receiverNickname: string, req: UserRequestDto) {
-    const senderId = req.user.id;
-
-    const user = await this.usersRepository.findByNickname(receiverNickname);
-
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
-    }
-
-    const receiverId = user.id;
-
-    if (receiverId === senderId) {
-      throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");
-    }
-
-    const isMatched = await this.matchRepository.isMatchFind(senderId, receiverId);
-
-    if (isMatched.length > 0) {
-      throw new BadRequestException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
-    } else {
-      await this.matchRepository.createDevMatch(senderId, receiverId); //Dev
-
-      const newMatchData = await this.matchRepository.createMatch(senderId, receiverId);
-
-      return {
-        matchId: newMatchData.id,
-        senderId: newMatchData.sender.id,
-        receiverId: newMatchData.receiver.id,
-        matchStatus: newMatchData.status,
-      };
-    }
   }
 
   async getLikeSendBox(req: UserRequestDto) {
     const loggedId = req.user.id;
     const matched = await this.matchRepository.getSendMatch(loggedId);
+    const receiverProfiles = matched.map((data) => data.receiver.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
 
     const sendBox = matched.map((matchData) => ({
       matchId: matchData.id,
       isMatch: matchData.status,
       receiverId: matchData.receiver.id,
       receiverNickname: matchData.receiver.nickname,
-      // profileImages:
       expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+      profileImages: {
+        ProfileImages: matchData.receiver.profileImages,
+        PreSignedUrl: preSignedUrl,
+      },
     }));
 
     if (!sendBox.length) {
@@ -104,6 +81,8 @@ export class MatchService {
   async getLikeReceiveBox(req: UserRequestDto) {
     const loggedId = req.user.id;
     const matched = await this.matchRepository.getReceiveMatch(loggedId);
+    const senderProfiles = matched.map((data) => data.sender.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfiles.flat());
 
     const receiveBox = matched
       .filter((matchData) => matchData.status === MatchState.PENDING)
@@ -111,7 +90,12 @@ export class MatchService {
         matchId: matchData.id,
         isMatch: matchData.status,
         senderId: matchData.sender.id,
+        senderNickname: matchData.sender.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+        profileImages: {
+          ProfileImages: matchData.sender.profileImages,
+          PreSignedUrl: preSignedUrl,
+        },
       }));
 
     if (!receiveBox.length) {
@@ -152,6 +136,40 @@ export class MatchService {
       senderId: result.sender.id,
       receiverId: result.receiver.id,
     };
+  }
+
+  async sendLike(receiverNickname: string, req: UserRequestDto) {
+    const loggedId = req.user.id;
+
+    const user = await this.usersRepository.findByNickname(receiverNickname);
+
+    if (!user) {
+      throw new NotFoundException("존재하지 않는 유저 입니다");
+    }
+
+    const receiverId = user.id;
+
+    if (receiverId === loggedId) {
+      throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");
+    }
+
+    const isMatched = await this.matchRepository.isMatchFind(loggedId, receiverId);
+
+    if (isMatched.length > 0) {
+      throw new BadRequestException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
+    } else {
+      await this.matchRepository.createDevMatch(loggedId, receiverId); //Dev
+
+      const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
+
+      return {
+        matchId: newMatchData.id,
+        me: newMatchData.sender.id,
+        receiverId: newMatchData.receiver.id,
+        receiverNickname: receiverNickname,
+        matchStatus: newMatchData.status,
+      };
+    }
   }
 
   async matchAccept(matchId: number, req: UserRequestDto) {

@@ -7,9 +7,15 @@ import { UsersModule } from "src/users/users.module";
 import { MatchRepository } from "./match.repository";
 import { ChatModule } from "src/chat/chat.module";
 import { DevMatch } from "./entity/devmatch.entity";
+import { AppModule } from "src/app.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Match, DevMatch]), forwardRef(() => UsersModule), forwardRef(() => ChatModule)],
+  imports: [
+    TypeOrmModule.forFeature([Match, DevMatch]),
+    forwardRef(() => UsersModule),
+    forwardRef(() => ChatModule),
+    forwardRef(() => AppModule),
+  ],
   exports: [MatchService, MatchRepository],
   controllers: [MatchController],
   providers: [MatchService, MatchRepository],

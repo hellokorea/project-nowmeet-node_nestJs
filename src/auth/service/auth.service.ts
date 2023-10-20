@@ -1,11 +1,14 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException } from "@nestjs/common";
 import { UsersRepository } from "./../../users/users.repository";
-import { GoogleRequest } from "../dtos/auth.googleuser.dto";
+import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersRepository: UsersRepository, private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly jwtService: JwtService
+  ) {}
 
   async isUserExist(email: string) {
     const logger = new Logger();

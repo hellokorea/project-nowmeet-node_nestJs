@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entity/users.entity";
 import { EntityManager, FindOneOptions, Repository, createQueryBuilder } from "typeorm";
-import { UserCreateDto } from "./dtos/users.create.dto";
+import { UserCreateDto } from "./dtos/request/users.create.dto";
 
 @Injectable()
 export class UsersRepository {
@@ -94,9 +94,12 @@ export class UsersRepository {
 
   //--------------s3 Bucket Rogic
 
-  async upddateProfilesImg(keys: string[]): Promise<string[]> {
-    console.log(keys);
-    const userProfiles = await this.usersRepository.create();
-    return ["1", "2"];
+  async findByFilesKeys(id: number): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { id },
+      select: ["profileImages"],
+    };
+
+    return await this.usersRepository.findOne(option);
   }
 }

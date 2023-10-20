@@ -18,7 +18,7 @@ export class UploadResponseDto {
 
 export class DeleteResponseDto {
   @ApiProperty({
-    example: "usersProfileImges/79623158372_10_Exmaple.png",
+    example: "Exmaple.jpg",
   })
   key: string;
 }

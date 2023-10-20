@@ -2,9 +2,9 @@ import { Controller, Get, UseInterceptors, Request, Response, Post, UseGuards, R
 import { AuthGuard } from "@nestjs/passport";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { AuthService } from "../service/auth.service";
-import { GoogleRequest } from "../dtos/auth.googleuser.dto";
+import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { IsUserRequsetDto, IsUserResponseDto } from "../dtos/auth.isUser.dto";
+import { IsUserRequsetDto, IsUserResponseDto } from "../dtos/response/auth.isUser.dto";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)

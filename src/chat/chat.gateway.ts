@@ -15,7 +15,7 @@ import { ChatMessage } from "./entity/chatmessage.entity";
 import { UseGuards, Req, InternalServerErrorException, BadRequestException, NotFoundException } from "@nestjs/common";
 import { SendMessageDto } from "./dtos/chat.dto";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
-import { UserRequestDto } from "src/users/dtos/users.request.dto";
+import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/users.repository";
 import { DevChatRoom } from "./entity/devchats.entity";
 

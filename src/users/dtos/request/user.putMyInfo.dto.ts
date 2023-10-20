@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsNotEmpty, IsString } from "class-validator";
 
-export class PutMyInfoResponseDto {
+export class UpdateProfileDto {
   @ApiProperty({
     example: "교육직",
   })
@@ -19,9 +19,15 @@ export class PutMyInfoResponseDto {
   @ApiProperty({
     example: "취향 변경",
   })
-  @IsString()
+  @IsArray()
   @IsNotEmpty()
   preference: string[];
 
-  //프로필 이미지 추가
+  @ApiProperty({
+    example: "profileImages/1697786230979_2.JPG",
+    isArray: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  profilesImages: string[];
 }

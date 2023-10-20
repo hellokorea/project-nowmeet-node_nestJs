@@ -3,14 +3,17 @@ import * as AWS from "aws-sdk";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PromiseResult } from "aws-sdk/lib/request";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { UsersRepository } from "src/users/users.repository";
 
 @Injectable()
 export class AwsService {
   private readonly awsS3: AWS.S3;
   public readonly S3_BUCKET_NAME: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usersRepository: UsersRepository
+  ) {
     this.awsS3 = new AWS.S3({
       accessKeyId: this.configService.get("AWS_S3_ACCESS_KEY"),
       secretAccessKey: this.configService.get("AWS_S3_SECRET_KEY"),
@@ -44,6 +47,7 @@ export class AwsService {
 
         return { key, s3Object, contentType: file.mimetype };
       });
+
       return Promise.all(uploadPromises);
     } catch (error) {
       console.error(error);
@@ -51,27 +55,57 @@ export class AwsService {
     }
   }
 
-  async deleteS3Object(
-    key: string,
-    callback?: (err: AWS.AWSError, data: AWS.S3.DeleteObjectOutput) => void
-  ): Promise<{ success: true; key: string }> {
-    try {
-      await this.awsS3
-        .deleteObject(
-          {
-            Bucket: this.S3_BUCKET_NAME,
-            Key: key,
-          },
-          callback
-        )
-        .promise();
-      return { success: true, key };
-    } catch (error) {
-      throw new BadRequestException(`파일 업로드에 실패 했습니다 : ${error}`);
-    }
+  replaceProfileImages(oldImages: string[], newImages: string[]): string[] {
+    let updatedImages = [...oldImages];
+
+    const MAX_PROFILE_IMAGES = 3;
+
+    newImages.forEach((newKey, index) => {
+      if (index < MAX_PROFILE_IMAGES) {
+        if (updatedImages[index]) {
+          updatedImages[index] = newKey;
+        } else {
+          updatedImages.push(newKey);
+        }
+      }
+    });
+
+    return updatedImages.slice(0, MAX_PROFILE_IMAGES);
   }
 
-  public getAwsS3FileUrl(objectKey: string) {
-    return `https://${this.S3_BUCKET_NAME}.s3.amazonaws.com/${objectKey}`;
+  async createPreSignedUrl(keys: string[]) {
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const signedUrlParams = {
+          Bucket: this.S3_BUCKET_NAME,
+          Key: key,
+          Expires: 60 * 5,
+        };
+
+        return this.awsS3.getSignedUrl("getObject", signedUrlParams);
+      })
+    );
+
+    return signedUrls;
+  }
+
+  async deleteFilesFromS3(keys: string[]) {
+    console.log(keys.length);
+    console.log(keys);
+    try {
+      const deletePromises = keys.map((key) => {
+        console.log(key);
+        return this.awsS3
+          .deleteObject({
+            Bucket: this.S3_BUCKET_NAME,
+            Key: key,
+          })
+          .promise();
+      });
+      await Promise.all(deletePromises);
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(`파일 삭제에 실패 했습니다 : ${error}`);
+    }
   }
 }

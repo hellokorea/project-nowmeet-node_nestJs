@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { UserProfileResponseDto } from "./user.profile.dto";
+import { GetProfileResponseDto } from "./user.getProfiles.dto";
 
 class myLocationResDto {
   @ApiProperty({ example: "1" })
@@ -15,6 +15,6 @@ class myLocationResDto {
 export class RefreshLocationUserResDto {
   @ApiProperty({ type: () => myLocationResDto })
   myInfo: myLocationResDto;
-  @ApiProperty({ type: () => UserProfileResponseDto, isArray: true })
-  nearUser: UserProfileResponseDto;
+  @ApiProperty({ type: () => GetProfileResponseDto, isArray: true })
+  nearUser: GetProfileResponseDto;
 }

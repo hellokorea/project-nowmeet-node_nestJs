@@ -9,31 +9,26 @@ import {
   Put,
   Param,
   UseGuards,
-  ParseIntPipe,
   Delete,
-  UploadedFile,
 } from "@nestjs/common";
 import { UsersService } from "../service/users.service";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
-import { UserCreateDto } from "../dtos/users.create.dto";
+import { UserCreateDto } from "../dtos/request/users.create.dto";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
-import { UserRequestDto } from "../dtos/users.request.dto";
-import { UserNicknameDuplicateDto } from "../dtos/users.nickname.duplicate";
+import { UserRequestDto } from "../dtos/request/users.request.dto";
+import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplicate";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PutMyInfoResponseDto } from "../dtos/user.putMyInfo.dto";
-import { RefreshLocationUserResDto } from "../dtos/user.locationResponse.dto";
-import { AwsService } from "src/aws.service";
-import { DeleteResponseDto, UploadResponseDto } from "../dtos/user.profilesImages.dto";
+import { RefreshLocationUserResDto } from "../dtos/response/user.locationResponse.dto";
+import { DeleteUserProfileKey } from "../dtos/request/users.deleteProfilesKey.dto";
+import { UserCreateResDto } from "../dtos/response/users.create.response.dto";
+import { UpdateProfileDto } from "../dtos/request/user.putMyInfo.dto";
 
 @ApiBearerAuth()
 @Controller("users")
 @UseInterceptors(SuccessInterceptor)
 export class UsersController {
-  constructor(
-    private readonly userService: UsersService,
-    private readonly awsService: AwsService
-  ) {}
+  constructor(private readonly userService: UsersService) {}
 
   @ApiOperation({ summary: "모든 유저 정보 조회 (테스트 용도)" })
   @Get()
@@ -43,7 +38,7 @@ export class UsersController {
 
   //-----------------------Signup Rogic
 
-  @ApiResponse({ type: UserCreateDto })
+  @ApiResponse({ type: UserCreateResDto })
   @ApiOperation({ summary: "유저 회원가입" })
   @UseInterceptors(FilesInterceptor("profileImages"))
   @Post("signup")
@@ -56,27 +51,6 @@ export class UsersController {
   @Get("signup/nickname")
   nicknameDuplicate(@Body() body: UserNicknameDuplicateDto) {
     return this.userService.nicknameDuplicate(body);
-  }
-
-  //-----------------------Profile Images Rogic
-
-  @ApiResponse({ type: UploadResponseDto, isArray: true })
-  @ApiOperation({ summary: "내 프로필 업데이트" })
-  @ApiBody({ description: "업데이트 할 파일들 추가", isArray: true })
-  @UseInterceptors(FilesInterceptor("profileImages"))
-  @Post("me/update/profileImages")
-  updateProfileImages(@UploadedFiles() files: Array<Express.Multer.File>) {
-    return this.awsService.uploadFilesToS3("usersProfileImges", files);
-  }
-
-  //회원 가입용 추가 말고 1개더 추가하자. 변경도하고 삭제도 한번 에 하는 api.
-
-  @ApiResponse({ description: "삭제 완료 시 파일 key 반환", type: DeleteResponseDto })
-  @ApiOperation({ summary: "내 프로필 이미지 삭제" })
-  @ApiBody({ description: "삭제 할 파일 Key 입력", type: DeleteResponseDto })
-  @Post("me/delete/profileImages")
-  deleteProfileImages(@Body("key") key: string) {
-    return this.awsService.deleteS3Object(key);
   }
 
   //-----------------------Location Rogic
@@ -102,11 +76,25 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: "내 프로필 수정" })
-  @ApiBody({ description: "직업, 소개, 취향 항목만 수정 가능", type: PutMyInfoResponseDto })
+  @ApiBody({ description: "직업, 소개, 취향 항목만 수정 가능", type: UpdateProfileDto })
+  @UseInterceptors(FilesInterceptor("profileImages"))
   @UseGuards(JwtAuthGuard)
   @Put("me/update")
-  putMyUserInfo(@Body() body: any, @Req() req: UserRequestDto) {
-    return this.userService.putMyUserInfo(body, req);
+  putMyUserInfo(@Body() body: any, @Req() req: UserRequestDto, @UploadedFiles() files: Array<Express.Multer.File>) {
+    return this.userService.putMyUserInfo(body, req, files);
+  }
+
+  // delete => put 순차 요청 필요
+
+  @ApiOperation({
+    summary: "유저 프로필 사진 삭제",
+    description: "반드시 deleteProfile 요청 후 완료 된 직후 putMyUserInfo 순차적으로 요청 해야함!!",
+  })
+  @ApiBody({ description: "삭제하고자 하는 유저 profilesImages key 입력", type: DeleteUserProfileKey })
+  @UseGuards(JwtAuthGuard)
+  @Put("me/update/profilesImage")
+  deleteUserProfilesKey(@Req() req: UserRequestDto, @Body("deleteKey") deleteKey: string) {
+    return this.userService.deleteUserProfilesKey(req, deleteKey);
   }
 
   @ApiOperation({ summary: "내 계정 삭제" })

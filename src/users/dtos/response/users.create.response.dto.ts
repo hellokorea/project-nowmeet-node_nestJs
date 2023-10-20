@@ -1,61 +1,54 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { ProfileImagesDto } from "src/match/dtos/response/match.likeBoxResponse.dto";
 
-export class UserCreateDto {
+export class UserCreateResDto {
+  @ApiProperty({
+    example: "23",
+    description: "id",
+  })
+  id: number;
+
   @ApiProperty({
     example: "test@naver.com",
     description: "email",
   })
-  @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @ApiProperty({
     example: "nowmmet대박가자",
     description: "nickname",
   })
-  @IsString()
-  @IsNotEmpty()
   nickname: string;
 
   @ApiProperty({
     example: "남자",
     description: "sex",
   })
-  @IsString()
-  @IsNotEmpty()
   sex: string;
 
   @ApiProperty({
     example: "1994-07-30",
     description: "birthDate",
   })
-  @IsString()
-  @IsNotEmpty()
   birthDate: string;
 
   @ApiProperty({
     example: "183",
     description: "tall",
   })
-  @IsString()
-  @IsNotEmpty()
   tall: string;
 
   @ApiProperty({
     example: "전문직",
     description: "job",
   })
-  @IsString()
-  @IsNotEmpty()
   job: string;
 
   @ApiProperty({
     example: "여! 반갑다. 내 이름은 홍길동이고, 아버지를 아버지라 부르지 못하지.",
     description: "introduce",
   })
-  @IsString()
-  @IsNotEmpty()
   introduce: string;
 
   @ApiProperty({
@@ -63,29 +56,29 @@ export class UserCreateDto {
     description: "preference",
     isArray: true,
   })
-  @IsString()
-  @IsNotEmpty()
   preference: string[];
 
   @ApiProperty({
     example: "180.000000",
     description: "longitude",
   })
-  @IsNotEmpty()
   longitude: number;
 
   @ApiProperty({
     example: "-90.000000",
     description: "latitude",
   })
-  @IsNotEmpty()
   latitude: number;
 
   @ApiProperty({
-    example: "1.jpg, 2.png",
-    description: "profileImages",
-    isArray: true,
+    example: "0",
+    description: "gem",
   })
-  @IsNotEmpty()
+  gem: number;
+
+  @ApiProperty({
+    example: ["profileImages/1697729883735_%EA%B9%80%E....jpg, profileImages/1697729883735_%EA%B9%80%E....jpg"],
+    description: "profileImages",
+  })
   profileImages: string[];
 }
