@@ -30,7 +30,7 @@ import { AwsService } from "./aws.service";
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
           entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-          synchronize: false, // prob - false
+          synchronize: true, // prob - false
         };
       },
       inject: [ConfigService],

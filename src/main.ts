@@ -11,9 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   //Global Use Inspector
-  // app.enableCors({
-  //   origin: "https://port-0-now-meet-backend-k19y2klk157645.sel4.cloudtype.app",
-  // });
+  app.enableCors({
+    origin: "http://ec2-52-79-236-117.ap-northeast-2.compute.amazonaws.com",
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.use(
