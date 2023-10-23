@@ -9,17 +9,19 @@ import { formatUrl } from "@aws-sdk/util-format-url";
 @Injectable()
 export class AwsService {
   private readonly s3Client: S3Client;
-  public readonly S3_BUCKET_NAME: string;
+  public readonly S3_USER_PROFILES_BUCKET_NAME: string;
+  public readonly S3_DEPLOY_BUCKET_NAME: string;
 
   constructor(private readonly configService: ConfigService) {
     this.s3Client = new S3Client({
       credentials: {
-        accessKeyId: this.configService.get("AWS_S3_FULL_ACCESS_KEY"),
-        secretAccessKey: this.configService.get("AWS_S3_FULL_SECRET_KEY"),
+        accessKeyId: this.configService.get("AWS_S3_ACCESS_KEY"),
+        secretAccessKey: this.configService.get("AWS_S3_SECRET_KEY"),
       },
       region: this.configService.get("AWS_S3_REGION"),
     });
-    this.S3_BUCKET_NAME = this.configService.get("AWS_S3_BUCKET_NAME");
+    this.S3_USER_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_PROFILES_BUCKET_NAME");
+    this.S3_DEPLOY_BUCKET_NAME = this.configService.get("AWS_S3_DEPLOY_BUCKET_NAME");
   }
 
   async uploadFilesToS3(folder: string, files: Array<Express.Multer.File>) {
@@ -28,7 +30,7 @@ export class AwsService {
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
         const putCommand = new PutObjectCommand({
-          Bucket: this.S3_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
@@ -71,7 +73,7 @@ export class AwsService {
     const signedUrls = await Promise.all(
       keys.map(async (key) => {
         const command = new GetObjectCommand({
-          Bucket: this.S3_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
         });
 
@@ -92,7 +94,7 @@ export class AwsService {
     try {
       const deletePromises = keys.map((key) => {
         const deleteCommand = new DeleteObjectCommand({
-          Bucket: this.S3_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
         });
         return this.s3Client.send(deleteCommand);

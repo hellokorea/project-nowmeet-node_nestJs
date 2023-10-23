@@ -1,0 +1,86 @@
+name: nowmeet_build_deploy
+
+env:
+  # AWS
+  AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
+  AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
+  AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
+  AWS_S3_USER_PROFILES_BUCKET_NAME: ${{ secrets.AWS_S3_USER_PROFILES_BUCKET_NAME }}
+  AWS_S3_DEPLOY_BUCKET_NAME: ${{ secrets.AWS_S3_DEPLOY_BUCKET_NAME }}
+
+  # DB
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_DATABASE: ${{ secrets.DB_DATABASE }}
+
+  # lOGIN
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+  # JWT
+  JWT_KEY: ${{ secrets.JWT_KEY }}
+  JWT_EXPIRES: ${{ secrets.JWT_EXPIRES }}
+
+  # ETC
+  SWAGGER_USER: ${{ secrets.SWAGGER_USER }}
+  SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
+  PORT: ${{ secrets.PORT }}
+  SEARCH_BOUNDARY: ${{ secrets.SEARCH_BOUNDARY }}
+
+# psuh event
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout github workspace
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18.18.2"
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build NestJS project
+        run: npm run build
+
+      - name: Copy appspec.yml into dist
+        run: cp appspec.yml dist/
+
+      - name: Compress the result into zip file
+        run: zip -r ./build.zip dist/
+        shell: bash
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.AWS_S3_SECRET_KEY }}
+          aws-region: ${{ env.AWS_S3_REGION }}
+
+      - name: Upload to S3
+        run: aws s3 cp build.zip s3://${{ env.AWS_S3_DEPLOY_BUCKET_NAME }}/deploy/nowmeet_dev1.zip --region ap-northeast-2
+
+      - name: Code Deploy
+        run: |
+          aws deploy create-deployment \
+          --application-name nowmeet \
+          --deployment-config-name CodeDeployDefault.OneAtATime \
+          --deployment-group-name nowmeet_deploy_group \
+          --s3-location bucket=${{ env.AWS_S3_DEPLOY_BUCKET_NAME }},bundleType=zip,key=deploy/nowmeet_dev1.zip

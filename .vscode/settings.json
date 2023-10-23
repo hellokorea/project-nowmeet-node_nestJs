@@ -2,5 +2,8 @@
   "workbench.colorCustomizations": {
     "titleBar.activeBackground": "#c6c911ea",
     "titleBar.inactiveBackground": "#cf1069"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///c%3A/now-meet-backend/.github/workflows/build.yaml"
   }
 }

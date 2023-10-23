@@ -30,7 +30,7 @@ import { AwsService } from "./aws.service";
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
           entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-          synchronize: true, // prob - false
+          synchronize: false, // prob - false
         };
       },
       inject: [ConfigService],
@@ -45,8 +45,7 @@ import { AwsService } from "./aws.service";
   providers: [AppService, AwsService],
 })
 export class AppModule implements NestModule {
-  // private readonly isDev: boolean = process.env.MODE === "dev" ? true : false;
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes("*"); //all endPoint
+    consumer.apply(LoggerMiddleware).forRoutes("*");
   }
 }
