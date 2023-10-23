@@ -13,18 +13,14 @@ then
 else
   echo "> 애플리케이션 종료"
   pm2 stop $APP_NAME
-  sleep 5
+  sleep 10
 fi
 
 echo "> 새 어플리케이션 배포"
 
-# 디렉토리로 이동해서 의존성 설치 (package.json 변경 시 진행)
-cd $REPOSITORY
-echo "> npm install 실행 (package.json 변경 시 진행)"
-npm install
-
 # Node.js 어플리케이션의 엔트리 포인트 (예: main.js 또는 app.js)
 APP_ENTRY=$REPOSITORY/main.js
 
-pm2 start npm --name $APP_NAME -- run start:prod # 앱 production 환경으로 실행
+cd $REPOSITORY
+npm run start:ec2 # 앱 production 환경으로 실행
 #pm2 start $APP_ENTRY --name $APP_NAME
