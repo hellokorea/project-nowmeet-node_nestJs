@@ -61,8 +61,10 @@ jobs:
       - name: Build NestJS project
         run: npm run build
 
-      - name: Copy appspec.yml into dist
-        run: cp appspec.yml dist/
+      - name: Copy appspec.yml and deploy.sh into dist
+        run: |
+          cp appspec.yml dist/
+          cp deploy.sh dist/
 
       - name: Compress the result into zip file
         run: zip -r ./build.zip dist/
