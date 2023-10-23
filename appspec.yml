@@ -11,6 +11,6 @@ permissions:
     mode: 755
 hooks:
   AfterInstall:
-    - location: deploy.sh # locaiton 기준 => project root 디렉토리
+    - location: deploy.sh # locaiton 기준 => project root 디렉토리!
       timeout: 60
       runas: ec2-user
