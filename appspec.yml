@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /dist
+  - source: /
     destination: /home/ubuntu/applications/nowmeet # 인스턴스에서 파일이 저장될 위치
     overwrite: yes
 permissions:
