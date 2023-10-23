@@ -2,15 +2,15 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ec2-user/applications/nowmeet # 인스턴스에서 파일이 저장될 위치
+    destination: /home/ec2-user/applications/nowmeet
     overwrite: yes
 permissions:
-  - object: /home/ec2-user/nowmeet
+  - object: /home/ec2-user/applications/nowmeet
     owner: ec2-user
     group: ec2-user
     mode: 755
 hooks:
   AfterInstall:
-    - location: deploy.sh # locaiton 기준 => project root 디렉토리!
+    - location: deploy.sh
       timeout: 60
       runas: ec2-user
