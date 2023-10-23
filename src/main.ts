@@ -12,7 +12,7 @@ async function bootstrap() {
 
   //Global Use Inspector
   app.enableCors({
-    origin: "http://ec2-52-79-236-117.ap-northeast-2.compute.amazonaws.com",
+    origin: process.env.AWS,
   });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());

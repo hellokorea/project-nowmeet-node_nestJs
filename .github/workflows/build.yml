@@ -7,6 +7,7 @@ env:
   AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
   AWS_S3_USER_PROFILES_BUCKET_NAME: ${{ secrets.AWS_S3_USER_PROFILES_BUCKET_NAME }}
   AWS_S3_DEPLOY_BUCKET_NAME: ${{ secrets.AWS_S3_DEPLOY_BUCKET_NAME }}
+  AWS: ${{ secrets.AWS }}
 
   # DB
   DB_HOST: ${{ secrets.DB_HOST }}
@@ -28,6 +29,8 @@ env:
   SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
   PORT: ${{ secrets.PORT }}
   SEARCH_BOUNDARY: ${{ secrets.SEARCH_BOUNDARY }}
+  LOCAL_GOOGLE_LOGIN_CB: ${{ LOCAL_GOOGLE_LOGIN_CB }}
+  EC2_GOOGLE_LOGIN_CB: ${{ EC2_GOOGLE_LOGIN_CB }}
 
 # psuh event
 on:
