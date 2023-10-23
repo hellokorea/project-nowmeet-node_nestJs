@@ -5,32 +5,7 @@ env:
   AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
   AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
   AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
-  AWS_S3_USER_PROFILES_BUCKET_NAME: ${{ secrets.AWS_S3_USER_PROFILES_BUCKET_NAME }}
   AWS_S3_DEPLOY_BUCKET_NAME: ${{ secrets.AWS_S3_DEPLOY_BUCKET_NAME }}
-  AWS: ${{ secrets.AWS }}
-
-  # DB
-  DB_HOST: ${{ secrets.DB_HOST }}
-  DB_PORT: ${{ secrets.DB_PORT }}
-  DB_USERNAME: ${{ secrets.DB_USERNAME }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  DB_DATABASE: ${{ secrets.DB_DATABASE }}
-
-  # lOGIN
-  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-
-  # JWT
-  JWT_KEY: ${{ secrets.JWT_KEY }}
-  JWT_EXPIRES: ${{ secrets.JWT_EXPIRES }}
-
-  # ETC
-  SWAGGER_USER: ${{ secrets.SWAGGER_USER }}
-  SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
-  PORT: ${{ secrets.PORT }}
-  SEARCH_BOUNDARY: ${{ secrets.SEARCH_BOUNDARY }}
-  LOCAL_GOOGLE_LOGIN_CB: ${{ secrets.LOCAL_GOOGLE_LOGIN_CB }}
-  EC2_GOOGLE_LOGIN_CB: ${{ secrets.EC2_GOOGLE_LOGIN_CB }}
 
 # psuh event
 on:
