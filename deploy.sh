@@ -18,6 +18,11 @@ fi
 
 echo "> 새 어플리케이션 배포"
 
+# 디렉토리로 이동해서 의존성 설치 (package.json 변경 시 진행)
+cd $REPOSITORY
+echo "> npm install 실행 (package.json 변경 시 진행)"
+npm install
+
 # Node.js 어플리케이션의 엔트리 포인트 (예: main.js 또는 app.js)
 APP_ENTRY=$REPOSITORY/main.js
 

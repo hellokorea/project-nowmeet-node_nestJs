@@ -61,6 +61,11 @@ jobs:
       - name: Build NestJS project
         run: npm run build
 
+      - name: Copy package.json and package-lock.json into dist
+        run: |
+          cp package.json dist/
+          cp package-lock.json dist/
+
       - name: Copy appspec.yml and deploy.sh into dist
         run: |
           cp appspec.yml dist/
