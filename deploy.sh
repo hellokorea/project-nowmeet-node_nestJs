@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-REPOSITORY=/home/ubuntu/applications/nowmeet
+REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
 
 echo "> 현재 구동중인 애플리케이션 pid 확인"
