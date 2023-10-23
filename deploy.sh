@@ -19,6 +19,6 @@ fi
 echo "> 새 어플리케이션 배포"
 
 # Node.js 어플리케이션의 엔트리 포인트 (예: main.js 또는 app.js)
-APP_ENTRY=$REPOSITORY/dist/main.js
+APP_ENTRY=$REPOSITORY/main.js
 
 pm2 start $APP_ENTRY --name $APP_NAME
