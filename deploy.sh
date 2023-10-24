@@ -46,6 +46,7 @@ mkdir -p $REPOSITORY
 
 # 환경 변수를 .env 파일에 저장
 echo "Current directory: $(pwd)"
+echo "Writing to .env file..."
 echo "Creating .env file in: $REPOSITORY/.env"
 echo "AWS=$AWS" > $REPOSITORY/.env
 echo "AWS_S3_ACCESS_KEY=$AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
@@ -66,6 +67,7 @@ echo "JWT_KEY=$JWT_KEY" >> $REPOSITORY/.env
 echo "SEARCH_BOUNDARY=$SEARCH_BOUNDARY" >> $REPOSITORY/.env
 echo "SWAGGER_PASSWORD=$SWAGGER_PASSWORD" >> $REPOSITORY/.env
 echo "SWAGGER_USER=$SWAGGER_USER" >> $REPOSITORY/.env
+echo ".env file written successfully!"
 
 cd $REPOSITORY
 pm2 start main.js --name $APP_NAME
