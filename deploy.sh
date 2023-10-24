@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+set -x
+
 REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
 
@@ -17,6 +20,13 @@ else
 fi
 
 echo "> 새 어플리케이션 배포"
+
+# AWS CLI 및 SSM이 정상적으로 설치되어 있는지 확인
+if ! command -v aws &> /dev/null
+then
+    echo "AWS CLI could not be found. Please install it first."
+    exit 1
+fi
 
 echo "> SSM Parameter Store에서 환경 변수 가져오기"
 #
@@ -39,6 +49,9 @@ JWT_KEY=$(aws ssm get-parameter --name "/nowmeet/JWT_KEY" --with-decryption --qu
 SEARCH_BOUNDARY=$(aws ssm get-parameter --name "/nowmeet/SEARCH_BOUNDARY" --query "Parameter.Value" --output text)
 SWAGGER_PASSWORD=$(aws ssm get-parameter --name "/nowmeet/SWAGGER_PASSWORD" --with-decryption --query "Parameter.Value" --output text)
 SWAGGER_USER=$(aws ssm get-parameter --name "/nowmeet/SWAGGER_USER" --with-decryption --query "Parameter.Value" --output text)
+
+# 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
+mkdir -p $REPOSITORY
 
 # 환경 변수를 .env 파일에 저장
 echo "AWS=$AWS" > $REPOSITORY/.env
