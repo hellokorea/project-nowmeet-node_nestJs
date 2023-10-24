@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
 
 echo "> 현재 구동중인 애플리케이션 pid 확인"
-CURRENT_PID=$(pgrep -f $APP_NAME)
+CURRENT_PID=$(pgrep -f $APP_NAME || true)
 echo "$CURRENT_PID"
 
 if [ -z $CURRENT_PID ]
@@ -14,7 +13,7 @@ then
   echo "> 실행중인 해당 애플리케이션이 없습니다. "
 else
   echo "> 애플리케이션 종료"
-  pm2 stop $APP_NAME
+  pm2 stop $APP_NAME || true
   sleep 10
 fi
 
@@ -69,5 +68,4 @@ echo "SWAGGER_PASSWORD=$SWAGGER_PASSWORD" >> $REPOSITORY/.env
 echo "SWAGGER_USER=$SWAGGER_USER" >> $REPOSITORY/.env
 
 cd $REPOSITORY
-npm run start:ec2 # 앱 production 환경으로 실행
-#pm2 start $APP_ENTRY --name $APP_NAME
+pm2 start main.js --name $APP_NAME
