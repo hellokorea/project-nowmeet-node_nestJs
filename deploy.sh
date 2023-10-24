@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
 
@@ -44,6 +46,8 @@ SWAGGER_USER=$(aws ssm get-parameter --name "/nowmeet/SWAGGER_USER" --with-decry
 mkdir -p $REPOSITORY
 
 # 환경 변수를 .env 파일에 저장
+echo "Current directory: $(pwd)"
+echo "Creating .env file in: $REPOSITORY/.env"
 echo "AWS=$AWS" > $REPOSITORY/.env
 echo "AWS_S3_ACCESS_KEY=$AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
 echo "AWS_S3_DEPLOY_BUCKET_NAME=$AWS_S3_DEPLOY_BUCKET_NAME" >> $REPOSITORY/.env
