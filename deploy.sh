@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-set -x
-
 REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
 
@@ -20,13 +17,6 @@ else
 fi
 
 echo "> 새 어플리케이션 배포"
-
-# AWS CLI 및 SSM이 정상적으로 설치되어 있는지 확인
-if ! command -v aws &> /dev/null
-then
-    echo "AWS CLI could not be found. Please install it first."
-    exit 1
-fi
 
 echo "> SSM Parameter Store에서 환경 변수 가져오기"
 #
