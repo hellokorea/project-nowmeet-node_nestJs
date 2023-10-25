@@ -41,9 +41,14 @@ JWT_KEY=$(aws ssm get-parameter --name "/nowmeet/JWT_KEY" --with-decryption --qu
 SEARCH_BOUNDARY=$(aws ssm get-parameter --name "/nowmeet/SEARCH_BOUNDARY" --query "Parameter.Value" --output text)
 SWAGGER_PASSWORD=$(aws ssm get-parameter --name "/nowmeet/SWAGGER_PASSWORD" --with-decryption --query "Parameter.Value" --output text)
 SWAGGER_USER=$(aws ssm get-parameter --name "/nowmeet/SWAGGER_USER" --with-decryption --query "Parameter.Value" --output text)
+MODE=$(aws ssm get-parameter --name "/nowmeet/MODE" --with-decryption --query "Parameter.Value" --output text)
+LOCAL_IP=$(aws ssm get-parameter --name "/nowmeet/LOCAL_IP" --with-decryption --query "Parameter.Value" --output text)
+LOCAL_GOOGLE_LOGIN_CB=$(aws ssm get-parameter --name "/nowmeet/LOCAL_GOOGLE_LOGIN_CB" --with-decryption --query "Parameter.Value" --output text)
+PORT=$(aws ssm get-parameter --name "/nowmeet/PORT" --with-decryption --query "Parameter.Value" --output text)
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 mkdir -p $REPOSITORY
+
 
 # 환경 변수를 .env 파일에 저장
 echo "Current directory: $(pwd)"
@@ -69,6 +74,11 @@ echo "JWT_KEY=$JWT_KEY" >> $REPOSITORY/.env
 echo "SEARCH_BOUNDARY=$SEARCH_BOUNDARY" >> $REPOSITORY/.env
 echo "SWAGGER_PASSWORD=$SWAGGER_PASSWORD" >> $REPOSITORY/.env
 echo "SWAGGER_USER=$SWAGGER_USER" >> $REPOSITORY/.env
+echo "MODE=$MODE" >> $REPOSITORY/.env
+echo "LOCAL_IP=$LOCAL_IP" >> $REPOSITORY/.env
+echo "LOCAL_GOOGLE_LOGIN_CB=$LOCAL_GOOGLE_LOGIN_CB" >> $REPOSITORY/.env
+echo "PORT=$PORT" >> $REPOSITORY/.env
+
 echo ".env file written successfully!"
 
 cd $REPOSITORY
