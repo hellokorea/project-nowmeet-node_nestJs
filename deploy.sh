@@ -3,6 +3,8 @@ set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
 APP_NAME=nowmeet
+DEPLOY_NAME=nowmeet-deploy
+
 
 echo "> 현재 구동중인 애플리케이션 pid 확인"
 CURRENT_PID=$(pgrep -f $APP_NAME || true)
@@ -82,4 +84,4 @@ echo "PORT=$PORT" >> $REPOSITORY/.env
 echo ".env file written successfully!"
 
 cd $REPOSITORY
-pm2 start main.js --name $APP_NAME
+pm2 start main.js --name $DEPLOY_NAME
