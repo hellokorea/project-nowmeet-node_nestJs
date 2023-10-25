@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { BadRequestException, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -22,22 +22,25 @@ import { AwsService } from "./aws.service";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
-        const isDevMode = process.env.MODE === "dev";
-        const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
-        const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
-        console.log(hostKey);
-        console.log(hostDb);
+        try {
+          const isDevMode = process.env.MODE === "dev";
+          const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
+          const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
 
-        return {
-          type: "mysql",
-          host: configService.getOrThrow(hostKey),
-          port: configService.getOrThrow("DB_PORT"),
-          username: configService.getOrThrow("DB_USERNAME"),
-          password: configService.getOrThrow("DB_PASSWORD"),
-          database: configService.getOrThrow(hostDb),
-          entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-          synchronize: true, //^ TODO: prod => false
-        };
+          return {
+            type: "mysql",
+            host: configService.getOrThrow(hostKey),
+            port: configService.getOrThrow("DB_PORT"),
+            username: configService.getOrThrow("DB_USERNAME"),
+            password: configService.getOrThrow("DB_PASSWORD"),
+            database: configService.getOrThrow(hostDb),
+            entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
+            synchronize: false, //^ TODO: prod => false
+          };
+        } catch (error) {
+          console.error(error);
+          throw new BadRequestException(`db 연결에 실패했습니다. ${configService.getOrThrow("DB_PROD_DATABASE")}`);
+        }
       },
       inject: [ConfigService],
     }),
