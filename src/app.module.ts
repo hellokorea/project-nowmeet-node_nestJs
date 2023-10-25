@@ -25,7 +25,7 @@ import { AwsService } from "./aws.service";
         const isDevMode = process.env.MODE === "dev";
         const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
         const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
-        console.log(hostDb);
+
         return {
           type: "mysql",
           host: configService.getOrThrow(hostKey),
@@ -34,7 +34,7 @@ import { AwsService } from "./aws.service";
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow(hostDb),
           entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-          synchronize: false, //^ TODO: prod => false
+          synchronize: true, //^ TODO: prod => false
         };
       },
       inject: [ConfigService],
