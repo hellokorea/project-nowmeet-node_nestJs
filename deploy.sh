@@ -2,8 +2,7 @@
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-APP_NAME=nowmeet
-DEPLOY_NAME=nowmeet-deploy
+DEPLOY_NAME=nowmeet-aws
 
 
 echo "> 현재 구동중인 애플리케이션 pid 확인"
