@@ -7,7 +7,7 @@ DEPLOY_NAME=nowmeet-deploy
 
 
 echo "> 현재 구동중인 애플리케이션 pid 확인"
-CURRENT_PID=$(pgrep -f $APP_NAME || true)
+CURRENT_PID=$(pgrep -f $DEPLOY_NAME || true)
 echo "$CURRENT_PID"
 
 if [ -z $CURRENT_PID ]
@@ -15,7 +15,7 @@ then
   echo "> 실행중인 해당 애플리케이션이 없습니다. "
 else
   echo "> 애플리케이션 종료"
-  pm2 stop $APP_NAME || true
+  pm2 stop $DEPLOY_NAME || true
   sleep 10
 fi
 
