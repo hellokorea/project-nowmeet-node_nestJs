@@ -20,11 +20,10 @@ else
 fi
  
  # 만약 delete 했는데 남아있다면 직접 pid kill
- if pgrep -f $DEPLOY_NAME > /dev/null
+if pgrep -f $DEPLOY_NAME > /dev/null
   then
     kill -9 $CURRENT_PID || true
     sleep 5
-  fi
 fi
 
 echo "> 새 어플리케이션 배포"
