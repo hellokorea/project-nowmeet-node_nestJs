@@ -28,6 +28,15 @@ export class UsersService {
   ) {}
 
   async getAllUsers() {
+    const host = process.env.DB_PROD_HOST;
+    const port = process.env.DB_PORT;
+    const username = process.env.DB_USERNAME;
+    const database = process.env.DB_PROD_DATABASE;
+
+    console.log(`Host: ${host}`);
+    console.log(`Port: ${port}`);
+    console.log(`Username: ${username}`);
+    console.log(`Database: ${database}`);
     return this.usersRepository.findAll();
   }
 
