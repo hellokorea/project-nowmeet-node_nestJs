@@ -16,7 +16,15 @@ else
   echo "> 애플리케이션 종료"
   pm2 stop $DEPLOY_NAME || true
   pm2 delete $DEPLOY_NAME || true
-  sleep 10
+  sleep 15
+fi
+ 
+ # 만약 delete 했는데 남아있다면 직접 pid kill
+ if pgrep -f $DEPLOY_NAME > /dev/null
+  then
+    kill -9 $CURRENT_PID || true
+    sleep 5
+  fi
 fi
 
 echo "> 새 어플리케이션 배포"
