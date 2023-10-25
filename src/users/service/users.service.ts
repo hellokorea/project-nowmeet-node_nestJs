@@ -28,6 +28,8 @@ export class UsersService {
   ) {}
 
   async getAllUsers() {
+    console.log(process.env.DB_PROD_HOST);
+    console.log(process.env.DB_PROD_DATABASE);
     return this.usersRepository.findAll();
   }
 

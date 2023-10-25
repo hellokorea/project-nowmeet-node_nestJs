@@ -25,6 +25,8 @@ import { AwsService } from "./aws.service";
         const isDevMode = process.env.MODE === "dev";
         const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
         const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
+        console.log(hostKey);
+        console.log(hostDb);
 
         return {
           type: "mysql",
