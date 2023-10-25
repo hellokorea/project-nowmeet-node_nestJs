@@ -4,9 +4,8 @@ set -e
 REPOSITORY=/home/ec2-user/applications/nowmeet
 DEPLOY_NAME=nowmeet-aws
 
-
 echo "> 현재 구동중인 애플리케이션 pid 확인"
-CURRENT_PID=$(pgrep -f $DEPLOY_NAME || true)
+CURRENT_PID=$(pm2 show $DEPLOY_NAME | grep pid | awk '{print $4}')
 echo "$CURRENT_PID"
 
 if [ -z $CURRENT_PID ]
@@ -17,13 +16,6 @@ else
   pm2 stop $DEPLOY_NAME || true
   pm2 delete $DEPLOY_NAME || true
   sleep 15
-fi
- 
- # 만약 delete 했는데 남아있다면 직접 pid kill
-if pgrep -f $DEPLOY_NAME > /dev/null
-  then
-    kill -9 $CURRENT_PID || true
-    sleep 5
 fi
 
 echo "> 새 어플리케이션 배포"
