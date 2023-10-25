@@ -15,6 +15,7 @@ then
 else
   echo "> 애플리케이션 종료"
   pm2 stop $DEPLOY_NAME || true
+  pm2 delete $DEPLOY_NAME || true
   sleep 10
 fi
 
