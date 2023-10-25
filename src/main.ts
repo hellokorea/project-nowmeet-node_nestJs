@@ -55,12 +55,30 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("docs", app, document);
 
-  //Local PORT!
+  //Port Setting!
   const PORT = process.env.PORT;
+  const MODE = process.env.MODE;
 
-  await app.listen(PORT, () => {
-    console.log(`http://localhost:${PORT}`);
+  const MODE_CONFIG = {
+    dev: {
+      address: process.env.LOCAL_IP,
+      message: `Server is Running in Dev Mode at port : ${PORT}`,
+    },
+    prod: {
+      address: undefined, // All ip access ok
+      message: `Server is Running in Production Mode at port : ${PORT}`,
+    },
+  };
+
+  const currentConfig = MODE_CONFIG[MODE];
+
+  if (!currentConfig) {
+    console.error(`Unknown MODE: ${MODE}. 서버 실행에 실패 했습니다.`);
+    process.exit(1);
+  }
+
+  await app.listen(PORT, currentConfig.address, () => {
+    console.log(currentConfig.message);
   });
 }
-
 bootstrap();

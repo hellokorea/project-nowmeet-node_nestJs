@@ -22,15 +22,18 @@ import { AwsService } from "./aws.service";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
+        const isDevMode = process.env.MODE === "dev";
+        const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
+
         return {
           type: "mysql",
-          host: configService.getOrThrow("DB_HOST"),
+          host: configService.getOrThrow(hostKey),
           port: configService.getOrThrow("DB_PORT"),
           username: configService.getOrThrow("DB_USERNAME"),
           password: configService.getOrThrow("DB_PASSWORD"),
           database: configService.getOrThrow("DB_DATABASE"),
           entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-          synchronize: true, // prob - false
+          synchronize: true, //^ TODO: prod => false
         };
       },
       inject: [ConfigService],
