@@ -39,9 +39,9 @@ import { AwsService } from "./aws.service";
                 port: configService.getOrThrow("DB_PORT"),
                 username: configService.getOrThrow("DB_USERNAME"),
                 password: configService.getOrThrow("DB_PASSWORD"),
-                database: configService.getOrThrow("DB_DEV_DATABASE"),
+                database: configService.getOrThrow(hostDb),
                 entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-                synchronize: true, //^ TODO: prod => false
+                synchronize: false, //^ TODO: prod => false
               });
             } catch (error) {
               console.error(error);
