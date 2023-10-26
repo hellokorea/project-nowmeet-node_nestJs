@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
+
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-DEPLOY_NAME=nowmeet-aws
+DEPLOY_NAME=nowmeet-aws1
 
-echo "> 현재 구동중인 애플리케이션 pid 확인"
-CURRENT_PID=$(pm2 show $DEPLOY_NAME | grep pid | awk '{print $4}')
-echo "$CURRENT_PID"
+echo "> 현재 구동중인 애플리케이션 DEPLOY_NAME 확인"
+CURRENT_DEPLOY="$(pm2 list | grep $DEPLOY_NAME)"
+echo "$CURRENT_DEPLOY"
 
-if [ -z $CURRENT_PID ]
+if [ -z "$CURRENT_DEPLOY" ]
 then
   echo "> 실행중인 해당 애플리케이션이 없습니다. "
 else
   echo "> 애플리케이션 종료"
-  pm2 stop $DEPLOY_NAME || true
-  pm2 delete $DEPLOY_NAME || true
+  pm2 stop "$DEPLOY_NAME" || true
+  pm2 delete "$DEPLOY_NAME" || true
   sleep 15
 fi
 
@@ -49,7 +50,7 @@ LOCAL_GOOGLE_LOGIN_CB=$(aws ssm get-parameter --name "/nowmeet/LOCAL_GOOGLE_LOGI
 PORT=$(aws ssm get-parameter --name "/nowmeet/PORT" --with-decryption --query "Parameter.Value" --output text)
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
-mkdir -p $REPOSITORY
+`mkdir -p "$REPOSITORY"`
 
 
 # 환경 변수를 .env 파일에 저장
@@ -84,5 +85,5 @@ echo "PORT=$PORT" >> $REPOSITORY/.env
 
 echo ".env file written successfully!"
 
-cd $REPOSITORY
+cd "$REPOSITORY"
 pm2 start main.js --name $DEPLOY_NAME

@@ -28,11 +28,7 @@ import { AwsService } from "./aws.service";
               const isDevMode = process.env.MODE === "dev";
               const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
               const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
-              if (hostDb) {
-                const logger = new Logger();
 
-                logger.log(`현재 연결되어있는 db : ${hostDb}`);
-              }
               res({
                 type: "mysql",
                 host: configService.getOrThrow(hostKey),
@@ -47,7 +43,7 @@ import { AwsService } from "./aws.service";
               console.error(error);
               rej(new BadRequestException(`db 연결에 실패했습니다.`));
             }
-          }, 5000);
+          }, 3000);
         });
       },
       inject: [ConfigService],
