@@ -36,10 +36,12 @@ import { AwsService } from "./aws.service";
             database: configService.getOrThrow(hostDb),
             entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
             synchronize: false, //^ TODO: prod => false
+            retryAttempts: 3,
+            retryDelay: 2000,
           };
         } catch (error) {
           console.error(error);
-          throw new BadRequestException(`db 연결에 실패했습니다. ${configService.getOrThrow("DB_PROD_DATABASE")}`);
+          throw new BadRequestException(`db 연결에 실패했습니다.`);
         }
       },
       inject: [ConfigService],

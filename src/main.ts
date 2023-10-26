@@ -80,32 +80,6 @@ async function bootstrap() {
   await app.listen(PORT, currentConfig.address, () => {
     console.log(currentConfig.message);
   });
-
-  const isDevMode = process.env.MODE === "dev";
-  const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
-  const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
-
-  if (isDevMode) {
-    const host = configService.getOrThrow(hostKey);
-    const port = configService.getOrThrow("DB_PORT");
-    const username = configService.getOrThrow("DB_USERNAME");
-    const database = configService.getOrThrow(hostDb);
-
-    console.log(`Host: ${host}`);
-    console.log(`Port: ${port}`);
-    console.log(`Username: ${username}`);
-    console.log(`Database: ${database}`);
-  } else {
-    const host = configService.getOrThrow(hostKey);
-    const port = configService.getOrThrow("DB_PORT");
-    const username = configService.getOrThrow("DB_USERNAME");
-    const database = configService.getOrThrow(hostDb);
-
-    console.log(`ProdHost: ${host}`);
-    console.log(`ProdPort: ${port}`);
-    console.log(`ProdUsername: ${username}`);
-    console.log(`ProdDatabase: ${database}`);
-  }
 }
 
 bootstrap();
