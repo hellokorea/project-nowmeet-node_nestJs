@@ -1,4 +1,4 @@
-import { BadRequestException, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { BadRequestException, Logger, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -28,16 +28,20 @@ import { AwsService } from "./aws.service";
               const isDevMode = process.env.MODE === "dev";
               const hostKey = isDevMode ? "DB_DEV_HOST" : "DB_PROD_HOST";
               const hostDb = isDevMode ? "DB_DEV_DATABASE" : "DB_PROD_DATABASE";
+              if (hostDb) {
+                const logger = new Logger();
 
+                logger.log(`현재 연결되어있는 db : ${hostDb}`);
+              }
               res({
                 type: "mysql",
                 host: configService.getOrThrow(hostKey),
                 port: configService.getOrThrow("DB_PORT"),
                 username: configService.getOrThrow("DB_USERNAME"),
                 password: configService.getOrThrow("DB_PASSWORD"),
-                database: configService.getOrThrow(hostDb),
+                database: configService.getOrThrow("DB_DEV_DATABASE"),
                 entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-                synchronize: false, //^ TODO: prod => false
+                synchronize: true, //^ TODO: prod => false
               });
             } catch (error) {
               console.error(error);
