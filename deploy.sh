@@ -52,6 +52,7 @@ DEV_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_ACCESS
 DEV_AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_SECRET_KEY" --with-decryption --query "Parameter.Value" --output text)
 AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" --with-decryption --query "Parameter.Value" --output text)
 
+
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 `mkdir -p "$REPOSITORY"`
 
