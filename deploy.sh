@@ -24,10 +24,10 @@ echo "> 새 어플리케이션 배포"
 echo "> SSM Parameter Store에서 환경 변수 가져오기"
 #
 AWS=$(aws ssm get-parameter --name "/nowmeet/AWS" --query "Parameter.Value" --output text)
-AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_ACCESS_KEY" --with-decryption --query "Parameter.Value" --output text)
+PROD_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/PROD_AWS_S3_ACCESS_KEY" --with-decryption --query "Parameter.Value" --output text)
 AWS_S3_DEPLOY_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_DEPLOY_BUCKET_NAME" --query "Parameter.Value" --output text)
 AWS_S3_REGION=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_REGION" --with-decryption --query "Parameter.Value" --output text)
-AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_SECRET_KEY" --query "Parameter.Value" --output text)
+PROD_AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/PROD_AWS_S3_SECRET_KEY" --query "Parameter.Value" --output text)
 AWS_S3_USER_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_USER_PROFILES_BUCKET_NAME" --with-decryption --query "Parameter.Value" --output text)
 DB_DEV_DATABASE=$(aws ssm get-parameter --name "/nowmeet/DB_DEV_DATABASE" --with-decryption --query "Parameter.Value" --output text)
 DB_PROD_DATABASE=$(aws ssm get-parameter --name "/nowmeet/DB_PROD_DATABASE" --with-decryption --query "Parameter.Value" --output text)
@@ -48,20 +48,22 @@ MODE=$(aws ssm get-parameter --name "/nowmeet/MODE" --with-decryption --query "P
 LOCAL_IP=$(aws ssm get-parameter --name "/nowmeet/LOCAL_IP" --with-decryption --query "Parameter.Value" --output text)
 LOCAL_GOOGLE_LOGIN_CB=$(aws ssm get-parameter --name "/nowmeet/LOCAL_GOOGLE_LOGIN_CB" --with-decryption --query "Parameter.Value" --output text)
 PORT=$(aws ssm get-parameter --name "/nowmeet/PORT" --with-decryption --query "Parameter.Value" --output text)
+DEV_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_ACCESS_KEY" --with-decryption --query "Parameter.Value" --output text)
+DEV_AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_SECRET_KEY" --with-decryption --query "Parameter.Value" --output text)
+AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" --with-decryption --query "Parameter.Value" --output text)
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 `mkdir -p "$REPOSITORY"`
-
 
 # 환경 변수를 .env 파일에 저장
 echo "Current directory: $(pwd)"
 echo "Writing to .env file..."
 echo "Creating .env file in: $REPOSITORY/.env"
 echo "AWS=$AWS" > $REPOSITORY/.env
-echo "AWS_S3_ACCESS_KEY=$AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
+echo "PROD_AWS_S3_ACCESS_KEY=$PROD_AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
 echo "AWS_S3_DEPLOY_BUCKET_NAME=$AWS_S3_DEPLOY_BUCKET_NAME" >> $REPOSITORY/.env
 echo "AWS_S3_REGION=$AWS_S3_REGION" >> $REPOSITORY/.env
-echo "AWS_S3_SECRET_KEY=$AWS_S3_SECRET_KEY" >> $REPOSITORY/.env
+echo "PROD_AWS_S3_SECRET_KEY=$PROD_AWS_S3_SECRET_KEY" >> $REPOSITORY/.env
 echo "AWS_S3_USER_PROFILES_BUCKET_NAME=$AWS_S3_USER_PROFILES_BUCKET_NAME" >> $REPOSITORY/.env
 echo "DB_DEV_DATABASE=$DB_DEV_DATABASE" >> $REPOSITORY/.env
 echo "DB_PROD_DATABASE=$DB_PROD_DATABASE" >> $REPOSITORY/.env
@@ -82,6 +84,9 @@ echo "MODE=$MODE" >> $REPOSITORY/.env
 echo "LOCAL_IP=$LOCAL_IP" >> $REPOSITORY/.env
 echo "LOCAL_GOOGLE_LOGIN_CB=$LOCAL_GOOGLE_LOGIN_CB" >> $REPOSITORY/.env
 echo "PORT=$PORT" >> $REPOSITORY/.env
+echo "DEV_AWS_S3_ACCESS_KEY=$DEV_AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
+echo "DEV_AWS_S3_SECRET_KEY=$DEV_AWS_S3_SECRET_KEY" >> $REPOSITORY/.env
+echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" >> $REPOSITORY/.env
 
 echo ".env file written successfully!"
 

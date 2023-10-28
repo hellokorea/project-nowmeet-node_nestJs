@@ -2,8 +2,8 @@ name: nowmeet_build_deploy
 
 env:
   # AWS
-  AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
-  AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
+  AWS_S3_ACCESS_KEY: ${{ secrets.PROD_AWS_S3_ACCESS_KEY }}
+  AWS_S3_SECRET_KEY: ${{ secrets.PROD_AWS_S3_SECRET_KEY }}
   AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
   AWS_S3_DEPLOY_BUCKET_NAME: ${{ secrets.AWS_S3_DEPLOY_BUCKET_NAME }}
 

@@ -11,17 +11,28 @@ export class AwsService {
   private readonly s3Client: S3Client;
   public readonly S3_USER_PROFILES_BUCKET_NAME: string;
   public readonly S3_DEPLOY_BUCKET_NAME: string;
+  public readonly S3_USER_DEV_PROFILES_BUCKET_NAME: string;
 
   constructor(private readonly configService: ConfigService) {
     this.s3Client = new S3Client({
       credentials: {
-        accessKeyId: this.configService.get("AWS_S3_ACCESS_KEY"),
-        secretAccessKey: this.configService.get("AWS_S3_SECRET_KEY"),
+        //* Prod
+        accessKeyId: this.configService.get("PROD_AWS_S3_ACCESS_KEY"),
+        secretAccessKey: this.configService.get("PROD_AWS_S3_SECRET_KEY"),
+        //& dev
+        // accessKeyId: this.configService.get("DEV_AWS_S3_ACCESS_KEY"),
+        // secretAccessKey: this.configService.get("DEV_AWS_S3_SECRET_KEY"),
       },
       region: this.configService.get("AWS_S3_REGION"),
     });
+
+    // 분기 추가하자 ;;
+
+    //* Prod
     this.S3_USER_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_PROFILES_BUCKET_NAME");
     this.S3_DEPLOY_BUCKET_NAME = this.configService.get("AWS_S3_DEPLOY_BUCKET_NAME");
+    //& dev
+    this.S3_USER_DEV_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_DEV_PROFILES_BUCKET_NAME");
   }
 
   async uploadFilesToS3(folder: string, files: Array<Express.Multer.File>) {
