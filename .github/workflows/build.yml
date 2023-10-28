@@ -2,8 +2,8 @@ name: nowmeet_build_deploy
 
 env:
   # AWS
-  AWS_S3_ACCESS_KEY: ${{ secrets.PROD_AWS_S3_ACCESS_KEY }}
-  AWS_S3_SECRET_KEY: ${{ secrets.PROD_AWS_S3_SECRET_KEY }}
+  PROD_AWS_S3_ACCESS_KEY: ${{ secrets.PROD_AWS_S3_ACCESS_KEY }}
+  PROD_AWS_S3_SECRET_KEY: ${{ secrets.PROD_AWS_S3_SECRET_KEY }}
   AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
   AWS_S3_DEPLOY_BUCKET_NAME: ${{ secrets.AWS_S3_DEPLOY_BUCKET_NAME }}
 
@@ -55,8 +55,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ env.AWS_S3_ACCESS_KEY }}
-          aws-secret-access-key: ${{ env.AWS_S3_SECRET_KEY }}
+          aws-access-key-id: ${{ env.PROD_AWS_S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.PROD_AWS_S3_SECRET_KEY }}
           aws-region: ${{ env.AWS_S3_REGION }}
 
       - name: Upload to S3
