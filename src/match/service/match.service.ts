@@ -212,11 +212,17 @@ export class MatchService {
   }
 
   async removeExpireMatches() {
-    const expireMatches = await this.matchRepository.findExpireMatchesById();
-    expireMatches.forEach(async (match) => {
-      console.log(`matchId: ${match.id}, matchStatus: ${match.status} ... match data remove`);
-      await this.matchRepository.removeExpireMatch(match);
-    });
+    try {
+      const expireMatches = await this.matchRepository.findExpireMatchesById();
+
+      expireMatches.forEach(async (match) => {
+        console.log(`삭제된 matchId: ${match.id}, matchStatus: ${match.status} ... match data remove`);
+        await this.matchRepository.removeExpireMatch(match);
+      });
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException("매칭 삭제 도중 문제가 발생했습니다.");
+    }
   }
 
   /*
@@ -282,6 +288,7 @@ export class MatchService {
       user = findChat.receiverId;
     }
 
+    // 닉네임 추가, 만료시간 추가
     return {
       chatId: findChat.id,
       matchId: findChat.matchId,

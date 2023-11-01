@@ -105,4 +105,8 @@ export class MatchController {
   getUserChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
     return this.matchService.getUserChatRoom(chatId, req);
   }
+
+  openChat() {
+    return "채팅방 열 수 있는 API";
+  }
 }

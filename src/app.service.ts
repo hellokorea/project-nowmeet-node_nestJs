@@ -1,17 +1,15 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { MatchService } from "./match/service/match.service";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
-export class AppService implements OnModuleInit {
+export class AppService {
   constructor(private readonly matchService: MatchService) {}
 
-  async onModuleInit() {
-    const CHECK_CYCLE: number = 24 * 60 * 60 * 1000;
-    const TEST_CYCLE: number = 10 * 1000;
-
-    setInterval(async () => {
-      await this.matchService.removeExpireMatches();
-    }, CHECK_CYCLE);
+  //Expire Matches Delete
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleExpiredMatches() {
+    await this.matchService.removeExpireMatches();
   }
 
   getHello(): string {
