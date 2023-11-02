@@ -68,4 +68,4 @@ jobs:
           --application-name nowmeet \
           --deployment-config-name CodeDeployDefault.OneAtATime \
           --deployment-group-name nowmeet_deploy_group \
-          --s3-location bucket=${{ env.AWS_S3_DEPLOY_BUCKET_NAME }},bundleType=zip,key=deploy/nowmeet_dev1.zip
+          --s3-location bucket=${{ env.AWS_S3_DEPLOY_BUCKET_NAME }},bundleType=zip,key=deploy/nowmeet_version_1.zip
