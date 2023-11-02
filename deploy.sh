@@ -91,6 +91,6 @@ echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME
 
 echo ".env file written successfully!"
 
-cd "/"
+cd "$REPOSITORY"
 /usr/local/bin/pm2 start main.js --name $DEPLOY_NAME
 
