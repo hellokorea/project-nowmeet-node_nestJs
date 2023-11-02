@@ -25,13 +25,13 @@ jobs:
         with:
           node-version: "18.x"
 
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      # - name: Cache node modules
+      #   uses: actions/cache@v2
+      #   with:
+      #    path: node_modules
+      #    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/package.json') }}
+      #    restore-keys: |
+      #      ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm install
