@@ -23,13 +23,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "18.18.2"
+          node-version: "18.x"
 
       - name: Cache node modules
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/package.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
