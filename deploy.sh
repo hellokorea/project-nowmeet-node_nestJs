@@ -3,34 +3,26 @@
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-DEPLOY_NAME=nowmeet-aws-2
-
-# 애플리케이션의 상태 확인
-function check_app_status() {
-    pm2 list | grep $1 || true
-}
-
-# 애플리케이션 종료
-function stop_app() {
-    pm2 stop "$1" || true
-    pm2 delete "$1" || true
-}
+DEPLOY_NAME=nowmeet-aws-3
 
 echo "> 현재 구동중인 애플리케이션 $DEPLOY_NAME 확인"
-CURRENT_DEPLOY=$(check_app_status $DEPLOY_NAME)
+CURRENT_DEPLOY="$(pm2 list | grep $DEPLOY_NAME || true)"
 echo "$CURRENT_DEPLOY"
 
-if [ -z "$CURRENT_DEPLOY" ]; then
-    echo "> 실행중인 해당 애플리케이션이 없습니다."
+if [ -z "$CURRENT_DEPLOY" ]
+then
+  echo "> 실행중인 해당 애플리케이션이 없습니다. "
 else
-    echo "> 애플리케이션 종료"
-    stop_app $DEPLOY_NAME
-    sleep 15
+  echo "> 애플리케이션 종료"
+  pm2 stop "$DEPLOY_NAME" || true
+  pm2 delete "$DEPLOY_NAME" || true
+  sleep 15
 fi
 
 echo "> 새 어플리케이션 배포"
 
 echo "> SSM Parameter Store에서 환경 변수 가져오기"
+#
 AWS=$(aws ssm get-parameter --name "/nowmeet/AWS" --query "Parameter.Value" --output text)
 PROD_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/PROD_AWS_S3_ACCESS_KEY" --with-decryption --query "Parameter.Value" --output text)
 AWS_S3_DEPLOY_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_DEPLOY_BUCKET_NAME" --query "Parameter.Value" --output text)
@@ -59,6 +51,7 @@ PORT=$(aws ssm get-parameter --name "/nowmeet/PORT" --with-decryption --query "P
 DEV_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_ACCESS_KEY" --with-decryption --query "Parameter.Value" --output text)
 DEV_AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_SECRET_KEY" --with-decryption --query "Parameter.Value" --output text)
 AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" --with-decryption --query "Parameter.Value" --output text)
+
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 `mkdir -p "$REPOSITORY"`
@@ -99,5 +92,4 @@ echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME
 echo ".env file written successfully!"
 
 cd "$REPOSITORY"
-echo "> 애플리케이션 시작"
 pm2 start main.js --name $DEPLOY_NAME
