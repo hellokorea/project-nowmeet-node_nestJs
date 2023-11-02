@@ -6,7 +6,7 @@ REPOSITORY=/home/ec2-user/applications/nowmeet
 DEPLOY_NAME=nowmeet-aws-3
 
 echo "> 현재 구동중인 애플리케이션 $DEPLOY_NAME 확인"
-CURRENT_DEPLOY="$(pm2 list | grep $DEPLOY_NAME || true)"
+CURRENT_DEPLOY="$(/usr/local/bin/pm2 list | grep $DEPLOY_NAME || true)"
 echo "$CURRENT_DEPLOY"
 
 if [ -z "$CURRENT_DEPLOY" ]
@@ -91,5 +91,6 @@ echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME
 
 echo ".env file written successfully!"
 
-cd "$REPOSITORY"
-pm2 start main.js --name $DEPLOY_NAME
+cd "/"
+/usr/local/bin/pm2 start main.js --name $DEPLOY_NAME
+
