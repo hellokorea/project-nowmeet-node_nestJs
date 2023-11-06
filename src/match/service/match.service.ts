@@ -296,4 +296,6 @@ export class MatchService {
       chatStatus: findChat.status,
     };
   }
+
+  async openChatRoom() {}
 }

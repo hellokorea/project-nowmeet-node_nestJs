@@ -84,7 +84,7 @@ export class MatchController {
     return this.matchService.matchReject(matchId, req);
   }
 
-  //Chat
+  //-------------------- Chat Rogic
   @ApiResponse({
     description: "있으면 채팅 관련 정보 배열로 모두 반환 / 없으면 null",
     type: ChatAllListResponseDto,
@@ -106,7 +106,8 @@ export class MatchController {
     return this.matchService.getUserChatRoom(chatId, req);
   }
 
-  openChat() {
-    return "채팅방 열 수 있는 API";
+  @Post("me/chatBox/open/:chatId")
+  openChatRoom() {
+    return this.matchService.openChatRoom();
   }
 }
