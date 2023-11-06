@@ -81,5 +81,4 @@ async function bootstrap() {
     console.log(currentConfig.message);
   });
 }
-
 bootstrap();
