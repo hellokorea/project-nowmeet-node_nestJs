@@ -17,11 +17,11 @@ export class AwsService {
     this.s3Client = new S3Client({
       credentials: {
         //* Prod
-        // accessKeyId: this.configService.get("PROD_AWS_S3_ACCESS_KEY"),
-        // secretAccessKey: this.configService.get("PROD_AWS_S3_SECRET_KEY"),
+        accessKeyId: this.configService.get("PROD_AWS_S3_ACCESS_KEY"),
+        secretAccessKey: this.configService.get("PROD_AWS_S3_SECRET_KEY"),
         //& dev
-        accessKeyId: this.configService.get("DEV_AWS_S3_ACCESS_KEY"),
-        secretAccessKey: this.configService.get("DEV_AWS_S3_SECRET_KEY"),
+        // accessKeyId: this.configService.get("DEV_AWS_S3_ACCESS_KEY"),
+        // secretAccessKey: this.configService.get("DEV_AWS_S3_SECRET_KEY"),
       },
       region: this.configService.get("AWS_S3_REGION"),
     });
@@ -39,7 +39,7 @@ export class AwsService {
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
         const putCommand = new PutObjectCommand({
-          Bucket: this.S3_USER_DEV_PROFILES_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
@@ -82,7 +82,7 @@ export class AwsService {
     const signedUrls = await Promise.all(
       keys.map(async (key) => {
         const command = new GetObjectCommand({
-          Bucket: this.S3_USER_DEV_PROFILES_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
         });
 
@@ -103,7 +103,7 @@ export class AwsService {
     try {
       const deletePromises = keys.map((key) => {
         const deleteCommand = new DeleteObjectCommand({
-          Bucket: this.S3_USER_DEV_PROFILES_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
         });
         return this.s3Client.send(deleteCommand);
