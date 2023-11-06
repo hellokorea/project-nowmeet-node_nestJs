@@ -14,8 +14,8 @@ then
   echo "> 실행중인 해당 애플리케이션이 없습니다. "
 else
   echo "> 애플리케이션 종료"
-  pm2 stop "$DEPLOY_NAME" || true
-  pm2 delete "$DEPLOY_NAME" || true
+  /usr/local/bin/pm2 stop "$DEPLOY_NAME" || true
+  /usr/local/bin/pm2 delete "$DEPLOY_NAME" || true
   sleep 15
 fi
 
