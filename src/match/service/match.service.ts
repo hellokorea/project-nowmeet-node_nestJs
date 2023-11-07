@@ -238,7 +238,7 @@ export class MatchService {
       return null;
     }
 
-    const chatList = findChats.map((chat) => {
+    const chatListPromises = findChats.map(async (chat) => {
       let me: number;
       let matchUserId: number;
 
@@ -249,14 +249,19 @@ export class MatchService {
         throw new BadRequestException();
       }
 
+      const userInfo = await this.usersRepository.findByIdGetNickname(matchUserId);
+
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
-        chatStatus: chat.status,
+        matchUserNickname: userInfo.nickname,
+        // chatStatus: chat.status,
       };
     });
+
+    const chatList = await Promise.all(chatListPromises);
 
     return chatList;
   }
@@ -280,22 +285,25 @@ export class MatchService {
       throw new BadRequestException("유저 정보가 올바르지 않습니다");
     }
 
-    let user: number;
+    let matchUserId: number;
 
     if (loggedId === findChat.receiverId) {
-      user = findChat.senderId;
+      matchUserId = findChat.senderId;
     } else if (loggedId === findChat.senderId) {
-      user = findChat.receiverId;
+      matchUserId = findChat.receiverId;
     }
+
+    const userInfo = await this.usersRepository.findByIdGetNickname(matchUserId);
 
     // 닉네임 추가, 만료시간 추가
     return {
       chatId: findChat.id,
       matchId: findChat.matchId,
-      matchUserId: user,
+      matchUserId,
+      matchUserNickname: userInfo.nickname,
       chatStatus: findChat.status,
     };
   }
 
-  async openChatRoom() {}
+  async openChatRoom(chatId: number, req: UserRequestDto) {}
 }

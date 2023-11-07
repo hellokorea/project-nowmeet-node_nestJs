@@ -44,14 +44,14 @@ export class UsersService {
 
     console.log(files);
     if (!files.length) {
-      throw new UnauthorizedException("프로필 사진을 최소 1장 등록하세요");
+      throw new BadRequestException("프로필 사진을 최소 1장 등록하세요");
     }
 
-    // const uploadUserProfiles = await this.awsService.uploadFilesToS3("profileImages", files);
+    const uploadUserProfiles = await this.awsService.uploadFilesToS3("profileImages", files);
 
-    // const userFilesKeys = uploadUserProfiles.map((filesObj) => {
-    //   return filesObj.key;
-    // });
+    const userFilesKeys = uploadUserProfiles.map((filesObj) => {
+      return filesObj.key;
+    });
 
     const users = await this.usersRepository.createUser({
       email,
@@ -64,8 +64,10 @@ export class UsersService {
       preference,
       longitude,
       latitude,
-      // profileImages: files,
+      profileImages: userFilesKeys,
     });
+
+    console.log(users);
     return users;
   }
 
@@ -197,7 +199,7 @@ export class UsersService {
         job: job || user.job,
         introduce: introduce || user.introduce,
         preference: preference || user.preference,
-        // profileImages: user.profileImages,
+        profileImages: user.profileImages,
       });
 
       const preSignedUrl = await this.awsService.createPreSignedUrl(updated.profileImages);

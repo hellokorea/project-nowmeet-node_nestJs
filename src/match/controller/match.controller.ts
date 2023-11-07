@@ -106,8 +106,8 @@ export class MatchController {
     return this.matchService.getUserChatRoom(chatId, req);
   }
 
-  @Post("me/chatBox/open/:chatId")
-  openChatRoom() {
-    return this.matchService.openChatRoom();
+  @Post("me/chatBox/:chatId/open")
+  openChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
+    return this.matchService.openChatRoom(chatId, req);
   }
 }

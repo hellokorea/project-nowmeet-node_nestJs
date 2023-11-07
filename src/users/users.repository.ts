@@ -20,6 +20,15 @@ export class UsersRepository {
     return await this.usersRepository.findOne(option);
   }
 
+  async findByIdGetNickname(id: number): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { id },
+      select: ["nickname"],
+    };
+
+    return await this.usersRepository.findOne(option);
+  }
+
   async findByNickname(nickname: string): Promise<User | null> {
     const option: FindOneOptions<User> = {
       where: { nickname },

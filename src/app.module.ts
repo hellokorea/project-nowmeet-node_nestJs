@@ -16,6 +16,7 @@ import { DevMatch } from "./match/entity/devmatch.entity";
 import { DevChatRoom } from "./chat/entity/devchats.entity";
 import { AwsService } from "./aws.service";
 import { ScheduleModule } from "@nestjs/schedule";
+import { fail } from "assert";
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { ScheduleModule } from "@nestjs/schedule";
                 password: configService.getOrThrow("DB_PASSWORD"),
                 database: configService.getOrThrow(hostDb),
                 entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-                synchronize: false, //^ TODO: prod => false
+                synchronize: true, //^ TODO: prod => false
               });
             } catch (error) {
               console.error(error);
