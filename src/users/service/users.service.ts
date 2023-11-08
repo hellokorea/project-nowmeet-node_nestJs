@@ -42,7 +42,6 @@ export class UsersService {
       throw new BadRequestException("이미 존재하는 닉네임 입니다");
     }
 
-    console.log(files);
     if (!files.length) {
       throw new BadRequestException("프로필 사진을 최소 1장 등록하세요");
     }
@@ -67,7 +66,6 @@ export class UsersService {
       profileImages: userFilesKeys,
     });
 
-    console.log(users);
     return users;
   }
 

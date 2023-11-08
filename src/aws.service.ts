@@ -88,11 +88,7 @@ export class AwsService {
 
         // Pre-sign the command
         const request = await createRequest(this.s3Client, command);
-        const signedUrl = formatUrl(
-          await signer.presign(request, {
-            expiresIn: 60 * 5,
-          })
-        );
+        const signedUrl = formatUrl(await signer.presign(request));
         return signedUrl;
       })
     );

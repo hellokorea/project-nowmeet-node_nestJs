@@ -7,8 +7,8 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swag
 import { SendLikeResponseDto } from "../dtos/request/match.sendLikeResonse.dto";
 import { ReceiveBoxResponseDto, SendBoxResponseDto } from "../dtos/response/match.likeBoxResponse.dto";
 import { MatchAcceptResponseDto, MatchRejectResponseDto } from "../dtos/response/match.matchResultResponse.dto";
-import { ChatAllListResponseDto } from "./../../chat/dtos/chat.listAllResopnse.dto";
-import { ChatRoomResponseDto } from "src/chat/dtos/chat.chatRoomResponse.dto";
+import { ChatAllListResponseDto } from "../../chat/dtos/response/chat.listAllResopnse.dto";
+import { ChatRoomResponseDto } from "src/chat/dtos/response/chat.chatRoomResponse.dto";
 import { GetProfileResponseDto } from "src/users/dtos/response/user.getProfiles.dto";
 
 @ApiBearerAuth()

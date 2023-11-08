@@ -13,7 +13,7 @@ import { ChatRoom, ChatState } from "./entity/chats.entity";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
 import { UseGuards, Req, InternalServerErrorException, BadRequestException, NotFoundException } from "@nestjs/common";
-import { SendMessageDto } from "./dtos/chat.dto";
+import { SendMessageDto } from "./dtos/response/chat.dto";
 import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/users.repository";
@@ -31,32 +31,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly userRepository: UsersRepository
   ) {}
 
-  async handleConnection() {
+  async handleConnection(matchId: number) {
     console.log("매칭된 상대와 채팅방 오픈"); //채팅방 열기 클라 이벤트 받아야함
-    this.socket.on("openchatroom", (data) => {
-      const chat = data;
-
-      const matchId = chat.id;
-
-      if (chat) {
-        chat.isOpen = ChatState.OPEN;
-        //dev_chat_room에도 반영 되어야함
-
-        this.setChatRoomDisconnectTimer(matchId);
-      } else {
-        throw new NotFoundException(`${matchId}번의 매치가 존재하지 않습니다`);
+    this.socket.on("openchatroom", async (data) => {
+      try {
+        console.log(data);
+        await this.setChatRoomDisconnectTimer(matchId);
+      } catch (error) {
+        console.error(error);
+        throw new BadRequestException("채팅방 오픈에 실패 했습니다.");
       }
     });
   }
 
   async handleDisconnect(matchId: number) {
-    console.log("채팅방 데이터 삭제 로직 시작");
+    try {
+      console.log("채팅방 데이터 삭제 로직 시작");
 
-    const chat = await this.chatRoomRepository.find({ where: { matchId: matchId } });
-
-    await this.chatRoomRepository.remove(chat);
-
-    console.log("채팅방 데이터 삭제 완료");
+      const chat = await this.chatRoomRepository.find({ where: { matchId: matchId } });
+      await this.chatRoomRepository.remove(chat);
+      console.log("채팅방 데이터 삭제 완료");
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
@@ -66,10 +63,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
     }
 
+    //*corn으로 뺄까?
+    const CHECK_CYCLE: number = 12 * 60 * 60 * 1000;
+    const TEST_CYCLE: number = 30 * 1000;
+
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
       senderId: senderId,
       receiverId: receiverId,
+      expireTime: new Date(Date.now() + CHECK_CYCLE),
     });
 
     const createDevChatRoom = this.devChatRoomRepository.create({
@@ -91,6 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const CHAT_EXPIRE_TIMER = 12 * 60 * 60 * 1000;
     const TEST = 40 * 1000;
 
+    //*corn으로 뺄까?
     this.chatRoomTimers[matchId] = setTimeout(async () => {
       const chat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
@@ -107,7 +110,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         chatId: chat.id,
         chatStatus: chat.status,
         reason: "chatRoomExpired",
-        message: "유저가 24시간 내 채팅방을 오픈하지 않아 소멸 됩니다",
+        message: "유저가 12시간 내 채팅방을 오픈하지 않아 소멸 됩니다",
       });
       console.log(`채팅 오픈 가능 시간이 종료되어 ${matchId}의 채팅방이 소멸 됩니다`);
 
@@ -118,6 +121,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async setChatRoomDisconnectTimer(matchId: number) {
+    //필드 추가
     const CHAT_DISCONNECT_TIMER = 12 * 60 * 60 * 1000;
     const TEST = 30 * 1000;
 
@@ -132,7 +136,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         matchId: matchId,
         chatId: chat.id,
         reason: "chatRoomDisconnect",
-        message: "채팅 가능 제한 시간이 종료 되어 연결이 끊깁니다",
+        message: "채팅 가능한 시간이 종료 되어 연결이 끊깁니다",
       });
       console.log(`채팅 가능 시간이 종료되어 ${matchId}의 채팅방 연결이 끊깁니다`);
 

@@ -7,6 +7,7 @@ import { MatchState } from "../entity/match.entity";
 import * as moment from "moment";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { AwsService } from "src/aws.service";
+import { ChatState } from "src/chat/entity/chats.entity";
 
 @Injectable()
 export class MatchService {
@@ -249,7 +250,8 @@ export class MatchService {
         throw new BadRequestException();
       }
 
-      const userInfo = await this.usersRepository.findByIdGetNickname(matchUserId);
+      const userInfo = await this.usersRepository.findById(matchUserId);
+      const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
 
       return {
         chatId: chat.id,
@@ -257,7 +259,7 @@ export class MatchService {
         me,
         matchUserId,
         matchUserNickname: userInfo.nickname,
-        // chatStatus: chat.status,
+        profileImage: preSignedUrl[0],
       };
     });
 
@@ -293,17 +295,48 @@ export class MatchService {
       matchUserId = findChat.receiverId;
     }
 
-    const userInfo = await this.usersRepository.findByIdGetNickname(matchUserId);
+    const userInfo = await this.usersRepository.findById(matchUserId);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
+    const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
 
-    // 닉네임 추가, 만료시간 추가
     return {
       chatId: findChat.id,
       matchId: findChat.matchId,
       matchUserId,
       matchUserNickname: userInfo.nickname,
-      chatStatus: findChat.status,
+      chatStatus: findChat.status, //pending이면 expire, open이면 disconnect 처리
+      expireTime,
+      profileImage: preSignedUrl[0],
     };
   }
 
-  async openChatRoom(chatId: number, req: UserRequestDto) {}
+  async openChatRoom(chatId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+
+    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
+
+    if (!findChat) {
+      throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
+    }
+
+    if (findChat.receiverId === null || findChat.senderId === null) {
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
+    }
+
+    const isUser = await this.chatGateway.findChatsByUserId(loggedId);
+
+    if (!isUser.length) {
+      throw new BadRequestException("유저 정보가 올바르지 않습니다");
+    }
+
+    //과금 처리
+
+    findChat.status = ChatState.OPEN;
+
+    // expire await this.chatGateway.handleConnection(findChat.matchId);
+
+    return {
+      chatStatus: findChat.status,
+    };
+  }
 }

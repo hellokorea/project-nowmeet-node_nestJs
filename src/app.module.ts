@@ -16,7 +16,6 @@ import { DevMatch } from "./match/entity/devmatch.entity";
 import { DevChatRoom } from "./chat/entity/devchats.entity";
 import { AwsService } from "./aws.service";
 import { ScheduleModule } from "@nestjs/schedule";
-import { fail } from "assert";
 
 @Module({
   imports: [

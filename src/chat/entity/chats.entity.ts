@@ -26,6 +26,12 @@ export class ChatRoom {
   @OneToMany(() => ChatMessage, (message) => message.chatRoom)
   message: ChatMessage[];
 
+  @Column()
+  expireTime: Date;
+
+  @Column({ default: null })
+  disconnectTime: Date;
+
   @CreateDateColumn()
   createdAt: string;
 }
