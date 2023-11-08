@@ -155,17 +155,29 @@ export class UsersService {
   //-----------------------My Account Rogic
 
   async getMyUserInfo(req: UserRequestDto) {
-    const userId = req.user.id;
-    const user = await this.usersRepository.findById(userId);
+    const loggedId = req.user.id;
+    const user = await this.usersRepository.findById(loggedId);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
-    if (user.id === userId) {
+    if (user.id !== loggedId) {
+      throw new BadRequestException("잘못된 요청입니다.");
+    }
+
+    try {
+      console.log("나의 유저 정보");
+      console.log(user);
+
       const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
 
+      console.log(preSignedUrl);
+
       return { user, PreSignedUrl: preSignedUrl };
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException("유저 정보를 갖고오는데 실패 했습니다.");
     }
   }
 

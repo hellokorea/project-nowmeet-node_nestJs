@@ -81,7 +81,12 @@ export class AwsService {
     const signer = new S3RequestPresigner({
       ...this.s3Client.config,
     });
+    console.log("url 생성 key log");
+    console.log(keys);
 
+    if (!keys.length === null) {
+      throw new BadRequestException("프로필 이미지가 비어있습니다.");
+    }
     const signedUrls = await Promise.all(
       keys.map(async (key) => {
         const command = new GetObjectCommand({

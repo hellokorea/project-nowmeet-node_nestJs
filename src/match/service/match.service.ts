@@ -252,7 +252,7 @@ export class MatchService {
 
       const userInfo = await this.usersRepository.findById(matchUserId);
       const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
-
+      //논리적 삭제 여부 노출?
       return {
         chatId: chat.id,
         matchId: chat.matchId,
@@ -298,16 +298,28 @@ export class MatchService {
     const userInfo = await this.usersRepository.findById(matchUserId);
     const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
     const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
+    const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
-    return {
+    const chatData = {
       chatId: findChat.id,
       matchId: findChat.matchId,
       matchUserId,
       matchUserNickname: userInfo.nickname,
-      chatStatus: findChat.status, //pending이면 expire, open이면 disconnect 처리
-      expireTime,
+      chatStatus: findChat.status,
       profileImage: preSignedUrl[0],
     };
+
+    if (findChat.status === "PENDING") {
+      return {
+        chatData,
+        expireTime,
+      };
+    } else if (findChat.status === "OPEN") {
+      return {
+        chatData,
+        disconnectTime,
+      };
+    }
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {
@@ -331,12 +343,12 @@ export class MatchService {
 
     //과금 처리
 
-    findChat.status = ChatState.OPEN;
-
-    // expire await this.chatGateway.handleConnection(findChat.matchId);
+    const openChatActive = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);
+    const disconnectTime = moment(openChatActive.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
     return {
-      chatStatus: findChat.status,
+      chatStatus: openChatActive.status,
+      disconnectTime,
     };
   }
 }

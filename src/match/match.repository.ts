@@ -12,13 +12,13 @@ export class MatchRepository {
   ) {}
 
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
-    const CHECK_CYCLE: number = 24 * 60 * 60 * 1000;
-    const TEST_CYCLE: number = 30 * 1000;
+    const PROD_TIMER: number = 24 * 60 * 60 * 1000;
+    const TEST_TIMER: number = 30 * 1000;
 
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + TEST_CYCLE),
+      expireMatch: new Date(Date.now() + PROD_TIMER),
     });
 
     return await this.matchRepository.save(newMatch);

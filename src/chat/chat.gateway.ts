@@ -36,7 +36,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.socket.on("openchatroom", async (data) => {
       try {
         console.log(data);
-        await this.setChatRoomDisconnectTimer(matchId);
+        // await this.setChatRoomDisconnectTimer(matchId);
       } catch (error) {
         console.error(error);
         throw new BadRequestException("채팅방 오픈에 실패 했습니다.");
@@ -44,6 +44,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  // 아예 삭제시켜버리는 로직과 일단 논리적 삭제 하는 것을 둬야 할듯 안그러면 걍 쥐도새도 모르게 채팅방이 날아가기 때문에
   async handleDisconnect(matchId: number) {
     try {
       console.log("채팅방 데이터 삭제 로직 시작");
@@ -63,15 +64,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
     }
 
-    //*corn으로 뺄까?
-    const CHECK_CYCLE: number = 12 * 60 * 60 * 1000;
-    const TEST_CYCLE: number = 30 * 1000;
+    const PROD_TIMER: number = 12 * 60 * 60 * 1000;
+    const TEST_TIMER: number = 30 * 1000;
 
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
       senderId: senderId,
       receiverId: receiverId,
-      expireTime: new Date(Date.now() + CHECK_CYCLE),
+      expireTime: new Date(Date.now() + PROD_TIMER),
     });
 
     const createDevChatRoom = this.devChatRoomRepository.create({
@@ -93,7 +93,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const CHAT_EXPIRE_TIMER = 12 * 60 * 60 * 1000;
     const TEST = 40 * 1000;
 
-    //*corn으로 뺄까?
     this.chatRoomTimers[matchId] = setTimeout(async () => {
       const chat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
@@ -121,9 +120,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async setChatRoomDisconnectTimer(matchId: number) {
-    //필드 추가
-    const CHAT_DISCONNECT_TIMER = 12 * 60 * 60 * 1000;
-    const TEST = 30 * 1000;
+    console.log(matchId);
+    const PROD_TIMER = 12 * 60 * 60 * 1000;
+    const TEST_TIMER = 30 * 1000;
+
+    //- DisconnectTime 필드 추가, status OPEN으로 저장
+    const chatRoom = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
+
+    chatRoom.disconnectTime = new Date(Date.now() + PROD_TIMER);
+    chatRoom.status = ChatState.OPEN;
+
+    const addDisconnectTime = await this.chatRoomRepository.save(chatRoom);
+    //-
 
     this.chatRoomTimers[matchId] = setTimeout(async () => {
       const chat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
@@ -143,7 +151,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       delete this.chatRoomTimers[matchId];
 
       await this.handleDisconnect(matchId);
-    }, CHAT_DISCONNECT_TIMER);
+    }, PROD_TIMER);
+
+    return addDisconnectTime;
   }
 
   /*
