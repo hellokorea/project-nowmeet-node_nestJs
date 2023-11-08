@@ -38,6 +38,9 @@ export class AwsService {
       const uploadPromises = files.map(async (file) => {
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
+        console.log(file.buffer);
+        console.log(file);
+
         const putCommand = new PutObjectCommand({
           Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
           Key: key,
