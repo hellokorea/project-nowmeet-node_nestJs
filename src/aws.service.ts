@@ -1,6 +1,6 @@
 import * as path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { S3RequestPresigner } from "@aws-sdk/s3-request-presigner";
 import { createRequest } from "@aws-sdk/util-create-request";
@@ -84,23 +84,30 @@ export class AwsService {
     console.log("url 생성 key log");
     console.log(keys);
 
-    if (!keys.length === null) {
+    if (!keys.length) {
       throw new BadRequestException("프로필 이미지가 비어있습니다.");
     }
-    const signedUrls = await Promise.all(
-      keys.map(async (key) => {
-        const command = new GetObjectCommand({
-          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
-          Key: key,
-        });
 
-        // Pre-sign the command
-        const request = await createRequest(this.s3Client, command);
-        const signedUrl = formatUrl(await signer.presign(request));
-        return signedUrl;
-      })
-    );
-    return signedUrls;
+    try {
+      const signedUrls = await Promise.all(
+        keys.map(async (key) => {
+          const command = new GetObjectCommand({
+            Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
+            Key: key,
+          });
+
+          // Pre-sign the command
+          const request = await createRequest(this.s3Client, command);
+          const signedUrl = formatUrl(await signer.presign(request));
+          return signedUrl;
+        })
+      );
+      return signedUrls;
+    } catch (error) {
+      console.error("S3 사전 서명 URL 생성 중 오류 발생:", error);
+      // 적절한 예외 처리 로직이나 오류 응답을 여기에 구현합니다.
+      throw new InternalServerErrorException("S3 사전 서명 URL을 생성하는데 실패했습니다.");
+    }
   }
 
   async deleteFilesFromS3(keys: string[]) {
