@@ -249,34 +249,32 @@ export class UsersService {
   }
 
   async deleteAccount(req: UserRequestDto) {
-    const userId = req.user.id;
-    const user = await this.usersRepository.findById(userId);
-
-    console.log(userId);
-
+    const loggedId = req.user.id;
+    const user = await this.usersRepository.findById(loggedId);
+    console.log(loggedId);
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
-    if (user.id === userId) {
-      try {
-        await this.connection.transaction(async (txManager) => {
-          await this.matchRepository.deleteMatchesByUserId(txManager, user.id);
-          await this.matchRepository.deleteDevMatchesByUserId(txManager, user.id);
-          await this.chatGateway.deleteChatDataByUserId(txManager, user.id);
-          await this.chatGateway.deleteDevChatDataByUserId(txManager, user.id);
-          await this.usersRepository.deleteUser(txManager, user);
-          console.log(`userId: ${userId} 번 유저 데이터 전부 삭제 완료`);
-        });
-        console.log(`userId: ${userId} 번 유저 계정 삭제 완료`);
+    try {
+      await this.connection.transaction(async (txManager) => {
+        // 연관된 데이터 삭제
+        await this.matchRepository.deleteMatchesByUserId(txManager, loggedId);
+        await this.matchRepository.deleteDevMatchesByUserId(txManager, loggedId);
+        await this.chatGateway.deleteChatDataByUserId(txManager, loggedId);
+        await this.chatGateway.deleteDevChatDataByUserId(txManager, loggedId);
 
-        return { message: `userId: ${userId} 번 유저의 계정을 성공적으로 삭제 했습니다` };
-        //
-      } catch (error) {
-        console.error("Error during transaction:", error);
+        // 사용자 삭제
+        await this.usersRepository.deleteUser(txManager, user);
 
-        throw new InternalServerErrorException(`userId: ${userId} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
-      }
+        console.log(`userId: ${loggedId} 번 유저 데이터 전부 삭제 완료`);
+      });
+
+      console.log(`userId: ${loggedId} 번 유저 계정 삭제 완료`);
+      return { message: `userId: ${loggedId} 번 유저의 계정을 성공적으로 삭제 했습니다` };
+    } catch (error) {
+      console.error("Error during transaction:", error);
+      throw new InternalServerErrorException(`userId: ${loggedId} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
     }
   }
 }
