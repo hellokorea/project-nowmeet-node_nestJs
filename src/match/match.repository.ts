@@ -18,7 +18,7 @@ export class MatchRepository {
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + PROD_TIMER),
+      expireMatch: new Date(Date.now() + TEST_TIMER),
     });
 
     return await this.matchRepository.save(newMatch);

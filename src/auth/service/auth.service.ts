@@ -12,36 +12,25 @@ export class AuthService {
 
   async isUserExist(email: string) {
     const logger = new Logger();
-    logger.log(email);
 
     try {
       const findUser = await this.usersRepository.findOneGetByEmail(email);
+      logger.log(findUser.email);
 
       if (!findUser) {
-        return null;
+        return false;
       }
 
-      //user exist
-      const googlePayload = { email, sub: findUser.id };
-
-      const token = {
-        token: this.jwtService.sign(googlePayload, {
-          secret: process.env.JWT_KEY,
-          expiresIn: process.env.JWT_EXPIRES,
-        }),
-      };
-
-      logger.log(`LoginLog => Email : ${googlePayload.email} || JWT : ${token.token}`);
-
-      return token;
+      return true;
     } catch (error) {
       logger.error(error);
-      throw new BadRequestException("잘못된 요청");
+      throw new BadRequestException("유저 검증 도중 문제가 발생했습니다.");
     }
   }
 
   //^------------------------------------------
 
+  //!Client Disuse Code
   async googleLogin(req: GoogleRequest) {
     try {
       const {

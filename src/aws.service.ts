@@ -42,7 +42,7 @@ export class AwsService {
         console.log(file);
 
         const putCommand = new PutObjectCommand({
-          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
@@ -92,7 +92,7 @@ export class AwsService {
       const signedUrls = await Promise.all(
         keys.map(async (key) => {
           const command = new GetObjectCommand({
-            Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
+            Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
             Key: key,
           });
 
@@ -114,7 +114,7 @@ export class AwsService {
     try {
       const deletePromises = keys.map((key) => {
         const deleteCommand = new DeleteObjectCommand({
-          Bucket: this.S3_USER_PROFILES_BUCKET_NAME,
+          Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
           Key: key,
         });
         return this.s3Client.send(deleteCommand);
