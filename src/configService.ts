@@ -28,6 +28,6 @@ export const ENV_VARS = {
   LOCAL_IP: "LOCAL_IP",
   //
   WEB_CLIENTID: "WEB_CLIENTID",
-  issuer: "issuer",
-  jwksUri: "jwksUri",
+  ISSUER: "ISSUER",
+  JWKS_URI: "JWKS_URI",
 };

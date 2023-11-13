@@ -52,8 +52,8 @@ DEV_AWS_S3_ACCESS_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_ACCESS
 DEV_AWS_S3_SECRET_KEY=$(aws ssm get-parameter --name "/nowmeet/DEV_AWS_S3_SECRET_KEY" --with-decryption --query "Parameter.Value" --output text)
 AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" --with-decryption --query "Parameter.Value" --output text)
 WEB_CLIENTID=$(aws ssm get-parameter --name "/nowmeet/WEB_CLIENTID" --with-decryption --query "Parameter.Value" --output text)
-jwksUri=$(aws ssm get-parameter --name "/nowmeet/jwksUri" --with-decryption --query "Parameter.Value" --output text)
-issuer=$(aws ssm get-parameter --name "/nowmeet/issuer" --with-decryption --query "Parameter.Value" --output text)
+JWKS_URI=$(aws ssm get-parameter --name "/nowmeet/JWKS_URI" --with-decryption --query "Parameter.Value" --output text)
+ISSUER=$(aws ssm get-parameter --name "/nowmeet/ISSUER" --with-decryption --query "Parameter.Value" --output text)
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 `mkdir -p "$REPOSITORY"`
@@ -91,8 +91,8 @@ echo "DEV_AWS_S3_ACCESS_KEY=$DEV_AWS_S3_ACCESS_KEY" >> $REPOSITORY/.env
 echo "DEV_AWS_S3_SECRET_KEY=$DEV_AWS_S3_SECRET_KEY" >> $REPOSITORY/.env
 echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME" >> $REPOSITORY/.env
 echo "WEB_CLIENTID=$WEB_CLIENTID" >> $REPOSITORY/.env
-echo "jwksUri=$jwksUri" >> $REPOSITORY/.env
-echo "issuer=$issuer" >> $REPOSITORY/.env
+echo "JWKS_URI=$JWKS_URI" >> $REPOSITORY/.env
+echo "ISSUER=$ISSUER" >> $REPOSITORY/.env
 
 
 echo ".env file written successfully!"
