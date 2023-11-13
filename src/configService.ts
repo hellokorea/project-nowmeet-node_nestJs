@@ -26,4 +26,8 @@ export const ENV_VARS = {
   AWS_S3_DEPLOY_BUCKET_NAME: "AWS_S3_DEPLOY_BUCKET_NAME",
   AWS: "AWS",
   LOCAL_IP: "LOCAL_IP",
+  //
+  WEB_CLIENTID: "WEB_CLIENTID",
+  issuer: "issuer",
+  jwksUri: "jwksUri",
 };

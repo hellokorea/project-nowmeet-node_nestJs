@@ -216,6 +216,11 @@ export class MatchService {
     try {
       const expireMatches = await this.matchRepository.findExpireMatchesById();
 
+      if (!expireMatches.length) {
+        console.log("삭제 할 매치 데이터가 존재하지 않습니다.");
+        return;
+      }
+
       expireMatches.forEach(async (match) => {
         console.log(`삭제된 matchId: ${match.id}, matchStatus: ${match.status} ... match data remove`);
         await this.matchRepository.removeExpireMatch(match);
