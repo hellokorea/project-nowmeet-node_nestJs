@@ -105,7 +105,7 @@ export class AwsService {
       return signedUrls;
     } catch (error) {
       console.error("S3 사전 서명 URL 생성 중 오류 발생:", error);
-      // 적절한 예외 처리 로직이나 오류 응답을 여기에 구현합니다.
+
       throw new InternalServerErrorException("S3 사전 서명 URL을 생성하는데 실패했습니다.");
     }
   }

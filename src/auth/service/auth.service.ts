@@ -11,11 +11,8 @@ export class AuthService {
   ) {}
 
   async isUserExist(email: string) {
-    const logger = new Logger();
-
     try {
       const findUser = await this.usersRepository.findOneGetByEmail(email);
-      logger.log(findUser.email);
 
       if (!findUser) {
         return false;
@@ -23,7 +20,7 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      logger.error(error);
+      console.error(error);
       throw new BadRequestException("유저 검증 도중 문제가 발생했습니다.");
     }
   }
