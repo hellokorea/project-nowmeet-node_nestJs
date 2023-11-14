@@ -11,12 +11,11 @@ import { GoogleStrategy } from "./strategies/google.strategies";
   imports: [
     PassportModule.register({ defaultStrategy: "jwt", session: false }),
 
-    //자체 jwt 발급
+    //* Local Use
     JwtModule.register({
       secret: process.env.JWT_KEY,
       signOptions: { expiresIn: process.env.JWT_EXPIRES },
     }),
-
     forwardRef(() => UsersModule),
   ],
   exports: [AuthService],

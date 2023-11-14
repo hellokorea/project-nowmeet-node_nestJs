@@ -28,6 +28,7 @@ export class AuthService {
   //^------------------------------------------
 
   //!Client Disuse Code
+  //* Local Use
   async googleLogin(req: GoogleRequest) {
     try {
       const {
@@ -36,27 +37,22 @@ export class AuthService {
 
       const findUser = await this.usersRepository.findOneGetByEmail(email);
 
-      // Email Check
       if (!findUser) {
-        return { shouldSignUp: true, email };
+        return null;
       }
 
-      //Jwt Generate
       const googlePayload = { email, sub: findUser.id };
 
-      const signupData = {
-        shouldSignUp: false,
+      const jwtToken = {
         token: this.jwtService.sign(googlePayload, {
           secret: process.env.JWT_KEY,
           expiresIn: process.env.JWT_EXPIRES,
         }),
       };
 
-      const logger = new Logger();
-      logger.log(`LoginLog => Email : ${googlePayload.email} || JWT : ${signupData.token}`);
-
-      return signupData;
+      return jwtToken;
     } catch (error) {
+      console.error(error);
       throw new UnauthorizedException("로그인 실패");
     }
   }
