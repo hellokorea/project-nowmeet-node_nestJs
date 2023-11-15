@@ -27,7 +27,7 @@ export class AwsService {
     });
 
     //* Prod
-    this.S3_USER_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_PROFILES_BUCKET_NAME");
+    this.S3_USER_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_PROFILES_BUCKET_NAME"); //*
     this.S3_DEPLOY_BUCKET_NAME = this.configService.get("AWS_S3_DEPLOY_BUCKET_NAME");
     //& dev
     this.S3_USER_DEV_PROFILES_BUCKET_NAME = this.configService.get("AWS_S3_USER_DEV_PROFILES_BUCKET_NAME");

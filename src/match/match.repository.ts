@@ -67,7 +67,9 @@ export class MatchRepository {
   }
 
   async findExpireMatchesById(): Promise<Match[]> {
-    return this.matchRepository.find({ where: { expireMatch: LessThan(new Date()) } });
+    const OFFSET = 9 * 60 * 60 * 1000;
+    const nowInKorea = new Date(new Date().getTime() + OFFSET);
+    return this.matchRepository.find({ where: { expireMatch: LessThan(nowInKorea) } });
   }
 
   async removeExpireMatch(match: Match): Promise<void> {

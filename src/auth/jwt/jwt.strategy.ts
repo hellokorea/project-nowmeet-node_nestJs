@@ -37,10 +37,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const user = await this.userRepository.findOneGetByEmail(payload.email);
 
-    console.log("jwt검증 로직 유저 :");
-    console.log(user);
-    console.log(payload.email);
-
     if (!user) {
       throw new UnauthorizedException("접근 오류");
     }
