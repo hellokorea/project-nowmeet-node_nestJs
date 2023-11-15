@@ -57,6 +57,11 @@ export class MatchService {
   async getLikeSendBox(req: UserRequestDto) {
     const loggedId = req.user.id;
     const matched = await this.matchRepository.getSendMatch(loggedId);
+
+    if (!matched.length) {
+      return null;
+    }
+
     const receiverProfiles = matched.map((data) => data.receiver.profileImages);
     const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
 
@@ -82,6 +87,11 @@ export class MatchService {
   async getLikeReceiveBox(req: UserRequestDto) {
     const loggedId = req.user.id;
     const matched = await this.matchRepository.getReceiveMatch(loggedId);
+
+    if (!matched.length) {
+      return null;
+    }
+
     const senderProfiles = matched.map((data) => data.sender.profileImages);
     const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfiles.flat());
 
@@ -258,13 +268,14 @@ export class MatchService {
       const userInfo = await this.usersRepository.findById(matchUserId);
       const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
       //논리적 삭제 여부 노출?
+      //만약 expire, disconnect 된 거라면,,, 기본 이미지 노출,,, ...
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
         matchUserNickname: userInfo.nickname,
-        profileImage: preSignedUrl[0],
+        preSignedUrl,
       };
     });
 
@@ -311,7 +322,7 @@ export class MatchService {
       matchUserId,
       matchUserNickname: userInfo.nickname,
       chatStatus: findChat.status,
-      profileImage: preSignedUrl[0],
+      preSignedUrl,
     };
 
     if (findChat.status === "PENDING") {

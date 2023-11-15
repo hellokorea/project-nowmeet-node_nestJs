@@ -16,5 +16,5 @@ export class RefreshLocationUserResDto {
   @ApiProperty({ type: () => myLocationResDto })
   myInfo: myLocationResDto;
   @ApiProperty({ type: () => GetProfileResponseDto, isArray: true })
-  nearUser: GetProfileResponseDto;
+  nearUsers: GetProfileResponseDto;
 }

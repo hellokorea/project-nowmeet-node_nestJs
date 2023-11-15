@@ -66,12 +66,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const PROD_TIMER: number = 12 * 60 * 60 * 1000;
     const TEST_TIMER: number = 30 * 1000;
+    const OFFSET = 9 * 60 * 60 * 1000;
 
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
       senderId: senderId,
       receiverId: receiverId,
-      expireTime: new Date(Date.now() + TEST_TIMER),
+      expireTime: new Date(Date.now() + TEST_TIMER + OFFSET),
     });
 
     const createDevChatRoom = this.devChatRoomRepository.create({
@@ -125,10 +126,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(matchId);
     const PROD_TIMER = 24 * 60 * 60 * 1000;
     const TEST_TIMER = 90 * 1000;
+    const OFFSET = 9 * 60 * 60 * 1000;
 
-    // DisconnectTime 필드 추가, status OPEN으로 저장
+    // DisconnectTime 필드 데이터 활성화, status OPEN으로 저장
     const chatRoom = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
-    chatRoom.disconnectTime = new Date(Date.now() + TEST_TIMER);
+    chatRoom.disconnectTime = new Date(Date.now() + TEST_TIMER + OFFSET);
     chatRoom.status = ChatState.OPEN;
     const addDisconnectTime = await this.chatRoomRepository.save(chatRoom);
 

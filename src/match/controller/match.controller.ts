@@ -10,6 +10,7 @@ import { MatchAcceptResponseDto, MatchRejectResponseDto } from "../dtos/response
 import { ChatAllListResponseDto } from "../../chat/dtos/response/chat.listAllResopnse.dto";
 import { ChatRoomResponseDto } from "src/chat/dtos/response/chat.chatRoomResponse.dto";
 import { GetProfileResponseDto } from "src/users/dtos/response/user.getProfiles.dto";
+import { OpenChatResponseDto } from "src/chat/dtos/response/chat.open.dto";
 
 @ApiBearerAuth()
 @Controller("match")
@@ -97,6 +98,8 @@ export class MatchController {
   }
 
   @ApiResponse({
+    description:
+      "채팅방의 Status가 PENDING이면 expireTime(오픈 만료 시간)이고, OPEN이면 disconnectTime(채팅 종료 시간)",
     type: ChatRoomResponseDto,
   })
   @ApiOperation({ summary: "해당 채팅방으로 입장" })
@@ -106,6 +109,12 @@ export class MatchController {
     return this.matchService.getUserChatRoom(chatId, req);
   }
 
+  @ApiResponse({
+    description: "채팅방 오픈 시 채팅방 Status => OPEN으로 변경, disconnectTime 함수 활성",
+    type: OpenChatResponseDto,
+  })
+  @ApiOperation({ summary: "채팅방 오픈" })
+  @ApiParam({ name: "chatId", description: "오픈할 채팅방 id 입력", type: Number })
   @Post("me/chatBox/:chatId/open")
   openChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
     return this.matchService.openChatRoom(chatId, req);

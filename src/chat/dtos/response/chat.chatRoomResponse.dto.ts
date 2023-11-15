@@ -13,6 +13,17 @@ export class ChatRoomResponseDto {
   @ApiProperty({ example: "매칭된 유저의 닉네임" })
   matchUserNickname: string;
 
-  @ApiProperty({ example: "PENDING 또는 OPEN" })
+  @ApiProperty({ example: "PENDING" })
   chatStatus: string;
+
+  @ApiProperty({
+    example: ["https://nowmeet-profileimg-s3-bucket-dev.s3.ap-northeast-2.amazonaws.com/profileImages/example.jpg"],
+    type: [String],
+  })
+  preSignedUrl: string[];
+
+  @ApiProperty({
+    example: "2023-11-15 23:20:41",
+  })
+  expireTime: string;
 }

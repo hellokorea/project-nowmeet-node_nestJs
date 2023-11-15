@@ -14,11 +14,12 @@ export class MatchRepository {
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const PROD_TIMER: number = 24 * 60 * 60 * 1000;
     const TEST_TIMER: number = 30 * 1000;
+    const OFFSET = 9 * 60 * 60 * 1000;
 
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + TEST_TIMER),
+      expireMatch: new Date(Date.now() + TEST_TIMER + OFFSET),
     });
 
     return await this.matchRepository.save(newMatch);

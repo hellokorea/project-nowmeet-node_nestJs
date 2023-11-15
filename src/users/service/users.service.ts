@@ -127,6 +127,10 @@ export class UsersService {
         (responseUser) => user.nickname !== responseUser.nickname
       );
 
+      if (!filteredResponseUserList.length) {
+        return null;
+      }
+
       const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
       const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
 

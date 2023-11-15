@@ -7,7 +7,7 @@ export class AppService {
   constructor(private readonly matchService: MatchService) {}
 
   //Expire Matches Delete
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) //EVERY_30_SECONDS
+  @Cron(CronExpression.EVERY_30_SECONDS) //EVERY_DAY_AT_MIDNIGHT
   async handleExpiredMatches() {
     await this.matchService.removeExpireMatches();
   }

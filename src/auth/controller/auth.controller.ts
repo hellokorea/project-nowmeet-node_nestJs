@@ -4,7 +4,7 @@ import { SuccessInterceptor } from "src/common/interceptors/success.interceptor"
 import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { IsUserRequsetDto, IsUserResponseDto } from "../dtos/response/auth.isUser.dto";
+import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)
@@ -24,8 +24,8 @@ export class AuthController {
   }
 
   @ApiResponse({
-    description: "유저 존재 시 JWT 반환, 없을 시 null 반환",
-    type: IsUserResponseDto,
+    description: "유저 => true / 유저 X => false",
+    type: Boolean,
   })
   @ApiOperation({ summary: "로그인 시 유저 검증" })
   @ApiBody({ description: "이메일 정보 입력", type: IsUserRequsetDto })
