@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Match } from "./entity/match.entity";
 import { EntityManager, FindOneOptions, LessThan, Repository } from "typeorm";
 import { DevMatch } from "./entity/devmatch.entity";
+import * as moment from "moment-timezone";
 
 @Injectable()
 export class MatchRepository {
@@ -14,12 +15,13 @@ export class MatchRepository {
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const PROD_TIMER: number = 24 * 60 * 60 * 1000;
     const TEST_TIMER: number = 30 * 1000;
-    const OFFSET = 9 * 60 * 60 * 1000;
+
+    const expireMatch = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },
       receiver: { id: receiverId },
-      expireMatch: new Date(Date.now() + TEST_TIMER + OFFSET),
+      expireMatch,
     });
 
     return await this.matchRepository.save(newMatch);
@@ -67,9 +69,8 @@ export class MatchRepository {
   }
 
   async findExpireMatchesById(): Promise<Match[]> {
-    const OFFSET = 9 * 60 * 60 * 1000;
-    const nowInKorea = new Date(new Date().getTime() + OFFSET);
-    return this.matchRepository.find({ where: { expireMatch: LessThan(nowInKorea) } });
+    const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
+    return this.matchRepository.find({ where: { expireMatch: LessThan(currentKoreaTime) } });
   }
 
   async removeExpireMatch(match: Match): Promise<void> {

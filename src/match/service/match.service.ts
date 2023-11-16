@@ -357,6 +357,10 @@ export class MatchService {
       throw new BadRequestException("유저 정보가 올바르지 않습니다");
     }
 
+    if (findChat.status === "OPEN") {
+      throw new BadRequestException("이미 해당 채팅방은 오픈이 되어 있는 상태입니다.");
+    }
+
     //과금 처리
 
     const openChatActive = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);

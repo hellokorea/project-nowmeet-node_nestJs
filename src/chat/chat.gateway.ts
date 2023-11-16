@@ -18,6 +18,7 @@ import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/users.repository";
 import { DevChatRoom } from "./entity/devchats.entity";
+import * as moment from "moment-timezone";
 
 @WebSocketGateway({ namespace: "chat" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -66,13 +67,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const PROD_TIMER: number = 12 * 60 * 60 * 1000;
     const TEST_TIMER: number = 30 * 1000;
-    const OFFSET = 9 * 60 * 60 * 1000;
+
+    const expireTime = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
       senderId: senderId,
       receiverId: receiverId,
-      expireTime: new Date(Date.now() + TEST_TIMER + OFFSET),
+      expireTime,
     });
 
     const createDevChatRoom = this.devChatRoomRepository.create({
@@ -126,11 +128,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(matchId);
     const PROD_TIMER = 24 * 60 * 60 * 1000;
     const TEST_TIMER = 90 * 1000;
-    const OFFSET = 9 * 60 * 60 * 1000;
 
     // DisconnectTime 필드 데이터 활성화, status OPEN으로 저장
     const chatRoom = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
-    chatRoom.disconnectTime = new Date(Date.now() + TEST_TIMER + OFFSET);
+    chatRoom.disconnectTime = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
     chatRoom.status = ChatState.OPEN;
     const addDisconnectTime = await this.chatRoomRepository.save(chatRoom);
 
