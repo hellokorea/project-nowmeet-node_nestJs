@@ -267,14 +267,14 @@ export class MatchService {
 
       const userInfo = await this.usersRepository.findById(matchUserId);
       const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
-      //논리적 삭제 여부 노출?
-      //만약 expire, disconnect 된 거라면,,, 기본 이미지 노출,,, ...
+
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
         matchUserNickname: userInfo.nickname,
+        chatStatus: chat.status, // profileImg decide
         preSignedUrl,
       };
     });
@@ -330,12 +330,17 @@ export class MatchService {
         chatData,
         expireTime,
       };
-    } else if (findChat.status === "OPEN") {
+    }
+
+    if (findChat.status === "OPEN") {
       return {
         chatData,
         disconnectTime,
       };
     }
+
+    // End Status
+    return chatData;
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {
@@ -359,16 +364,56 @@ export class MatchService {
 
     if (findChat.status === "OPEN") {
       throw new BadRequestException("이미 해당 채팅방은 오픈이 되어 있는 상태입니다.");
+    } else if (findChat.status === "DISCONNECT_END" || findChat.status === "EXIPRE_END") {
+      throw new BadRequestException("채팅방 오픈 할 수 없는 상태입니다.");
     }
 
     //과금 처리
 
-    const openChatActive = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);
-    const disconnectTime = moment(openChatActive.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
+    try {
+      const openChatActive = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);
+      const disconnectTime = moment(openChatActive.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
-    return {
-      chatStatus: openChatActive.status,
-      disconnectTime,
-    };
+      return {
+        chatStatus: openChatActive.status,
+        disconnectTime,
+      };
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("채팅방을 오픈하는 요청이 실패했습니다.");
+    }
+  }
+
+  async deleteChatRoom(chatId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+
+    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
+
+    if (!findChat) {
+      throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
+    }
+
+    if (findChat.receiverId === null || findChat.senderId === null) {
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
+    }
+
+    const isUser = await this.chatGateway.findChatsByUserId(loggedId);
+
+    if (!isUser.length) {
+      throw new BadRequestException("유저 정보가 올바르지 않습니다");
+    }
+
+    try {
+      if (findChat.status === "EXIPRE_END" || findChat.status === "DISCONNECT_END") {
+        await this.chatGateway.handleDisconnect(findChat.matchId);
+
+        return {
+          message: `matchId :  ${findChat.matchId} 로 이루어진 채팅방 데이터 id는 ${findChat.id}가 삭제 되었습니다.`,
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      throw new BadRequestException("채팅방 삭제에 실패했습니다.");
+    }
   }
 }

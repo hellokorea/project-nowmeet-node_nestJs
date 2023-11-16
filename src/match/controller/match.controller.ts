@@ -1,4 +1,4 @@
-import { Controller, Get, UseInterceptors, Post, Req, Param, UseGuards, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, UseInterceptors, Post, Req, Param, UseGuards, ParseIntPipe, Delete } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { MatchService } from "../service/match.service";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
@@ -99,7 +99,7 @@ export class MatchController {
 
   @ApiResponse({
     description:
-      "채팅방의 Status가 PENDING이면 expireTime(오픈 만료 시간)이고, OPEN이면 disconnectTime(채팅 종료 시간)",
+      "채팅방의 Status가 PENDING이면 expireTime(오픈 만료 시간)이고, OPEN이면 disconnectTime(채팅 종료 시간) END면 just Data",
     type: ChatRoomResponseDto,
   })
   @ApiOperation({ summary: "해당 채팅방으로 입장" })
@@ -118,5 +118,12 @@ export class MatchController {
   @Post("me/chatBox/:chatId/open")
   openChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
     return this.matchService.openChatRoom(chatId, req);
+  }
+
+  @ApiOperation({ summary: "채팅방 삭제" })
+  @ApiParam({ name: "chatId", description: "삭제할 채팅방 id 입력", type: Number })
+  @Delete("me/chatBox/:chatId/delete")
+  deleteChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
+    return this.matchService.deleteChatRoom(chatId, req);
   }
 }

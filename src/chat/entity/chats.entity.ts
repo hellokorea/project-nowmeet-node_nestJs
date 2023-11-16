@@ -4,6 +4,8 @@ import { ChatMessage } from "./chatmessage.entity";
 export enum ChatState {
   PENDING = "PENDING",
   OPEN = "OPEN",
+  DISCONNECT_END = "DISCONNECT_END",
+  EXIPRE_END = "EXIPRE_END",
 }
 
 @Entity()
