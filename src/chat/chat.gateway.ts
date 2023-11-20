@@ -217,7 +217,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return chats;
   }
 
-  async findChatsByUserIds(profileId: number, loggedId: number): Promise<ChatRoom | null> {
+  async findChatsByUserIds(profileId: number, loggedId: number): Promise<ChatRoom[] | null> {
     const option: FindOneOptions<ChatRoom> = {
       where: [
         { senderId: loggedId, receiverId: profileId },
@@ -225,7 +225,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       ],
     };
 
-    return await this.chatRoomRepository.findOne(option);
+    return await this.chatRoomRepository.find(option);
   }
 
   async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {

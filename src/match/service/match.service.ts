@@ -27,7 +27,6 @@ export class MatchService {
     }
 
     const profiledId = user.id;
-    console.log("object");
     if (user.id === loggedId) {
       throw new BadRequestException("본인 프로필 조회 불가");
     }
@@ -37,12 +36,14 @@ export class MatchService {
 
     const userInfo = new UserProfileResponseDto(user);
 
-    let matchStatus = null;
+    let matchStatus = isMatch ? isMatch.status : null;
 
-    if (isMatch) {
-      matchStatus = isMatch.status;
-    } else if (isChats) {
-      matchStatus = MatchState.MATCH;
+    if (!matchStatus) {
+      const openOrPendingChat = isChats.find((v) => v.status === "OPEN" || v.status === "PENDING");
+
+      if (openOrPendingChat) {
+        matchStatus = MatchState.MATCH;
+      }
     }
 
     const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
@@ -165,22 +166,24 @@ export class MatchService {
     }
 
     const isMatched = await this.matchRepository.isMatchFind(loggedId, receiverId);
+    const isChats = await this.chatGateway.findChatsByUserIds(loggedId, receiverId);
+    const findActiveChat = isChats.find((v) => v.status === "OPEN" || v.status === "PENDING");
 
-    if (isMatched.length > 0) {
+    if (isMatched.length > 0 || findActiveChat) {
       throw new BadRequestException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
-    } else {
-      await this.matchRepository.createDevMatch(loggedId, receiverId); //Dev
-
-      const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
-
-      return {
-        matchId: newMatchData.id,
-        me: newMatchData.sender.id,
-        receiverId: newMatchData.receiver.id,
-        receiverNickname: receiverNickname,
-        matchStatus: newMatchData.status,
-      };
     }
+
+    await this.matchRepository.createDevMatch(loggedId, receiverId); //Dev
+
+    const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
+
+    return {
+      matchId: newMatchData.id,
+      me: newMatchData.sender.id,
+      receiverId: newMatchData.receiver.id,
+      receiverNickname: receiverNickname,
+      matchStatus: newMatchData.status,
+    };
   }
 
   async matchAccept(matchId: number, req: UserRequestDto) {
@@ -274,7 +277,7 @@ export class MatchService {
         me,
         matchUserId,
         matchUserNickname: userInfo.nickname,
-        chatStatus: chat.status, // profileImg decide
+        chatStatus: chat.status, //profileImg decide
         preSignedUrl,
       };
     });
@@ -284,9 +287,8 @@ export class MatchService {
     return chatList;
   }
 
-  async getUserChatRoom(chatId: number, req: UserRequestDto) {
-    const loggedId = req.user.id;
-
+  //Find Chat Common Exception--
+  async verifyFindChatRoom(chatId: number, loggedId: number) {
     const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
 
     if (!findChat) {
@@ -302,6 +304,14 @@ export class MatchService {
     if (!isUser.length) {
       throw new BadRequestException("유저 정보가 올바르지 않습니다");
     }
+
+    return findChat;
+  }
+  //--
+
+  async getUserChatRoom(chatId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
     let matchUserId: number;
 
@@ -339,28 +349,13 @@ export class MatchService {
       };
     }
 
-    // End Status
+    //End Status
     return chatData;
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-
-    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
-
-    if (!findChat) {
-      throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
-    }
-
-    if (findChat.receiverId === null || findChat.senderId === null) {
-      throw new NotFoundException("해당 유저가 존재하지 않습니다");
-    }
-
-    const isUser = await this.chatGateway.findChatsByUserId(loggedId);
-
-    if (!isUser.length) {
-      throw new BadRequestException("유저 정보가 올바르지 않습니다");
-    }
+    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
     if (findChat.status === "OPEN") {
       throw new BadRequestException("이미 해당 채팅방은 오픈이 되어 있는 상태입니다.");
@@ -386,22 +381,7 @@ export class MatchService {
 
   async deleteChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-
-    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
-
-    if (!findChat) {
-      throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
-    }
-
-    if (findChat.receiverId === null || findChat.senderId === null) {
-      throw new NotFoundException("해당 유저가 존재하지 않습니다");
-    }
-
-    const isUser = await this.chatGateway.findChatsByUserId(loggedId);
-
-    if (!isUser.length) {
-      throw new BadRequestException("유저 정보가 올바르지 않습니다");
-    }
+    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
     try {
       if (findChat.status === "EXIPRE_END" || findChat.status === "DISCONNECT_END") {

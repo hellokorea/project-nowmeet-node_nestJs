@@ -171,12 +171,7 @@ export class UsersService {
     }
 
     try {
-      console.log("나의 유저 정보");
-      console.log(user);
-
       const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
-
-      console.log(preSignedUrl);
 
       return { user, PreSignedUrl: preSignedUrl };
     } catch (error) {

@@ -35,7 +35,7 @@ export class MatchRepository {
     return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
   }
 
-  async isMatchFind(senderId: number, receiverId: number): Promise<Match[]> {
+  async isMatchFind(senderId: number, receiverId: number): Promise<Match[] | null> {
     return await this.matchRepository.find({
       where: {
         sender: { id: senderId },

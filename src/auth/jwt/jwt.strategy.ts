@@ -11,9 +11,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly userRepository: UsersRepository) {
     //* Local Use
     // super({
-    //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Client에서 헤더에 넣어 Jwt를 추출하겠다.
-    //   secretOrKey: process.env.JWT_KEY, // Env 환경변수 설정을 통해 보안 유지 필요
-    //   ignoreExpiration: false, // 만료된 토큰은 받지 않겠다.
+    //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    //   secretOrKey: process.env.JWT_KEY,
+    //   ignoreExpiration: false,
     // });
 
     super({
@@ -22,11 +22,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 10,
-        jwksUri: process.env.JWKS_URI, // jwt 구글 퍼블릭 서명
+        jwksUri: process.env.JWKS_URI,
       }),
       ignoreExpiration: false,
-      issuer: process.env.ISSUER, // jwt 키 발행자
-      audience: process.env.WEB_CLIENTID, //클라이언트 발급 ID
+      issuer: process.env.ISSUER,
+      audience: process.env.WEB_CLIENTID,
       algorithms: ["RS256"],
     });
   }
