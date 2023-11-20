@@ -384,13 +384,11 @@ export class MatchService {
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
     try {
-      if (findChat.status === "EXIPRE_END" || findChat.status === "DISCONNECT_END") {
-        await this.chatGateway.handleDisconnect(findChat.matchId);
+      await this.chatGateway.handleDisconnect(findChat.matchId);
 
-        return {
-          message: `matchId :  ${findChat.matchId} 로 이루어진 채팅방 데이터 id는 ${findChat.id}가 삭제 되었습니다.`,
-        };
-      }
+      return {
+        message: `matchId :  ${findChat.matchId} 로 이루어진 채팅방 데이터 id는 ${findChat.id}가 삭제 되었습니다.`,
+      };
     } catch (err) {
       console.error(err);
       throw new BadRequestException("채팅방 삭제에 실패했습니다.");
