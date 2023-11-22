@@ -27,9 +27,25 @@ export class AuthService {
     }
   }
 
-  async makeNewIdToken(refreshToken: string): Promise<any> {
+  async makeNewIdToken(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
-    const body = new URLSearchParams({
+
+    const bodyCode = new URLSearchParams({
+      client_id: process.env.WEB_CLIENTID,
+      client_secret: process.env.WEB_SECRET,
+      code: code,
+      grant_type: "authorization_code",
+    });
+
+    const responseCode = await this.httpService.axiosRef.post(googleTokenEndpoint, bodyCode.toString(), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    const refreshToken = responseCode.data.refresh_token;
+
+    const bodyRefreshToken = new URLSearchParams({
       client_id: process.env.WEB_CLIENTID,
       client_secret: process.env.WEB_SECRET,
       refresh_token: refreshToken,
@@ -37,13 +53,13 @@ export class AuthService {
     });
 
     try {
-      const response = await this.httpService.axiosRef.post(googleTokenEndpoint, body.toString(), {
+      const responseIdtoken = await this.httpService.axiosRef.post(googleTokenEndpoint, bodyRefreshToken.toString(), {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
 
-      return response.data;
+      return responseIdtoken.data;
     } catch (e) {
       console.error(e);
       throw new BadRequestException("id_token 발급에 실패했습니다.");
