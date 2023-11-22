@@ -383,6 +383,7 @@ export class MatchService {
     const loggedId = req.user.id;
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
+    //나가기 없으면 if 조건 필요 if (findChat.status === "EXIPRE_END" || findChat.status === "DISCONNECT_END")
     try {
       await this.chatGateway.handleDisconnect(findChat.matchId);
 

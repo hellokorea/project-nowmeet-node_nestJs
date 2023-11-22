@@ -29,41 +29,49 @@ export class AuthService {
 
   async makeNewIdToken(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
+    const clientId = process.env.WEB_CLIENTID;
+    const clientSecret = process.env.WEB_SECRET;
+
+    const getToken = async (body: URLSearchParams) => {
+      try {
+        console.log(body);
+        const response = await this.httpService.axiosRef.post(googleTokenEndpoint, body.toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        });
+
+        console.log(response.data);
+        return response.data;
+      } catch (e) {
+        console.log(e);
+
+        throw new BadRequestException("토큰 발급에 실패했습니다.");
+      }
+    };
 
     const bodyCode = new URLSearchParams({
-      client_id: process.env.WEB_CLIENTID,
-      client_secret: process.env.WEB_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       code: code,
       grant_type: "authorization_code",
     });
 
-    const responseCode = await this.httpService.axiosRef.post(googleTokenEndpoint, bodyCode.toString(), {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const tokenData = await getToken(bodyCode);
+    const refreshToken = tokenData.refresh_token;
 
-    const refreshToken = responseCode.data.refresh_token;
+    console.log(refreshToken);
 
     const bodyRefreshToken = new URLSearchParams({
-      client_id: process.env.WEB_CLIENTID,
-      client_secret: process.env.WEB_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     });
 
-    try {
-      const responseIdtoken = await this.httpService.axiosRef.post(googleTokenEndpoint, bodyRefreshToken.toString(), {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
+    const idTokenData = await getToken(bodyRefreshToken);
 
-      return responseIdtoken.data;
-    } catch (e) {
-      console.error(e);
-      throw new BadRequestException("id_token 발급에 실패했습니다.");
-    }
+    return idTokenData.id_token;
   }
 
   //^------------------------------------------
