@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class DeleteUserProfileKey {
+export class DeleteUserProfileIndex {
   @ApiProperty({
-    example: "profileImages/1697784931200_3.JPG",
+    example: 1,
   })
-  deleteKey: string;
+  deleteIndex: number;
 }

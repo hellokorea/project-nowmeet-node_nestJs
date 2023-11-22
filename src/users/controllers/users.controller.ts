@@ -20,9 +20,14 @@ import { UserRequestDto } from "../dtos/request/users.request.dto";
 import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplicate";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { RefreshLocationUserResDto } from "../dtos/response/user.locationResponse.dto";
-import { DeleteUserProfileKey } from "../dtos/request/users.deleteProfilesKey.dto";
 import { UserCreateResDto } from "../dtos/response/users.create.response.dto";
-import { UpdateProfileDto } from "../dtos/request/user.putMyInfo.dto";
+import {
+  UpdateIntroduceDto,
+  UpdateJobDto,
+  UpdatePreferenceDto,
+  UpdateProfileDto,
+} from "../dtos/request/user.putMyInfo.dto";
+import { DeleteUserProfileIndex } from "../dtos/request/users.deleteProfilesKey.dto";
 
 @ApiBearerAuth()
 @Controller("users")
@@ -75,26 +80,51 @@ export class UsersController {
     return this.userService.getMyUserInfo(req);
   }
 
-  @ApiOperation({ summary: "내 프로필 수정" })
-  @ApiBody({ description: "직업, 소개, 취향 항목만 수정 가능", type: UpdateProfileDto })
-  @UseInterceptors(FilesInterceptor("profileImages"))
+  @ApiOperation({ summary: "내 프로필 직업 수정" })
+  @ApiBody({ type: UpdateJobDto })
   @UseGuards(JwtAuthGuard)
-  @Put("me/update")
-  putMyUserInfo(@Body() body: any, @Req() req: UserRequestDto, @UploadedFiles() files: Array<Express.Multer.File>) {
-    return this.userService.putMyUserInfo(body, req, files);
+  @Put("me/update/job")
+  putMyJobInfo(@Body() body: any, @Req() req: UserRequestDto) {
+    return this.userService.putMyJobInfo(body, req);
   }
 
-  // delete => put 순차 요청 필요
+  @ApiOperation({ summary: "내 프로필 자기소개 수정" })
+  @ApiBody({ type: UpdateIntroduceDto })
+  @UseGuards(JwtAuthGuard)
+  @Put("me/update/introduce")
+  putMyIntroInfo(@Body() body: any, @Req() req: UserRequestDto) {
+    return this.userService.putMyIntroduceInfo(body, req);
+  }
+
+  @ApiOperation({ summary: "내 프로필 취향 수정" })
+  @ApiBody({ type: UpdatePreferenceDto })
+  @UseGuards(JwtAuthGuard)
+  @Put("me/update/preference")
+  putMyPreInfo(@Body() body: any, @Req() req: UserRequestDto) {
+    return this.userService.putMyPreferenceInfo(body, req);
+  }
+  @ApiOperation({ summary: "내 프로필 사진 추가 및 수정" })
+  @ApiBody({ type: UpdateProfileDto, isArray: true })
+  @ApiParam({ name: "index", description: "사진 추가 및 변경할 Index 입력", type: Number })
+  @UseInterceptors(FilesInterceptor("profileImage"))
+  @UseGuards(JwtAuthGuard)
+  @Put("me/update/profileImage/:index")
+  putMyProfileSecond(
+    @Param("index") index: number,
+    @Req() req: UserRequestDto,
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ) {
+    return this.userService.putMyProfileImageAtIndex(index, req, files);
+  }
 
   @ApiOperation({
-    summary: "유저 프로필 사진 삭제",
-    description: "반드시 deleteProfile 요청 후 완료 된 직후 putMyUserInfo 순차적으로 요청 해야함!!",
+    summary: "내 프로필 사진 삭제",
   })
-  @ApiBody({ description: "삭제하고자 하는 유저 profilesImages key 입력", type: DeleteUserProfileKey })
+  @ApiParam({ name: "index", description: "삭제 할 Index 입력", type: Number })
   @UseGuards(JwtAuthGuard)
-  @Put("me/update/profilesImage")
-  deleteUserProfilesKey(@Req() req: UserRequestDto, @Body("deleteKey") deleteKey: string) {
-    return this.userService.deleteUserProfilesKey(req, deleteKey);
+  @Put("me/delete/profileImage/:index")
+  deleteUserProfilesKey(@Param("index") index: number, @Req() req: UserRequestDto) {
+    return this.userService.deleteUserProfilesKey(index, req);
   }
 
   @ApiOperation({ summary: "내 계정 삭제" })

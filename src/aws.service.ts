@@ -38,9 +38,6 @@ export class AwsService {
       const uploadPromises = files.map(async (file) => {
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
-        console.log(file.buffer);
-        console.log(file);
-
         const putCommand = new PutObjectCommand({
           Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
           Key: key,
@@ -57,24 +54,6 @@ export class AwsService {
       console.error(error);
       throw new BadRequestException(`파일 업로드에 실패 했습니다 : ${error}`);
     }
-  }
-
-  replaceProfileImages(oldImages: string[], newImages: string[]): string[] {
-    let updatedImages = [...oldImages];
-
-    const MAX_PROFILE_IMAGES = 3;
-
-    newImages.forEach((newKey, index) => {
-      if (index < MAX_PROFILE_IMAGES) {
-        if (updatedImages[index]) {
-          updatedImages[index] = newKey;
-        } else {
-          updatedImages.push(newKey);
-        }
-      }
-    });
-
-    return updatedImages.slice(0, MAX_PROFILE_IMAGES);
   }
 
   async createPreSignedUrl(keys: string[]) {

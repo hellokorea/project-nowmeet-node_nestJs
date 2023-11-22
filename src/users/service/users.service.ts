@@ -15,7 +15,12 @@ import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplica
 import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { AwsService } from "src/aws.service";
 import { isEqual } from "lodash";
-import { UpdateProfileDto } from "../dtos/request/user.putMyInfo.dto";
+import {
+  UpdateIntroduceDto,
+  UpdateJobDto,
+  UpdatePreferenceDto,
+  UpdateProfileDto,
+} from "../dtos/request/user.putMyInfo.dto";
 
 @Injectable()
 export class UsersService {
@@ -158,21 +163,24 @@ export class UsersService {
 
   //-----------------------My Account Rogic
 
-  async getMyUserInfo(req: UserRequestDto) {
-    const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(loggedId);
+  //common user validate
+  async validateUser(id: number) {
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
-    if (user.id !== loggedId) {
-      throw new BadRequestException("잘못된 요청입니다.");
-    }
+    return user;
+  }
+  //--
+
+  async getMyUserInfo(req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const user = await this.usersRepository.findById(loggedId);
 
     try {
       const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
-
       return { user, PreSignedUrl: preSignedUrl };
     } catch (error) {
       console.error(error);
@@ -180,67 +188,100 @@ export class UsersService {
     }
   }
 
-  async putMyUserInfo(body: UpdateProfileDto, req: UserRequestDto, files: Array<Express.Multer.File>) {
+  async putMyJobInfo(body: UpdateJobDto, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(loggedId);
+    const user = await this.validateUser(loggedId);
 
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
+    const { job } = body;
+
+    user.job = job;
+
+    const updated = await this.usersRepository.updateUser(user);
+
+    return updated.job;
+  }
+
+  async putMyIntroduceInfo(body: UpdateIntroduceDto, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const user = await this.validateUser(loggedId);
+
+    const { introduce } = body;
+
+    user.introduce = introduce;
+
+    const updated = await this.usersRepository.updateUser(user);
+
+    return updated.introduce;
+  }
+
+  async putMyPreferenceInfo(body: UpdatePreferenceDto, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const user = await this.validateUser(loggedId);
+
+    const { preference } = body;
+
+    user.preference = preference;
+
+    const updated = await this.usersRepository.updateUser(user);
+
+    return updated.preference;
+  }
+
+  async putMyProfileImageAtIndex(index: number, req: UserRequestDto, files: Array<Express.Multer.File>) {
+    const loggedId = req.user.id;
+    const user = await this.validateUser(loggedId);
+
+    const indexNum = Number(index);
+
+    if (indexNum > 2) {
+      throw new BadRequestException("0 ~ 2까지 인덱스를 입력해주세요.");
     }
 
-    if (user.id === loggedId) {
-      const { job, introduce, preference } = body;
-      const MAX_PROFILE_IMAGES = 3;
+    try {
+      const profileKey = await this.awsService.uploadFilesToS3("profileImages", files);
+      const newKeys = profileKey[0].key;
 
-      if (files && files.length) {
-        if (files.length > MAX_PROFILE_IMAGES) {
-          throw new BadRequestException(`최대 ${MAX_PROFILE_IMAGES}개의 이미지만 업로드 가능합니다.`);
-        }
-        const uploadFiles = await this.awsService.uploadFilesToS3("profileImages", files);
+      user.profileImages[index] = newKeys;
+      user.profileImages = user.profileImages.filter((v) => v !== null || undefined);
 
-        const newKeys = uploadFiles.map((obj) => obj.key);
-
-        user.profileImages = this.awsService.replaceProfileImages(user.profileImages, newKeys);
-      }
-
-      const updated = await this.usersRepository.updateUser({
-        ...user,
-        job: job || user.job,
-        introduce: introduce || user.introduce,
-        preference: preference || user.preference,
-        profileImages: user.profileImages,
-      });
+      const updated = await this.usersRepository.updateUser(user);
 
       const preSignedUrl = await this.awsService.createPreSignedUrl(updated.profileImages);
 
       return {
-        updatedUser: updated,
+        updatedUser: updated.profileImages,
         PreSignedUrl: preSignedUrl,
       };
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("유저 프로필 사진 수정 중 문제가 발생했습니다.");
     }
   }
 
-  async deleteUserProfilesKey(req: UserRequestDto, deleteKey: string) {
+  async deleteUserProfilesKey(index: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(loggedId);
+    const user = await this.validateUser(loggedId);
 
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
+    const indexNum = Number(index);
+
+    if (indexNum > 2) {
+      throw new BadRequestException("0 ~ 2까지 인덱스를 입력해주세요.");
     }
 
-    if (!user.profileImages.includes(deleteKey)) {
-      throw new BadRequestException("해당 키는 유저의 프로필에 존재하지 않습니다.");
+    if (indexNum === 0) {
+      throw new BadRequestException("0번째 사진은 삭제가 불가능합니다.");
     }
+
     try {
-      const keyToDelete = deleteKey;
+      const deleteToKey = user.profileImages[index];
 
-      user.profileImages = user.profileImages.filter((key) => key !== deleteKey);
+      user.profileImages.splice(index, 1);
+
+      await this.awsService.deleteFilesFromS3([deleteToKey]);
 
       await this.usersRepository.updateUser(user);
 
-      await this.awsService.deleteFilesFromS3([keyToDelete]);
-
-      return { message: "Successfully deleted.", key: keyToDelete };
+      return { message: "Successfully deleted.", deleteToKey };
     } catch (error) {
       console.error(error);
       throw new BadRequestException("유저 프로필 파일 키 삭제 도중 문제가 발생했습니다.");
