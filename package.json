@@ -28,6 +28,7 @@
     "@aws-sdk/node-http-handler": "^3.374.0",
     "@aws-sdk/s3-request-presigner": "^3.431.0",
     "@aws-sdk/util-create-request": "^3.428.0",
+    "@nestjs/axios": "^3.0.1",
     "@nestjs/cli": "^10.1.18",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",

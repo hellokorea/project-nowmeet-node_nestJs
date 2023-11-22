@@ -5,6 +5,7 @@ import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
+import { JwtAuthGuard } from "../jwt/jwt.guard";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)
@@ -32,5 +33,11 @@ export class AuthController {
   @Post("isUser")
   isUserExist(@Body("email") email: string) {
     return this.authService.isUserExist(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("get/refreshToken")
+  makeNewIdToken(@Body("refreshToken") refreshToken: string) {
+    return this.authService.makeNewIdToken(refreshToken);
   }
 }

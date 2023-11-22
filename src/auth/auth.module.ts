@@ -6,10 +6,12 @@ import { JwtStrategy } from "./jwt/jwt.strategy";
 import { UsersModule } from "src/users/users.module";
 import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
+import { HttpModule } from "@nestjs/axios";
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: "jwt", session: false }),
+    HttpModule,
 
     //* Local Use
     JwtModule.register({

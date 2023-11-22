@@ -2,12 +2,14 @@ import { Injectable, Logger, UnauthorizedException, BadRequestException } from "
 import { UsersRepository } from "./../../users/users.repository";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
+import { HttpService } from "@nestjs/axios";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private httpService: HttpService
   ) {}
 
   async isUserExist(email: string) {
@@ -22,6 +24,29 @@ export class AuthService {
     } catch (error) {
       console.error(error);
       throw new BadRequestException("유저 검증 도중 문제가 발생했습니다.");
+    }
+  }
+
+  async makeNewIdToken(refreshToken: string): Promise<any> {
+    const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
+    const body = new URLSearchParams({
+      client_id: process.env.WEB_CLIENTID,
+      client_secret: process.env.WEB_SECRET,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    });
+
+    try {
+      const response = await this.httpService.axiosRef.post(googleTokenEndpoint, body.toString(), {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("id_token 발급에 실패했습니다.");
     }
   }
 

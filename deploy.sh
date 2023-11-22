@@ -3,7 +3,7 @@
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-DEPLOY_NAME=nowmeet-aws-8
+DEPLOY_NAME=nowmeet-aws-9
 
 echo "> 현재 구동중인 애플리케이션 $DEPLOY_NAME 확인"
 CURRENT_DEPLOY="$(/usr/local/bin/pm2 list | grep $DEPLOY_NAME || true)"
@@ -54,6 +54,8 @@ AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$(aws ssm get-parameter --name "/nowmeet/AW
 WEB_CLIENTID=$(aws ssm get-parameter --name "/nowmeet/WEB_CLIENTID" --with-decryption --query "Parameter.Value" --output text)
 JWKS_URI=$(aws ssm get-parameter --name "/nowmeet/JWKS_URI" --with-decryption --query "Parameter.Value" --output text)
 ISSUER=$(aws ssm get-parameter --name "/nowmeet/ISSUER" --with-decryption --query "Parameter.Value" --output text)
+WEB_SECRET=$(aws ssm get-parameter --name "/nowmeet/WEB_SECRET" --with-decryption --query "Parameter.Value" --output text)
+
 
 # 해당 REPOSITORY 디렉토리가 있는지 확인하고 없으면 생성
 `mkdir -p "$REPOSITORY"`
@@ -93,6 +95,7 @@ echo "AWS_S3_USER_DEV_PROFILES_BUCKET_NAME=$AWS_S3_USER_DEV_PROFILES_BUCKET_NAME
 echo "WEB_CLIENTID=$WEB_CLIENTID" >> $REPOSITORY/.env
 echo "JWKS_URI=$JWKS_URI" >> $REPOSITORY/.env
 echo "ISSUER=$ISSUER" >> $REPOSITORY/.env
+echo "WEB_SECRET=$WEB_SECRET" >> $REPOSITORY/.env
 
 
 echo ".env file written successfully!"
