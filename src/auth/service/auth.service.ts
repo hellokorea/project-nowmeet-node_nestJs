@@ -34,7 +34,6 @@ export class AuthService {
 
     const getToken = async (body: URLSearchParams) => {
       try {
-        console.log(body);
         const response = await this.httpService.axiosRef.post(googleTokenEndpoint, body.toString(), {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -45,7 +44,6 @@ export class AuthService {
         return response.data;
       } catch (e) {
         console.log(e);
-
         throw new BadRequestException("토큰 발급에 실패했습니다.");
       }
     };
@@ -60,8 +58,6 @@ export class AuthService {
     const tokenData = await getToken(bodyCode);
     const refreshToken = tokenData.refresh_token;
 
-    console.log(refreshToken);
-
     const bodyRefreshToken = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
@@ -71,7 +67,7 @@ export class AuthService {
 
     const idTokenData = await getToken(bodyRefreshToken);
 
-    return idTokenData.id_token;
+    return idTokenData;
   }
 
   //^------------------------------------------
