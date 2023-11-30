@@ -37,7 +37,7 @@ export class AuthController {
 
   @ApiOperation({ summary: "id_token 재발행" })
   @ApiBody({ description: "code 입력", type: String })
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Post("getRefreshToken")
   makeNewIdToken(@Body("code") code: string) {
     return this.authService.makeNewIdToken(code);
