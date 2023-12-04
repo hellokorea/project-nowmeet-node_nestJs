@@ -21,6 +21,7 @@ import {
   UpdatePreferenceDto,
   UpdateProfileDto,
 } from "../dtos/request/user.putMyInfo.dto";
+import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 
 @Injectable()
 export class UsersService {
@@ -86,6 +87,18 @@ export class UsersService {
     }
   }
 
+  //common user validate
+  async validateUser(id: number) {
+    const user = await this.usersRepository.findById(id);
+
+    if (!user) {
+      throw new NotFoundException("존재하지 않는 유저 입니다");
+    }
+
+    return user;
+  }
+  //--
+
   //-----------------------Location Rogic
 
   async refreshUserLocation(lon: string, lat: string, req: UserRequestDto) {
@@ -104,14 +117,7 @@ export class UsersService {
     }
 
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(loggedId);
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
-    }
-
-    if (loggedId !== user.id) {
-      throw new UnauthorizedException("요청한 사용자의 권한이 없습니다.");
-    }
+    const user = await this.validateUser(loggedId);
 
     try {
       const findMyLocation = await this.usersRepository.findUserLocation(user.id);
@@ -129,7 +135,7 @@ export class UsersService {
 
       const responseUserList = nearbyUsers.map((user) => new UserProfileResponseDto(user));
       const filteredResponseUserList = responseUserList.filter(
-        (responseUser) => user.nickname !== responseUser.nickname
+        (responseUser) => user.nickname !== responseUser.nickname && responseUser.ghostMode === false
       );
 
       if (!filteredResponseUserList.length) {
@@ -161,19 +167,22 @@ export class UsersService {
     }
   }
 
-  //-----------------------My Account Rogic
+  async putGhostMode(setting: GhostModeDto, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const user = await this.validateUser(loggedId);
 
-  //common user validate
-  async validateUser(id: number) {
-    const user = await this.usersRepository.findById(id);
+    try {
+      setting ? (user.ghostMode = true) : (user.ghostMode = false);
+      const ghostSetting = await this.usersRepository.updateUser(user);
 
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
+      return ghostSetting.ghostMode;
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("유령 모드 변경에 실패했습니다.");
     }
-
-    return user;
   }
-  //--
+
+  //-----------------------My Account Rogic
 
   async getMyUserInfo(req: UserRequestDto) {
     const loggedId = req.user.id;
@@ -265,7 +274,7 @@ export class UsersService {
     const indexNum = Number(index);
 
     if (indexNum > 2) {
-      throw new BadRequestException("0 ~ 2까지 인덱스를 입력해주세요.");
+      throw new BadRequestException("1 ~ 2까지 인덱스를 입력해주세요.");
     }
 
     if (indexNum === 0) {

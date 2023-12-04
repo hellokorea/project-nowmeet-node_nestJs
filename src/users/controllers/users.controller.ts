@@ -27,7 +27,7 @@ import {
   UpdatePreferenceDto,
   UpdateProfileDto,
 } from "../dtos/request/user.putMyInfo.dto";
-import { DeleteUserProfileIndex } from "../dtos/request/users.deleteProfilesKey.dto";
+import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 
 @ApiBearerAuth()
 @Controller("users")
@@ -69,6 +69,14 @@ export class UsersController {
   @Get("location/:lon/:lat")
   UserLocationRefresh(@Param("lon") lon: string, @Param("lat") lat: string, @Req() req: UserRequestDto) {
     return this.userService.refreshUserLocation(lon, lat, req);
+  }
+
+  @ApiOperation({ summary: "유령 모드 On/Off" })
+  @ApiBody({ type: GhostModeDto })
+  @UseGuards(JwtAuthGuard)
+  @Put("ghostMode")
+  putGhostMode(@Body("setting") setting: GhostModeDto, @Req() req: UserRequestDto) {
+    return this.userService.putGhostMode(setting, req);
   }
 
   //-----------------------My Account Rogic

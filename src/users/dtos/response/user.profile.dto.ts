@@ -23,6 +23,9 @@ export class UserProfileResponseDto {
   @ApiProperty({ example: "이것, 저것, 그것, 무엇" })
   preference: string[];
 
+  @ApiProperty({ example: false })
+  ghostMode: boolean;
+
   @ApiProperty({ example: "180.000000" })
   longitude: number;
 
@@ -51,5 +54,6 @@ export class UserProfileResponseDto {
     this.longitude = user.longitude;
     this.latitude = user.latitude;
     this.profileImages = user.profileImages;
+    this.ghostMode = user.ghostMode;
   }
 }

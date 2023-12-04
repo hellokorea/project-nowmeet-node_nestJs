@@ -23,6 +23,9 @@ export class GetProfileResponseDto {
   @ApiProperty({ example: ["이것, 저것, 그것, 무엇"], isArray: true })
   preference: string[];
 
+  @ApiProperty({ example: false })
+  ghostMode: boolean;
+
   @ApiProperty({ example: "180.000000" })
   longitude: number;
 

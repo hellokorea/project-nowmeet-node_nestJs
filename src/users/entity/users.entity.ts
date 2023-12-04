@@ -34,6 +34,9 @@ export class User {
   @Column({ default: 0 })
   gem: number;
 
+  @Column({ default: false })
+  ghostMode: boolean;
+
   @Column("decimal", { precision: 10, scale: 7, default: null })
   longitude: number;
 
