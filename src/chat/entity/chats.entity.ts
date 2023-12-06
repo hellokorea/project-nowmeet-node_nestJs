@@ -6,6 +6,8 @@ export enum ChatState {
   OPEN = "OPEN",
   DISCONNECT_END = "DISCONNECT_END",
   EXIPRE_END = "EXIPRE_END",
+  RECEIVER_EXIT = "RECEIVER_EXIT",
+  SENDER_EXIT = "SENDER_EXIT",
 }
 
 @Entity()

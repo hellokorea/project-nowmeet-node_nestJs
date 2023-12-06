@@ -39,7 +39,7 @@ export class MatchService {
     let matchStatus = isMatch ? isMatch.status : null;
 
     if (!matchStatus) {
-      const openOrPendingChat = isChats.find((v) => v.status === "OPEN" || v.status === "PENDING");
+      const openOrPendingChat = isChats.find((v) => v.status === ChatState.OPEN || v.status === ChatState.PENDING);
 
       if (openOrPendingChat) {
         matchStatus = MatchState.MATCH;
@@ -245,47 +245,8 @@ export class MatchService {
   }
 
   /*
-  ^^--------------------------------------Chat Rogic
+  --------------------------------------Chat Rogic
   */
-
-  async getChatRoomsAllList(req: UserRequestDto) {
-    const loggedId = req.user.id;
-
-    const findChats = await this.chatGateway.findChatsByUserId(loggedId);
-
-    if (!findChats.length) {
-      return null;
-    }
-
-    const chatListPromises = findChats.map(async (chat) => {
-      let me: number;
-      let matchUserId: number;
-
-      if (loggedId === chat.receiverId || loggedId === chat.senderId) {
-        me = loggedId;
-        matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
-      } else {
-        throw new BadRequestException();
-      }
-
-      const userInfo = await this.usersRepository.findById(matchUserId);
-      const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
-
-      return {
-        chatId: chat.id,
-        matchId: chat.matchId,
-        me,
-        matchUserId,
-        matchUserNickname: userInfo.nickname,
-        chatStatus: chat.status, //profileImg decide
-        preSignedUrl,
-      };
-    });
-
-    const chatList = await Promise.all(chatListPromises);
-
-    return chatList;
-  }
 
   //Find Chat Common Exception--
   async verifyFindChatRoom(chatId: number, loggedId: number) {
@@ -309,20 +270,60 @@ export class MatchService {
   }
   //--
 
+  async getChatRoomsAllList(req: UserRequestDto) {
+    const loggedId = req.user.id;
+
+    const findChats = await this.chatGateway.findChatsByUserId(loggedId);
+
+    if (!findChats.length) {
+      return null;
+    }
+
+    const chatListPromises = findChats
+      .filter((chat) => {
+        return (
+          (loggedId === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
+          (loggedId === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
+        );
+      })
+      .map(async (chat) => {
+        let me: number;
+        let matchUserId: number;
+
+        if (loggedId === chat.receiverId || loggedId === chat.senderId) {
+          me = loggedId;
+          matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
+        }
+
+        const userInfo = await this.usersRepository.findById(matchUserId);
+        const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
+
+        return {
+          chatId: chat.id,
+          matchId: chat.matchId,
+          me,
+          matchUserId,
+          matchUserNickname: userInfo.nickname,
+          chatStatus: chat.status, //profileImg decide
+          preSignedUrl,
+        };
+      });
+
+    const chatList = await Promise.all(chatListPromises);
+
+    return chatList;
+  }
+
   async getUserChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
     let matchUserId: number;
 
-    if (loggedId === findChat.receiverId) {
-      matchUserId = findChat.senderId;
-    } else if (loggedId === findChat.senderId) {
-      matchUserId = findChat.receiverId;
-    }
+    loggedId === findChat.receiverId ? (matchUserId = findChat.senderId) : (matchUserId = findChat.receiverId);
 
-    const userInfo = await this.usersRepository.findById(matchUserId);
-    const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
+    const opponentUser = await this.usersRepository.findById(matchUserId);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(opponentUser.profileImages);
     const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
@@ -330,26 +331,26 @@ export class MatchService {
       chatId: findChat.id,
       matchId: findChat.matchId,
       matchUserId,
-      matchUserNickname: userInfo.nickname,
+      matchUserNickname: opponentUser.nickname,
       chatStatus: findChat.status,
       preSignedUrl,
     };
 
-    if (findChat.status === "PENDING") {
+    if (findChat.status === ChatState.PENDING) {
       return {
         chatData,
         expireTime,
       };
     }
 
-    if (findChat.status === "OPEN") {
+    if (findChat.status === ChatState.OPEN) {
       return {
         chatData,
         disconnectTime,
       };
     }
 
-    //End Status
+    //Another Status (expireEnd, disconnectEnd, ...Exit)
     return chatData;
   }
 
@@ -357,10 +358,15 @@ export class MatchService {
     const loggedId = req.user.id;
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
-    if (findChat.status === "OPEN") {
+    if (findChat.status === ChatState.OPEN) {
       throw new BadRequestException("이미 해당 채팅방은 오픈이 되어 있는 상태입니다.");
-    } else if (findChat.status === "DISCONNECT_END" || findChat.status === "EXIPRE_END") {
-      throw new BadRequestException("채팅방 오픈 할 수 없는 상태입니다.");
+    } else if (
+      findChat.status === ChatState.DISCONNECT_END ||
+      findChat.status === ChatState.EXIPRE_END ||
+      findChat.status === ChatState.RECEIVER_EXIT ||
+      findChat.status === ChatState.SENDER_EXIT
+    ) {
+      throw new BadRequestException(`채팅방 상태가 ${findChat.status} 상태이므로 오픈 할 수 없는 상태입니다.`);
     }
 
     //과금 처리
@@ -375,7 +381,33 @@ export class MatchService {
       };
     } catch (e) {
       console.error(e);
-      throw new BadRequestException("채팅방을 오픈하는 요청이 실패했습니다.");
+      throw new BadRequestException("채팅방 오픈에 실패했습니다.");
+    }
+  }
+
+  async exitChatRoom(chatId: number, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
+
+    try {
+      loggedId === findChat.senderId
+        ? (findChat.status = ChatState.SENDER_EXIT)
+        : (findChat.status = ChatState.RECEIVER_EXIT);
+
+      await this.chatGateway.saveChatData(findChat);
+
+      let oppId: number;
+
+      loggedId === findChat.senderId ? (oppId = findChat.receiverId) : (oppId = findChat.senderId);
+
+      const oppInfo = await this.usersRepository.findById(oppId);
+
+      await this.chatGateway.notifyUserExit(findChat.id, oppInfo.nickname);
+
+      return { chatStatus: findChat.status, message: `${findChat.id}의 채팅방을 나갔습니다.` };
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("채팅방 나가는 도중 문제가 발생했습니다.");
     }
   }
 
@@ -383,7 +415,6 @@ export class MatchService {
     const loggedId = req.user.id;
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
-    //나가기 없으면 if 조건 필요 if (findChat.status === "EXIPRE_END" || findChat.status === "DISCONNECT_END")
     try {
       await this.chatGateway.handleDisconnect(findChat.matchId);
 

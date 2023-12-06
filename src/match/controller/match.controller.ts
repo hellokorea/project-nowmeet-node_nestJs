@@ -1,4 +1,15 @@
-import { Controller, Get, UseInterceptors, Post, Req, Param, UseGuards, ParseIntPipe, Delete } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  UseInterceptors,
+  Post,
+  Req,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+  Delete,
+  Put,
+} from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { MatchService } from "../service/match.service";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
@@ -118,6 +129,13 @@ export class MatchController {
   @Post("me/chatBox/:chatId/open")
   openChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
     return this.matchService.openChatRoom(chatId, req);
+  }
+
+  @ApiOperation({ summary: "채팅방 나가기" })
+  @ApiParam({ name: "chatId", description: "나갈 채팅방 id 입력", type: Number })
+  @Put("me/chatBox/:chatId/exit")
+  exitChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
+    return this.matchService.exitChatRoom(chatId, req);
   }
 
   @ApiOperation({ summary: "채팅방 삭제" })

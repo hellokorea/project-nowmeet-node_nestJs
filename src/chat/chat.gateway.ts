@@ -58,6 +58,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  async notifyUserExit(chatId: number, userNickname: string) {
+    this.socket.to(chatId.toString()).emit("chatRoomUserExit", { userNickname });
+  }
+
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
     const findChat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
@@ -103,8 +107,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new NotFoundException("존재하지 않은 매치 입니다.");
       }
 
-      if (chat.status === ChatState.OPEN) {
-        console.log(`해당 채팅방은 OPEN 상태이기 때문에 matchId: ${matchId}는 EXIPRE_END 상태가 되지 않습니다.`);
+      if (
+        chat.status === ChatState.OPEN ||
+        chat.status === ChatState.RECEIVER_EXIT ||
+        chat.status === ChatState.SENDER_EXIT
+      ) {
+        console.log(
+          `해당 채팅방은 ${chat.status} 상태이기 때문에 matchId: ${matchId}는 EXIPRE_END 상태가 되지 않습니다.`
+        );
         return;
       }
 
@@ -148,6 +158,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!chat) {
         throw new NotFoundException("존재하지 않은 매치 입니다.");
+      }
+
+      if (chat.status === ChatState.RECEIVER_EXIT || chat.status === ChatState.SENDER_EXIT) {
+        console.log(
+          `해당 채팅방은 ${chat.status} 상태이기 때문에 matchId: ${matchId}는 DISCONNECT_END 상태가 되지 않습니다.`
+        );
+        return;
       }
 
       this.socket.to(String(matchId)).emit("chatRoomDisconnect", {
@@ -230,6 +247,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
     return await this.chatRoomRepository.findOne({ where: { id: chatId } });
+  }
+
+  async saveChatData(chat: ChatRoom): Promise<ChatRoom> {
+    return this.chatRoomRepository.save(chat);
   }
 
   async deleteChatDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
