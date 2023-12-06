@@ -30,7 +30,7 @@ export class UpdatePreferenceDto {
 
 export class UpdateProfileDto {
   @ApiProperty({
-    example: "Example.JPG",
+    example: "form-data로 file을 보내야 함",
   })
   @IsString()
   @IsNotEmpty()

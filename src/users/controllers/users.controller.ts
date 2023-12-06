@@ -111,6 +111,7 @@ export class UsersController {
   putMyPreInfo(@Body() body: any, @Req() req: UserRequestDto) {
     return this.userService.putMyPreferenceInfo(body, req);
   }
+
   @ApiOperation({ summary: "내 프로필 사진 추가 및 수정" })
   @ApiBody({ type: UpdateProfileDto, isArray: true })
   @ApiParam({ name: "index", description: "사진 추가 및 변경할 Index 입력", type: Number })

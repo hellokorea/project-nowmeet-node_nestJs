@@ -248,10 +248,22 @@ export class UsersService {
 
     try {
       const profileKey = await this.awsService.uploadFilesToS3("profileImages", files);
-      const newKeys = profileKey[0].key;
+      const newKey = profileKey[0].key;
 
-      user.profileImages[index] = newKeys;
-      user.profileImages = user.profileImages.filter((v) => v !== null || undefined);
+      const filterProfileImages = (): string[] => {
+        user.profileImages[index] = newKey;
+        user.profileImages = user.profileImages.filter((v) => v !== null);
+
+        return user.profileImages;
+      };
+
+      if (user.profileImages[index]) {
+        const oldeKey = user.profileImages[index];
+        await this.awsService.deleteFilesFromS3([oldeKey]);
+        filterProfileImages();
+      } else {
+        filterProfileImages();
+      }
 
       const updated = await this.usersRepository.updateUser(user);
 
@@ -300,7 +312,7 @@ export class UsersService {
   async deleteAccount(req: UserRequestDto) {
     const loggedId = req.user.id;
     const user = await this.usersRepository.findById(loggedId);
-    console.log(loggedId);
+
     if (!user) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
@@ -312,17 +324,20 @@ export class UsersService {
         await this.matchRepository.deleteDevMatchesByUserId(txManager, loggedId);
         await this.chatGateway.deleteChatDataByUserId(txManager, loggedId);
         await this.chatGateway.deleteDevChatDataByUserId(txManager, loggedId);
+        console.log(`userId: ${loggedId} 번 유저 관련 데이터 삭제 완료`);
+
+        //s3 profileImages 삭제
+        await this.awsService.deleteFilesFromS3(user.profileImages);
+        console.log(`userId: ${loggedId} 번 s3 프로필 이미지 삭제 완료`);
 
         // 사용자 삭제
         await this.usersRepository.deleteUser(txManager, user);
-
-        console.log(`userId: ${loggedId} 번 유저 데이터 전부 삭제 완료`);
+        console.log(`userId: ${loggedId} 번 유저 계정 삭제 완료`);
       });
 
-      console.log(`userId: ${loggedId} 번 유저 계정 삭제 완료`);
       return { message: `userId: ${loggedId} 번 유저의 계정을 성공적으로 삭제 했습니다` };
-    } catch (error) {
-      console.error("Error during transaction:", error);
+    } catch (e) {
+      console.error("Error during transaction:", e);
       throw new InternalServerErrorException(`userId: ${loggedId} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
     }
   }
