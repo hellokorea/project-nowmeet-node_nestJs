@@ -87,7 +87,7 @@ export class UsersService {
     }
   }
 
-  //common user validate
+  //common user validate--
   async validateUser(id: number) {
     const user = await this.usersRepository.findById(id);
 
@@ -189,6 +189,13 @@ export class UsersService {
     const user = await this.usersRepository.findById(loggedId);
 
     try {
+      user.profileImages = Array(3)
+        .fill("undefined")
+        .map((_, i) => (user.profileImages[i] === undefined ? "undefined" : user.profileImages[i]));
+
+      console.log("겟 마이 인포");
+      console.log(user.profileImages);
+
       const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
       return { user, PreSignedUrl: preSignedUrl };
     } catch (error) {
@@ -250,7 +257,8 @@ export class UsersService {
       const profileKey = await this.awsService.uploadFilesToS3("profileImages", files);
       const newKey = profileKey[0].key;
 
-      const filterProfileImages = (): string[] => {
+      //File Change--
+      const filterUserProifleImages = () => {
         user.profileImages[index] = newKey;
         user.profileImages = user.profileImages.filter((v) => v !== null);
 
@@ -260,17 +268,24 @@ export class UsersService {
       if (user.profileImages[index]) {
         const oldeKey = user.profileImages[index];
         await this.awsService.deleteFilesFromS3([oldeKey]);
-        filterProfileImages();
+        filterUserProifleImages();
       } else {
-        filterProfileImages();
+        filterUserProifleImages();
       }
 
       const updated = await this.usersRepository.updateUser(user);
+      //--
+
+      //Res Array--
+      user.profileImages = Array(3)
+        .fill("undefined")
+        .map((_, i) => (user.profileImages[i] === undefined ? "undefined" : user.profileImages[i]));
+      //--
 
       const preSignedUrl = await this.awsService.createPreSignedUrl(updated.profileImages);
 
       return {
-        updatedUser: updated.profileImages,
+        updatedUser: user.profileImages,
         PreSignedUrl: preSignedUrl,
       };
     } catch (e) {
@@ -285,24 +300,35 @@ export class UsersService {
 
     const indexNum = Number(index);
 
-    if (indexNum > 2) {
-      throw new BadRequestException("1 ~ 2까지 인덱스를 입력해주세요.");
-    }
-
     if (indexNum === 0) {
       throw new BadRequestException("0번째 사진은 삭제가 불가능합니다.");
     }
 
+    if (indexNum > 2) {
+      throw new BadRequestException("1 ~ 2까지 인덱스를 입력해주세요.");
+    }
+
+    if (user.profileImages[index] === undefined) {
+      throw new NotFoundException("해당 Index는 비어있으므로 삭제가 되지 않습니다.");
+    }
+
     try {
+      //File Delete--
       const deleteToKey = user.profileImages[index];
-
-      user.profileImages.splice(index, 1);
-
       await this.awsService.deleteFilesFromS3([deleteToKey]);
 
+      user.profileImages.splice(index, 1);
+      user.profileImages = user.profileImages.filter((v) => v !== null);
       await this.usersRepository.updateUser(user);
+      //--
 
-      return { message: "Successfully deleted.", deleteToKey };
+      //Res Array--
+      user.profileImages = Array(3)
+        .fill("undefined")
+        .map((_, i) => (user.profileImages[i] === undefined ? "undefined" : user.profileImages[i]));
+      //--
+
+      return { message: "Successfully deleted.", deleteKey: deleteToKey, userProfileImages: user.profileImages };
     } catch (error) {
       console.error(error);
       throw new BadRequestException("유저 프로필 파일 키 삭제 도중 문제가 발생했습니다.");

@@ -295,15 +295,15 @@ export class MatchService {
           matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
         }
 
-        const userInfo = await this.usersRepository.findById(matchUserId);
-        const preSignedUrl = await this.awsService.createPreSignedUrl(userInfo.profileImages);
+        const oppUser = await this.usersRepository.findById(matchUserId);
+        const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
 
         return {
           chatId: chat.id,
           matchId: chat.matchId,
           me,
           matchUserId,
-          matchUserNickname: userInfo.nickname,
+          matchUserNickname: oppUser.nickname,
           chatStatus: chat.status, //profileImg decide
           preSignedUrl,
         };

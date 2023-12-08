@@ -82,7 +82,7 @@ export class UserCreateDto {
   latitude: number;
 
   @ApiProperty({
-    example: ["Example.jpg, Example.jpg,"],
+    example: ["Example.jpg", "Example.jpg,"],
     description: "profileImages",
     isArray: true,
   })

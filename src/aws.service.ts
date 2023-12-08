@@ -68,6 +68,10 @@ export class AwsService {
     try {
       const signedUrls = await Promise.all(
         keys.map(async (key) => {
+          if (key === "undefined") {
+            return "undefined";
+          }
+
           const command = new GetObjectCommand({
             Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
             Key: key,

@@ -12,6 +12,8 @@ import { JwtAuthGuard } from "../jwt/jwt.guard";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  //-----------------Google Login Rogic
+
   @ApiOperation({ summary: "구글 (사용 X)" })
   @Get("google")
   @UseGuards(AuthGuard("google"))
@@ -41,5 +43,18 @@ export class AuthController {
   @Post("getRefreshToken")
   makeNewIdToken(@Body("code") code: string) {
     return this.authService.makeNewIdToken(code);
+  }
+
+  //-----------------Apple Login Rogic
+
+  @ApiOperation({ summary: "애플 로그인" })
+  // @UseGuards(AppleOAuthGuard)
+  @Get("apple")
+  async appleLogin() {}
+
+  @Post("apple/callback")
+  // @UseGuards(AppleOAuthGuard)
+  async appleLoginCallback() {
+    return this.authService.appleLogin();
   }
 }

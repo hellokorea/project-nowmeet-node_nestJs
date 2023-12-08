@@ -3,7 +3,7 @@
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-DEPLOY_NAME=nowmeet-aws-10
+DEPLOY_NAME=nowmeet-aws-11
 
 echo "> 현재 구동중인 애플리케이션 $DEPLOY_NAME 확인"
 CURRENT_DEPLOY="$(/usr/local/bin/pm2 list | grep $DEPLOY_NAME || true)"
