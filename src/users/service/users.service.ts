@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/request/users.create.dto";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
@@ -14,13 +8,7 @@ import { Connection } from "typeorm";
 import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplicate";
 import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { AwsService } from "src/aws.service";
-import { isEqual } from "lodash";
-import {
-  UpdateIntroduceDto,
-  UpdateJobDto,
-  UpdatePreferenceDto,
-  UpdateProfileDto,
-} from "../dtos/request/user.putMyInfo.dto";
+import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 
 @Injectable()
@@ -37,12 +25,11 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  //-----------------------Signup Rogic
-
+  //-----------------------Signup Logic
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
     const { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
-    const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
+    const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
     if (isExistNickname) {
       throw new BadRequestException("이미 존재하는 닉네임 입니다");
@@ -58,7 +45,7 @@ export class UsersService {
       return filesObj.key;
     });
 
-    const users = await this.usersRepository.createUser({
+    const users = await this.usersRepository.saveUser({
       email,
       nickname,
       sex,
@@ -78,7 +65,7 @@ export class UsersService {
   async nicknameDuplicate(body: UserNicknameDuplicateDto) {
     const { nickname } = body;
 
-    const isExistNickname = await this.usersRepository.findOneGetByNickName(nickname);
+    const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
     if (!isExistNickname) {
       return false;
@@ -99,8 +86,7 @@ export class UsersService {
   }
   //--
 
-  //-----------------------Location Rogic
-
+  //-----------------------Location Logic
   async refreshUserLocation(lon: string, lat: string, req: UserRequestDto) {
     const xCoordString = parseFloat(lon).toFixed(7);
     const yCoordString = parseFloat(lat).toFixed(7);
@@ -173,7 +159,7 @@ export class UsersService {
 
     try {
       setting ? (user.ghostMode = true) : (user.ghostMode = false);
-      const ghostSetting = await this.usersRepository.updateUser(user);
+      const ghostSetting = await this.usersRepository.saveUser(user);
 
       return ghostSetting.ghostMode;
     } catch (e) {
@@ -182,25 +168,21 @@ export class UsersService {
     }
   }
 
-  //-----------------------My Account Rogic
-
+  //-----------------------My Account Logic
   async getMyUserInfo(req: UserRequestDto) {
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findById(loggedId);
+    const user = await this.validateUser(loggedId);
 
     try {
       user.profileImages = Array(3)
         .fill("undefined")
         .map((_, i) => (user.profileImages[i] === undefined ? "undefined" : user.profileImages[i]));
 
-      console.log("겟 마이 인포");
-      console.log(user.profileImages);
-
       const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
       return { user, PreSignedUrl: preSignedUrl };
     } catch (error) {
       console.error(error);
-      throw new BadRequestException("유저 정보를 갖고오는데 실패 했습니다.");
+      throw new BadRequestException("내 정보를 갖고오는데 실패 했습니다.");
     }
   }
 
@@ -212,7 +194,7 @@ export class UsersService {
 
     user.job = job;
 
-    const updated = await this.usersRepository.updateUser(user);
+    const updated = await this.usersRepository.saveUser(user);
 
     return updated.job;
   }
@@ -225,7 +207,7 @@ export class UsersService {
 
     user.introduce = introduce;
 
-    const updated = await this.usersRepository.updateUser(user);
+    const updated = await this.usersRepository.saveUser(user);
 
     return updated.introduce;
   }
@@ -238,7 +220,7 @@ export class UsersService {
 
     user.preference = preference;
 
-    const updated = await this.usersRepository.updateUser(user);
+    const updated = await this.usersRepository.saveUser(user);
 
     return updated.preference;
   }
@@ -273,7 +255,7 @@ export class UsersService {
         filterUserProifleImages();
       }
 
-      const updated = await this.usersRepository.updateUser(user);
+      const updated = await this.usersRepository.saveUser(user);
       //--
 
       //Res Array--
@@ -319,7 +301,7 @@ export class UsersService {
 
       user.profileImages.splice(index, 1);
       user.profileImages = user.profileImages.filter((v) => v !== null);
-      await this.usersRepository.updateUser(user);
+      await this.usersRepository.saveUser(user);
       //--
 
       //Res Array--

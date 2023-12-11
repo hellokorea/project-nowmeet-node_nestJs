@@ -20,7 +20,7 @@ import { AppModule } from "src/app.module";
     forwardRef(() => AuthModule),
     forwardRef(() => MatchModule),
     forwardRef(() => ChatModule),
-    forwardRef(() => AppModule), //Aws Service
+    forwardRef(() => AppModule),
   ],
   exports: [UsersService, UsersRepository],
   controllers: [UsersController],

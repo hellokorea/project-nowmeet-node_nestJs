@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { MatchService } from "./match/service/match.service";
 import { Cron, CronExpression } from "@nestjs/schedule";
 

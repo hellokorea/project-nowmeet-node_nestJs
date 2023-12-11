@@ -24,7 +24,7 @@ async function bootstrap() {
     })
   );
 
-  //Env Rogic
+  //Env Logic
   const configService = app.get(ConfigService);
 
   const missingVars = [];

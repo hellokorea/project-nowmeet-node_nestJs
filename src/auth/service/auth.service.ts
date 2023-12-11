@@ -27,8 +27,7 @@ export class AuthService {
     }
   }
 
-  //----------------Google Login Rogic
-
+  //----------------Google Login Logic
   async makeNewIdToken(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
     const clientId = process.env.WEB_CLIENTID;
@@ -71,12 +70,12 @@ export class AuthService {
     return idTokenData;
   }
 
-  //----------------Apple Login Rogic
+  //----------------Apple Login Logic
 
   async appleLogin() {}
 
-  //!Client Disuse Code
-  //* Local Use
+  //!----------------Client Disuse Code
+  //*Internal Use
   async googleLogin(req: GoogleRequest) {
     try {
       const {

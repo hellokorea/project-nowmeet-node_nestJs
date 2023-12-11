@@ -32,6 +32,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly userRepository: UsersRepository
   ) {}
 
+  //-----Connect Chat Logic
   async handleConnection(matchId: number) {
     console.log("매칭된 상대와 채팅방 오픈"); //채팅방 열기 클라 이벤트 받아야함
     this.socket.on("openchatroom", async (data) => {
@@ -45,6 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  //-----Delete Chat Logic
   async handleDisconnect(matchId: number) {
     try {
       console.log("채팅방 데이터 삭제 로직 시작");
@@ -58,10 +60,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  //-----Notice User Exit
   async notifyUserExit(chatId: number, userNickname: string) {
     this.socket.to(chatId.toString()).emit("chatRoomUserExit", { userNickname });
   }
 
+  //-----Chat Logic
+  //Create Chat Room
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
     const findChat = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
 
@@ -96,6 +101,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return newChatRooms;
   }
 
+  //ExpireEnd Chat Room Logic
   async setChatRoomExpireTimer(matchId: number) {
     const PROD_TIMER = 24 * 60 * 60 * 1000;
     const TEST_TIMER = 60 * 1000;
@@ -118,7 +124,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      //Chat Status PENDING..
+      //^Chat Status PENDING..
       this.socket.to(String(matchId)).emit("chatRoomExpired", {
         matchId: matchId,
         chatId: chat.id,
@@ -128,7 +134,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       console.log(`채팅 오픈 가능 시간이 종료되어 ${matchId}의 채팅방이 EXIPRE_END 상태가 됩니다.`);
 
-      // Chat Status 필드 데이터 변경
+      //^Chat Status Field Data Save
       chat.status = ChatState.EXIPRE_END;
       await this.chatRoomRepository.save(chat);
       //
@@ -137,11 +143,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }, TEST_TIMER);
   }
 
+  //DisconnectEnd Chat Room Logic
   async setChatRoomDisconnectTimer(matchId: number) {
     const PROD_TIMER = 24 * 60 * 60 * 1000;
     const TEST_TIMER = 60 * 1000;
 
-    // DisconnectTime 필드 데이터 활성화, status OPEN으로 저장
+    //^DisconnectTime Field Data Active, status OPEN Save
     const chatRoom = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
     chatRoom.disconnectTime = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
     chatRoom.status = ChatState.OPEN;
@@ -175,7 +182,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       console.log(`채팅 가능 시간이 종료되어 ${matchId}의 채팅방이 DISCONNECT_END 상태가 됩니다.`);
 
-      // Chat Status 필드 데이터 변경
+      //^Chat Status Field Data Save
       chat.status = ChatState.DISCONNECT_END;
       await this.chatRoomRepository.save(chat);
       //
@@ -186,9 +193,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return addDisconnectTime;
   }
 
-  /*
- ^^--------------------------Message Rogic
-  */
+  //*--------------------------Message Logic
   @SubscribeMessage("message")
   @UseGuards(JwtAuthGuard)
   async handleMessage(
@@ -223,9 +228,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.broadcast.to(messageDto.chatRoomId.toString()).emit("new_message", message);
   }
 
-  /*
- ^^--------------------------Repository Rogic
-  */
+  //*--------------------------Repository Logic
   async findChatsByUserId(userId: number): Promise<ChatRoom[]> {
     const chats = await this.chatRoomRepository.find({
       where: [{ senderId: userId }, { receiverId: userId }],
@@ -262,9 +265,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await chatRoomRepository.remove(chats);
   }
 
-  /*
-  ^^--------------- dev rogic
-   */
+  //*---------------Dev Logic
   async deleteDevChatDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
     const devChatRoomRepository = txManager.getRepository(DevChatRoom);
     const chats = await devChatRoomRepository.find({

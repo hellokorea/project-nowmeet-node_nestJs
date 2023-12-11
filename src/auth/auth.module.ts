@@ -13,7 +13,7 @@ import { HttpModule } from "@nestjs/axios";
     PassportModule.register({ defaultStrategy: "jwt", session: false }),
     HttpModule,
 
-    //* Local Use
+    //*Internal Use
     JwtModule.register({
       secret: process.env.JWT_KEY,
       signOptions: { expiresIn: process.env.JWT_EXPIRES },

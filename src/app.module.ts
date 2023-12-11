@@ -1,4 +1,4 @@
-import { BadRequestException, Logger, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { BadRequestException, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule, ConfigService } from "@nestjs/config";

@@ -12,27 +12,13 @@ export class MatchRepository {
     @InjectRepository(DevMatch) private devMatchRepository: Repository<DevMatch>
   ) {}
 
-  async createMatch(senderId: number, receiverId: number): Promise<Match> {
-    const PROD_TIMER: number = 24 * 60 * 60 * 1000;
-    const TEST_TIMER: number = 30 * 1000;
-
-    const expireMatch = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
-
-    const newMatch = this.matchRepository.create({
-      sender: { id: senderId },
-      receiver: { id: receiverId },
-      expireMatch,
-    });
-
-    return await this.matchRepository.save(newMatch);
-  }
-
-  async getSendMatch(userId: number): Promise<Match[]> {
-    return await this.matchRepository.find({ where: { sender: { id: userId } }, relations: ["receiver"] });
-  }
-
-  async getReceiveMatch(userId: number): Promise<Match[]> {
-    return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
+  //-----Find Logic
+  async findMatchById(matchId: number): Promise<Match> {
+    const option: FindOneOptions<Match> = {
+      where: { id: matchId },
+      relations: ["receiver", "sender"],
+    };
+    return await this.matchRepository.findOne(option);
   }
 
   async isMatchFind(senderId: number, receiverId: number): Promise<Match[] | null> {
@@ -51,21 +37,15 @@ export class MatchRepository {
         { sender: { id: profileId }, receiver: { id: loggedId } },
       ],
     };
-
     return await this.matchRepository.findOne(option);
   }
 
-  async findMatchById(matchId: number): Promise<Match> {
-    const option: FindOneOptions<Match> = {
-      where: { id: matchId },
-      relations: ["receiver", "sender"],
-    };
-
-    return await this.matchRepository.findOne(option);
+  async getSendMatch(userId: number): Promise<Match[]> {
+    return await this.matchRepository.find({ where: { sender: { id: userId } }, relations: ["receiver"] });
   }
 
-  async saveMatch(match: Match): Promise<Match> {
-    return await this.matchRepository.save(match);
+  async getReceiveMatch(userId: number): Promise<Match[]> {
+    return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
   }
 
   async findExpireMatchesById(): Promise<Match[]> {
@@ -73,6 +53,27 @@ export class MatchRepository {
     return this.matchRepository.find({ where: { expireMatch: LessThan(currentKoreaTime) } });
   }
 
+  //-----Create Logic
+  async createMatch(senderId: number, receiverId: number): Promise<Match> {
+    const PROD_TIMER: number = 24 * 60 * 60 * 1000;
+    const TEST_TIMER: number = 30 * 1000;
+
+    const expireMatch = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+
+    const newMatch = this.matchRepository.create({
+      sender: { id: senderId },
+      receiver: { id: receiverId },
+      expireMatch,
+    });
+    return await this.matchRepository.save(newMatch);
+  }
+
+  //-----Save Logic
+  async saveMatch(match: Match): Promise<Match> {
+    return await this.matchRepository.save(match);
+  }
+
+  //-----Delete Logic
   async removeExpireMatch(match: Match): Promise<void> {
     await this.matchRepository.remove(match);
   }
@@ -82,19 +83,15 @@ export class MatchRepository {
     const matches = await matchRepository.find({
       where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
     });
-
     await matchRepository.remove(matches);
   }
 
-  /*
-  ^^-------------------------------------내부 DB 보관용 Dev_Match 로직
-  */
+  //*-------------------------------------Internal DB Keep Dev_Match Logic
   async findDevMatchById(matchId: number): Promise<DevMatch> {
     const option: FindOneOptions<DevMatch> = {
       where: { id: matchId },
       relations: ["receiver", "sender"],
     };
-
     return await this.devMatchRepository.findOne(option);
   }
 
@@ -103,7 +100,6 @@ export class MatchRepository {
       sender: { id: senderId },
       receiver: { id: receiverId },
     });
-
     return await this.devMatchRepository.save(newMatch);
   }
 
@@ -116,7 +112,6 @@ export class MatchRepository {
     const matches = await devMatchRepository.find({
       where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
     });
-
     await devMatchRepository.remove(matches);
   }
 }

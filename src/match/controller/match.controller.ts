@@ -30,6 +30,7 @@ import { OpenChatResponseDto } from "src/chat/dtos/response/chat.open.dto";
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
+  //-----------------------Get User Profile Logic
   @ApiResponse({
     description: "유저 DB 내 정보 반환 / id, gem 항목은 제거",
     type: GetProfileResponseDto,
@@ -41,6 +42,7 @@ export class MatchController {
     return this.matchService.getUserProfile(nickname, req);
   }
 
+  //-----------------------Create Match Logic
   @ApiResponse({
     description: "matchId, senderId, reciverId, matchStatus = PENDING 반환 ",
     type: SendLikeResponseDto,
@@ -50,28 +52,6 @@ export class MatchController {
   @Post("profile/:nickname/like")
   userLikeSend(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
     return this.matchService.sendLike(nickname, req);
-  }
-
-  @ApiResponse({
-    description: "매칭 정보 반환 / 0일 때 null 반환",
-    type: SendBoxResponseDto,
-    isArray: true,
-  })
-  @ApiOperation({ summary: "내가 보낸 좋아요 발신함" })
-  @Get("me/sendBox")
-  getLikeSendBox(@Req() req: UserRequestDto) {
-    return this.matchService.getLikeSendBox(req);
-  }
-
-  @ApiResponse({
-    description: "받은 좋아요 >= 1 시 PENDING Status 일 때 해당 유저 정보 및 매칭 정보 반환 / 0일 때 null 반환",
-    type: ReceiveBoxResponseDto,
-    isArray: true,
-  })
-  @ApiOperation({ summary: "내가 받은 좋아요 수신함" })
-  @Get("me/reciveBox")
-  getLikeReceiveBox(@Req() req: UserRequestDto) {
-    return this.matchService.getLikeReceiveBox(req);
   }
 
   @ApiResponse({
@@ -96,7 +76,30 @@ export class MatchController {
     return this.matchService.matchReject(matchId, req);
   }
 
-  //-------------------- Chat Rogic
+  //-----------------------Get Match Box Logic
+  @ApiResponse({
+    description: "매칭 정보 반환 / 0일 때 null 반환",
+    type: SendBoxResponseDto,
+    isArray: true,
+  })
+  @ApiOperation({ summary: "내가 보낸 좋아요 발신함" })
+  @Get("me/sendBox")
+  getLikeSendBox(@Req() req: UserRequestDto) {
+    return this.matchService.getLikeSendBox(req);
+  }
+
+  @ApiResponse({
+    description: "받은 좋아요 >= 1 시 PENDING Status 일 때 해당 유저 정보 및 매칭 정보 반환 / 0일 때 null 반환",
+    type: ReceiveBoxResponseDto,
+    isArray: true,
+  })
+  @ApiOperation({ summary: "내가 받은 좋아요 수신함" })
+  @Get("me/reciveBox")
+  getLikeReceiveBox(@Req() req: UserRequestDto) {
+    return this.matchService.getLikeReceiveBox(req);
+  }
+
+  //-------------------- Chat Logic
   @ApiResponse({
     description: "있으면 채팅 관련 정보 배열로 모두 반환 / 없으면 null",
     type: ChatAllListResponseDto,

@@ -35,14 +35,14 @@ import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
+  //-----------------------Test Logic
   @ApiOperation({ summary: "모든 유저 정보 조회 (테스트 용도)" })
   @Get()
   getAllUsers() {
     return this.userService.getAllUsers();
   }
 
-  //-----------------------Signup Rogic
-
+  //-----------------------Signup Logic
   @ApiResponse({ type: UserCreateResDto })
   @ApiOperation({ summary: "유저 회원가입" })
   @UseInterceptors(FilesInterceptor("profileImages"))
@@ -58,8 +58,7 @@ export class UsersController {
     return this.userService.nicknameDuplicate(body);
   }
 
-  //-----------------------Location Rogic
-
+  //-----------------------Location Logic
   @ApiResponse({
     description: "유저의 좌표 위치를 최신화하고, 반경 2km 이내의 모든 유저 정보를 반환한다",
     type: RefreshLocationUserResDto,
@@ -79,8 +78,7 @@ export class UsersController {
     return this.userService.putGhostMode(setting, req);
   }
 
-  //-----------------------My Account Rogic
-
+  //-----------------------My Account Logic
   @ApiOperation({ summary: "내 프로필 정보 조회" })
   @UseGuards(JwtAuthGuard)
   @Get("me")

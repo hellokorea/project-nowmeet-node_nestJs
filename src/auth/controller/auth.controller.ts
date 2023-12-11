@@ -12,8 +12,7 @@ import { JwtAuthGuard } from "../jwt/jwt.guard";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  //-----------------Google Login Rogic
-
+  //-----------------Google Login Logic
   @ApiOperation({ summary: "구글 (사용 X)" })
   @Get("google")
   @UseGuards(AuthGuard("google"))
@@ -39,14 +38,12 @@ export class AuthController {
 
   @ApiOperation({ summary: "id_token 재발행" })
   @ApiBody({ description: "code 입력", type: String })
-  // @UseGuards(JwtAuthGuard)
   @Post("getRefreshToken")
   makeNewIdToken(@Body("code") code: string) {
     return this.authService.makeNewIdToken(code);
   }
 
-  //-----------------Apple Login Rogic
-
+  //-----------------Apple Login Logic
   @ApiOperation({ summary: "애플 로그인" })
   // @UseGuards(AppleOAuthGuard)
   @Get("apple")

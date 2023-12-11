@@ -8,6 +8,7 @@ import * as moment from "moment";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { AwsService } from "src/aws.service";
 import { ChatState } from "src/chat/entity/chats.entity";
+import { UsersService } from "src/users/service/users.service";
 
 @Injectable()
 export class MatchService {
@@ -15,26 +16,30 @@ export class MatchService {
     private readonly matchRepository: MatchRepository,
     private readonly usersRepository: UsersRepository,
     private readonly chatGateway: ChatGateway,
+    private readonly usersService: UsersService,
     private readonly awsService: AwsService
   ) {}
 
+  //-----Get Profile Logic
   async getUserProfile(nickname: string, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const user = await this.usersRepository.findByNickname(nickname);
+    await this.usersService.validateUser(loggedId);
 
-    if (!user) {
+    const oppUser = await this.usersRepository.findByNickname(nickname);
+
+    if (!oppUser) {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
-    const profiledId = user.id;
-    if (user.id === loggedId) {
+    const profiledId = oppUser.id;
+    if (oppUser.id === loggedId) {
       throw new BadRequestException("본인 프로필 조회 불가");
     }
 
     const isMatch = await this.matchRepository.findMatchByUserIds(profiledId, loggedId);
     const isChats = await this.chatGateway.findChatsByUserIds(profiledId, loggedId);
 
-    const userInfo = new UserProfileResponseDto(user);
+    const userInfo = new UserProfileResponseDto(oppUser);
 
     let matchStatus = isMatch ? isMatch.status : null;
 
@@ -46,7 +51,7 @@ export class MatchService {
       }
     }
 
-    const preSignedUrl = await this.awsService.createPreSignedUrl(user.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
 
     return {
       user: userInfo,
@@ -55,71 +60,48 @@ export class MatchService {
     };
   }
 
-  async getLikeSendBox(req: UserRequestDto) {
+  //-----Create Match Logic
+  async sendLike(receiverNickname: string, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const matched = await this.matchRepository.getSendMatch(loggedId);
+    await this.usersService.validateUser(loggedId);
 
-    if (!matched.length) {
-      return null;
+    const oppUser = await this.usersRepository.findByNickname(receiverNickname);
+
+    if (!oppUser) {
+      throw new NotFoundException("상대방은 존재하지 않는 유저 입니다");
     }
 
-    const receiverProfiles = matched.map((data) => data.receiver.profileImages);
-    const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
+    const receiverId = oppUser.id;
 
-    const sendBox = matched.map((matchData) => ({
-      matchId: matchData.id,
-      isMatch: matchData.status,
-      receiverId: matchData.receiver.id,
-      receiverNickname: matchData.receiver.nickname,
-      expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-      profileImages: {
-        ProfileImages: matchData.receiver.profileImages,
-        PreSignedUrl: preSignedUrl,
-      },
-    }));
-
-    if (!sendBox.length) {
-      return null;
+    if (receiverId === loggedId) {
+      throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");
     }
 
-    return sendBox;
+    const isMatched = await this.matchRepository.isMatchFind(loggedId, receiverId);
+    const isChats = await this.chatGateway.findChatsByUserIds(loggedId, receiverId);
+    const findActiveChat = isChats.find((v) => v.status === "OPEN" || v.status === "PENDING");
+
+    if (isMatched.length > 0 || findActiveChat) {
+      throw new BadRequestException(`이미 userId.${oppUser.id}번 상대방 유저에게 좋아요를 보냈습니다`);
+    }
+
+    await this.matchRepository.createDevMatch(loggedId, receiverId); //Dev
+
+    const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
+
+    return {
+      matchId: newMatchData.id,
+      me: newMatchData.sender.id,
+      receiverId: newMatchData.receiver.id,
+      receiverNickname: receiverNickname,
+      matchStatus: newMatchData.status,
+    };
   }
 
-  async getLikeReceiveBox(req: UserRequestDto) {
-    const loggedId = req.user.id;
-    const matched = await this.matchRepository.getReceiveMatch(loggedId);
-
-    if (!matched.length) {
-      return null;
-    }
-
-    const senderProfiles = matched.map((data) => data.sender.profileImages);
-    const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfiles.flat());
-
-    const receiveBox = matched
-      .filter((matchData) => matchData.status === MatchState.PENDING)
-      .map((matchData) => ({
-        matchId: matchData.id,
-        isMatch: matchData.status,
-        senderId: matchData.sender.id,
-        senderNickname: matchData.sender.nickname,
-        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-        profileImages: {
-          ProfileImages: matchData.sender.profileImages,
-          PreSignedUrl: preSignedUrl,
-        },
-      }));
-
-    if (!receiveBox.length) {
-      return null;
-    }
-
-    return receiveBox;
-  }
-
-  // 매칭 공용 함수
+  //Matching Common Logic
   private async updateMatchStatus(matchId: number, req: UserRequestDto, newStatus: MatchState) {
     const loggedId = req.user.id;
+    await this.usersService.validateUser(loggedId);
 
     const devMatch = await this.matchRepository.findDevMatchById(matchId); //Dev
     const match = await this.matchRepository.findMatchById(matchId);
@@ -149,42 +131,7 @@ export class MatchService {
       receiverId: result.receiver.id,
     };
   }
-
-  async sendLike(receiverNickname: string, req: UserRequestDto) {
-    const loggedId = req.user.id;
-
-    const user = await this.usersRepository.findByNickname(receiverNickname);
-
-    if (!user) {
-      throw new NotFoundException("존재하지 않는 유저 입니다");
-    }
-
-    const receiverId = user.id;
-
-    if (receiverId === loggedId) {
-      throw new BadRequestException("본인에게 좋아요를 보낼 수 없습니다");
-    }
-
-    const isMatched = await this.matchRepository.isMatchFind(loggedId, receiverId);
-    const isChats = await this.chatGateway.findChatsByUserIds(loggedId, receiverId);
-    const findActiveChat = isChats.find((v) => v.status === "OPEN" || v.status === "PENDING");
-
-    if (isMatched.length > 0 || findActiveChat) {
-      throw new BadRequestException(`이미 userId.${user.id}번 유저에게 좋아요를 보냈습니다`);
-    }
-
-    await this.matchRepository.createDevMatch(loggedId, receiverId); //Dev
-
-    const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
-
-    return {
-      matchId: newMatchData.id,
-      me: newMatchData.sender.id,
-      receiverId: newMatchData.receiver.id,
-      receiverNickname: receiverNickname,
-      matchStatus: newMatchData.status,
-    };
-  }
+  //--
 
   async matchAccept(matchId: number, req: UserRequestDto) {
     const updateMatch = await this.updateMatchStatus(matchId, req, MatchState.MATCH);
@@ -225,6 +172,74 @@ export class MatchService {
     };
   }
 
+  //-----Get Match Box Logic
+  async getLikeSendBox(req: UserRequestDto) {
+    const loggedId = req.user.id;
+    await this.usersService.validateUser(loggedId);
+
+    const matched = await this.matchRepository.getSendMatch(loggedId);
+
+    if (!matched.length) {
+      return null;
+    }
+
+    const receiverProfiles = matched.map((data) => data.receiver.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
+
+    const sendBox = matched.map((matchData) => ({
+      matchId: matchData.id,
+      isMatch: matchData.status,
+      receiverId: matchData.receiver.id,
+      receiverNickname: matchData.receiver.nickname,
+      expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+      profileImages: {
+        ProfileImages: matchData.receiver.profileImages,
+        PreSignedUrl: preSignedUrl,
+      },
+    }));
+
+    if (!sendBox.length) {
+      return null;
+    }
+
+    return sendBox;
+  }
+
+  async getLikeReceiveBox(req: UserRequestDto) {
+    const loggedId = req.user.id;
+    await this.usersService.validateUser(loggedId);
+
+    const matched = await this.matchRepository.getReceiveMatch(loggedId);
+
+    if (!matched.length) {
+      return null;
+    }
+
+    const senderProfiles = matched.map((data) => data.sender.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfiles.flat());
+
+    const receiveBox = matched
+      .filter((matchData) => matchData.status === MatchState.PENDING)
+      .map((matchData) => ({
+        matchId: matchData.id,
+        isMatch: matchData.status,
+        senderId: matchData.sender.id,
+        senderNickname: matchData.sender.nickname,
+        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+        profileImages: {
+          ProfileImages: matchData.sender.profileImages,
+          PreSignedUrl: preSignedUrl,
+        },
+      }));
+
+    if (!receiveBox.length) {
+      return null;
+    }
+
+    return receiveBox;
+  }
+
+  //-----Match Delete Logic
   async removeExpireMatches() {
     try {
       const expireMatches = await this.matchRepository.findExpireMatchesById();
@@ -244,26 +259,29 @@ export class MatchService {
     }
   }
 
-  /*
-  --------------------------------------Chat Rogic
-  */
+  //*--------------------------------------Chat Logic
 
-  //Find Chat Common Exception--
+  //Find Chat Common Exception
   async verifyFindChatRoom(chatId: number, loggedId: number) {
+    const user = await this.usersRepository.findById(loggedId);
     const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
+
+    if (!user) {
+      throw new NotFoundException("해당 유저가 존재하지 않습니다");
+    }
 
     if (!findChat) {
       throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
     }
 
     if (findChat.receiverId === null || findChat.senderId === null) {
-      throw new NotFoundException("해당 유저가 존재하지 않습니다");
+      throw new NotFoundException("상대방 유저가 존재하지 않습니다");
     }
 
     const isUser = await this.chatGateway.findChatsByUserId(loggedId);
 
     if (!isUser.length) {
-      throw new BadRequestException("유저 정보가 올바르지 않습니다");
+      throw new BadRequestException("채팅방 내 유저 정보가 존재하지 않습니다");
     }
 
     return findChat;
@@ -272,6 +290,7 @@ export class MatchService {
 
   async getChatRoomsAllList(req: UserRequestDto) {
     const loggedId = req.user.id;
+    await this.usersService.validateUser(loggedId);
 
     const findChats = await this.chatGateway.findChatsByUserId(loggedId);
 

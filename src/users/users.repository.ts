@@ -1,13 +1,14 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entity/users.entity";
-import { EntityManager, FindOneOptions, Repository, createQueryBuilder } from "typeorm";
+import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { UserCreateDto } from "./dtos/request/users.create.dto";
 
 @Injectable()
 export class UsersRepository {
   constructor(@InjectRepository(User) private usersRepository: Repository<User>) {}
 
+  //-----Find Logic
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find();
   }
@@ -16,7 +17,6 @@ export class UsersRepository {
     const option: FindOneOptions<User> = {
       where: { id },
     };
-
     return await this.usersRepository.findOne(option);
   }
 
@@ -24,12 +24,7 @@ export class UsersRepository {
     const option: FindOneOptions<User> = {
       where: { nickname },
     };
-
     return await this.usersRepository.findOne(option);
-  }
-
-  async createUser(user: UserCreateDto): Promise<User> {
-    return await this.usersRepository.save(user);
   }
 
   async findOneGetByEmail(email: string): Promise<User | null> {
@@ -39,17 +34,12 @@ export class UsersRepository {
     return await this.usersRepository.findOne(option);
   }
 
-  async findOneGetByNickName(nickname: string): Promise<User | null> {
-    const option: FindOneOptions<User> = {
-      where: { nickname },
-    };
-    return await this.usersRepository.findOne(option);
-  }
-
-  async updateUser(user: UserCreateDto): Promise<User> {
+  //-----update Logic
+  async saveUser(user: UserCreateDto): Promise<User> {
     return await this.usersRepository.save(user);
   }
 
+  //-----Delete Logic
   async deleteUser(transactionalEntityManager: EntityManager, user: User): Promise<void> {
     try {
       await transactionalEntityManager.remove(User, user);
@@ -59,8 +49,7 @@ export class UsersRepository {
     }
   }
 
-  //--------------Location Rogic
-
+  //-----Location Logic
   async findUserLocation(id: number): Promise<User | null> {
     const option: FindOneOptions<User> = {
       where: { id },
@@ -92,14 +81,12 @@ export class UsersRepository {
       .getMany();
   }
 
-  //--------------s3 Bucket Rogic
-
+  //-----s3 Bucket Logic
   async findByFilesKeys(id: number): Promise<User | null> {
     const option: FindOneOptions<User> = {
       where: { id },
       select: ["profileImages"],
     };
-
     return await this.usersRepository.findOne(option);
   }
 }
