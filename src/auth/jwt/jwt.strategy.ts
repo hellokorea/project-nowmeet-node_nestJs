@@ -6,8 +6,9 @@ import { UsersRepository } from "src/users/users.repository";
 import { User } from "src/users/entity/users.entity";
 import * as jwksRsa from "jwks-rsa";
 
+//Google Jwt Validate
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class GooleJwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly userRepository: UsersRepository) {
     //* Local Use
     // super({
@@ -22,11 +23,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 10,
-        jwksUri: process.env.JWKS_URI,
+        jwksUri: "https://www.googleapis.com/oauth2/v3/certs",
       }),
       ignoreExpiration: false,
-      issuer: process.env.ISSUER,
-      audience: process.env.WEB_CLIENTID,
+      issuer: "https://accounts.google.com",
+      audience: process.env.GOOGLE_WEB_CLIENTID,
       algorithms: ["RS256"],
     });
   }
@@ -35,6 +36,36 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     //* Local Use
     // const user = await this.userRepository.findById(payload.sub);
 
+    const user = await this.userRepository.findOneGetByEmail(payload.email);
+
+    if (!user) {
+      throw new UnauthorizedException("접근 오류");
+    }
+
+    return user;
+  }
+}
+
+//Apple Jwt Validate
+@Injectable()
+export class AppleJwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private readonly userRepository: UsersRepository) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKeyProvider: jwksRsa.passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 10,
+        jwksUri: "https://appleid.apple.com/auth/oauth2/v2/keys",
+      }),
+      ignoreExpiration: false,
+      issuer: "https://appleid.apple.com",
+      audience: process.env.APPLE_APP_ID,
+      algorithms: ["RS256"],
+    });
+  }
+
+  async validate(payload: Payload): Promise<User> {
     const user = await this.userRepository.findOneGetByEmail(payload.email);
 
     if (!user) {

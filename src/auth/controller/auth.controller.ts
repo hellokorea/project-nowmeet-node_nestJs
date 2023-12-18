@@ -36,22 +36,22 @@ export class AuthController {
     return this.authService.isUserExist(email);
   }
 
-  @ApiOperation({ summary: "id_token 재발행" })
+  @ApiOperation({ summary: "구글 id_token 발행" })
   @ApiBody({ description: "code 입력", type: String })
-  @Post("getRefreshToken")
-  makeNewIdToken(@Body("code") code: string) {
-    return this.authService.makeNewIdToken(code);
+  @Post("getRefreshToken/google")
+  makeNewIdTokenGoogle(@Body("code") code: string) {
+    return this.authService.makeNewIdTokenGoogle(code);
   }
 
-  //-----------------Apple Login Logic
-  @ApiOperation({ summary: "애플 로그인" })
-  // @UseGuards(AppleOAuthGuard)
-  @Get("apple")
-  async appleLogin() {}
+  @ApiOperation({ summary: "애플 id_token 발행" })
+  @ApiBody({ description: "Authcode 입력", type: String })
+  @Post("getRefreshToken/apple")
+  makeNewIdTokenApple(@Body("authCode") authCode: string) {
+    return this.authService.makeNewIdTokenApple(authCode);
+  }
 
-  @Post("apple/callback")
-  // @UseGuards(AppleOAuthGuard)
-  async appleLoginCallback() {
-    return this.authService.appleLogin();
+  @Post("createClientAppleSecret")
+  createSecretKeyApple() {
+    return this.authService.createSecretKeyApple();
   }
 }

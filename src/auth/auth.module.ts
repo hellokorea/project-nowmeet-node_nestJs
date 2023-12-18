@@ -2,7 +2,7 @@ import { forwardRef, Module } from "@nestjs/common";
 import { AuthService } from "./service/auth.service";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
-import { JwtStrategy } from "./jwt/jwt.strategy";
+import { AppleJwtStrategy, GooleJwtStrategy } from "./jwt/jwt.strategy";
 import { UsersModule } from "src/users/users.module";
 import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
@@ -24,6 +24,6 @@ import { HttpModule } from "@nestjs/axios";
 
   controllers: [AuthController],
 
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, GooleJwtStrategy, AppleJwtStrategy, GoogleStrategy],
 })
 export class AuthModule {}

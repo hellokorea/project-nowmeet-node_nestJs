@@ -3,6 +3,10 @@ import { UsersRepository } from "./../../users/users.repository";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
 import { HttpService } from "@nestjs/axios";
+import * as fs from "fs";
+import * as path from "path";
+import * as jwt from "jsonwebtoken";
+import { URLSearchParams } from "url";
 
 @Injectable()
 export class AuthService {
@@ -27,11 +31,11 @@ export class AuthService {
     }
   }
 
-  //----------------Google Login Logic
-  async makeNewIdToken(code: string): Promise<any> {
+  //----------------Google idToken Logic
+  async makeNewIdTokenGoogle(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
-    const clientId = process.env.WEB_CLIENTID;
-    const clientSecret = process.env.WEB_SECRET;
+    const clientId = process.env.GOOGLE_WEB_CLIENTID;
+    const clientSecret = process.env.GOOGLE_WEB_SECRET;
 
     const getToken = async (body: URLSearchParams) => {
       try {
@@ -44,18 +48,18 @@ export class AuthService {
         return response.data;
       } catch (e) {
         console.log(e);
-        throw new BadRequestException("토큰 발급에 실패했습니다.");
+        throw new BadRequestException("토큰 발급에 실패했습니다. With Goole");
       }
     };
 
-    const bodyCode = new URLSearchParams({
+    const authCodeBody = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
       code: code,
       grant_type: "authorization_code",
     });
 
-    const tokenData = await getToken(bodyCode);
+    const tokenData = await getToken(authCodeBody);
     const refreshToken = tokenData.refresh_token;
 
     const bodyRefreshToken = new URLSearchParams({
@@ -70,11 +74,74 @@ export class AuthService {
     return idTokenData;
   }
 
-  //----------------Apple Login Logic
+  //----------------Apple idToken Logic
+  async makeNewIdTokenApple(authCode: string) {
+    const appleTokenEndpoint = "https://appleid.apple.com/auth/oauth2/v2/token";
+    const clientSecret = await this.createSecretKeyApple();
+    const clientId = process.env.APPLE_CLIENT_ID;
 
-  async appleLogin() {}
+    const getToken = async (body: URLSearchParams) => {
+      try {
+        const response = await this.httpService.axiosRef.post(appleTokenEndpoint, body.toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        });
+        return response.data;
+      } catch (e) {
+        console.error(e);
+        throw new BadRequestException("토큰 발급에 실패했습니다. With Apple");
+      }
+    };
 
-  //!----------------Client Disuse Code
+    const authCodeBody = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: authCode,
+      grant_type: "authorization_code",
+    });
+
+    const tokenData = await getToken(authCodeBody);
+    const refreshToken = tokenData.refresh_token;
+
+    const bodyRefreshToken = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    });
+
+    const idTokenData = await getToken(bodyRefreshToken);
+
+    return idTokenData;
+  }
+
+  async createSecretKeyApple() {
+    const appleHeader = {
+      alg: "ES256",
+      kid: process.env.APPLE_APP_KEY,
+    };
+
+    const applePayload = {
+      iss: process.env.APPLE_APP_ID,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 900,
+      aud: "https://appleid.apple.com",
+      sub: process.env.APPLE_CLIENT_ID,
+    };
+
+    const clientKeyPath = path.join("C:", "now-meet-backend", "AppleSecretKey.p8");
+    const clientKey = fs.readFileSync(clientKeyPath, "utf8");
+
+    const clientSecret = jwt.sign(applePayload, clientKey, {
+      algorithm: "ES256",
+      header: appleHeader,
+    });
+
+    return clientSecret;
+  }
+
+  //!----------------Client Revoke Code
   //*Internal Use
   async googleLogin(req: GoogleRequest) {
     try {
