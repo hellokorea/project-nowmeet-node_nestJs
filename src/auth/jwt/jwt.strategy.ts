@@ -8,7 +8,7 @@ import * as jwksRsa from "jwks-rsa";
 
 //Google Jwt Validate
 @Injectable()
-export class GooleJwtStrategy extends PassportStrategy(Strategy) {
+export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
     //* Local Use
     // super({
@@ -48,7 +48,7 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy) {
 
 //Apple Jwt Validate
 @Injectable()
-export class AppleJwtStrategy extends PassportStrategy(Strategy) {
+export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

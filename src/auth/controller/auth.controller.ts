@@ -5,7 +5,6 @@ import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
-import { JwtAuthGuard } from "../jwt/jwt.guard";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)
@@ -50,6 +49,7 @@ export class AuthController {
     return this.authService.makeNewIdTokenApple(authCode);
   }
 
+  //* Test
   @Post("createClientAppleSecret")
   createSecretKeyApple() {
     return this.authService.createSecretKeyApple();

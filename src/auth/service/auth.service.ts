@@ -61,6 +61,8 @@ export class AuthService {
 
     const tokenData = await getToken(authCodeBody);
     const refreshToken = tokenData.refresh_token;
+    console.log("토큰 데이타!!!!!!!!!! 1차");
+    console.log(tokenData);
 
     const bodyRefreshToken = new URLSearchParams({
       client_id: clientId,
@@ -70,6 +72,8 @@ export class AuthService {
     });
 
     const idTokenData = await getToken(bodyRefreshToken);
+    console.log("리프레쉬 데이타!!!!!!!!!! 2차");
+    console.log(idTokenData);
 
     return idTokenData;
   }

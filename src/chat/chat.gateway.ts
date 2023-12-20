@@ -14,7 +14,7 @@ import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
 import { UseGuards, Req, InternalServerErrorException, BadRequestException, NotFoundException } from "@nestjs/common";
 import { SendMessageDto } from "./dtos/response/chat.dto";
-import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
+// import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/users.repository";
 import { DevChatRoom } from "./entity/devchats.entity";
@@ -195,7 +195,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //*--------------------------Message Logic
   @SubscribeMessage("message")
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async handleMessage(
     @MessageBody() messageDto: SendMessageDto,
     @ConnectedSocket() socket: Socket,

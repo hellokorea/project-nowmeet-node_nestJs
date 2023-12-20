@@ -7,10 +7,11 @@ import { UsersModule } from "src/users/users.module";
 import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
 import { HttpModule } from "@nestjs/axios";
+import { AppleGuard, CustomJwtGuard, GoogleGuard } from "./jwt/jwt.guard";
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: "jwt", session: false }),
+    PassportModule.register({ session: false }),
     HttpModule,
 
     //*Internal Use
@@ -20,10 +21,10 @@ import { HttpModule } from "@nestjs/axios";
     }),
     forwardRef(() => UsersModule),
   ],
-  exports: [AuthService],
+  exports: [AuthService, CustomJwtGuard, GoogleGuard, AppleGuard],
 
   controllers: [AuthController],
 
-  providers: [AuthService, GooleJwtStrategy, AppleJwtStrategy, GoogleStrategy],
+  providers: [AuthService, GooleJwtStrategy, AppleJwtStrategy, GoogleStrategy, CustomJwtGuard, GoogleGuard, AppleGuard],
 })
 export class AuthModule {}

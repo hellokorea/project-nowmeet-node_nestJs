@@ -13,7 +13,6 @@ import {
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { MatchService } from "../service/match.service";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
-import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { SendLikeResponseDto } from "../dtos/request/match.sendLikeResonse.dto";
 import { ReceiveBoxResponseDto, SendBoxResponseDto } from "../dtos/response/match.likeBoxResponse.dto";
@@ -25,7 +24,7 @@ import { OpenChatResponseDto } from "src/chat/dtos/response/chat.open.dto";
 
 @ApiBearerAuth()
 @Controller("match")
-@UseGuards(JwtAuthGuard)
+@UseGuards()
 @UseInterceptors(SuccessInterceptor)
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
