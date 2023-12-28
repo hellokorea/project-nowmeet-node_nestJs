@@ -27,7 +27,7 @@ export class UsersService {
 
   //-----------------------Signup Logic
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
-    const { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
+    let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub } = body;
 
     const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
@@ -45,6 +45,13 @@ export class UsersService {
       return filesObj.key;
     });
 
+    //Apple Email Hide Case
+    if (email === null) {
+      const randomAlg1 = Date.now().toString().slice(0, 5);
+      const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
+      email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();
+    }
+
     const users = await this.usersRepository.saveUser({
       email,
       nickname,
@@ -56,6 +63,7 @@ export class UsersService {
       preference,
       longitude,
       latitude,
+      sub,
       profileImages: userFilesKeys,
     });
 

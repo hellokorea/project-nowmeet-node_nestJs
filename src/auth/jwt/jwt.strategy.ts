@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable, Param, Req, UnauthorizedException } from "@nestjs/common";
-import { Payload } from "./jwt.payload";
+import { Injectable, Logger, Param, Req, UnauthorizedException } from "@nestjs/common";
+import { ApplePayload, GooglePayload } from "./jwt.payload";
 import { UsersRepository } from "src/users/users.repository";
 import { User } from "src/users/entity/users.entity";
 import * as jwksRsa from "jwks-rsa";
@@ -32,7 +32,7 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
     });
   }
 
-  async validate(payload: Payload): Promise<User> {
+  async validate(payload: GooglePayload): Promise<User> {
     //* Local Use
     // const user = await this.userRepository.findById(payload.sub);
 
@@ -49,6 +49,8 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
 //Apple Jwt Validate
 @Injectable()
 export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
+  private readonly logger = new Logger(AppleJwtStrategy.name);
+
   constructor(private readonly userRepository: UsersRepository) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -65,13 +67,17 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
     });
   }
 
-  async validate(payload: Payload): Promise<User> {
-    const user = await this.userRepository.findOneGetByEmail(payload.email);
+  async validate(payload: ApplePayload): Promise<User> {
+    const startTime = Date.now();
+    this.logger.log("유저 검증 시작");
+    const user = await this.userRepository.findAppleSub(payload.sub);
 
     if (!user) {
       throw new UnauthorizedException("접근 오류");
     }
-
+    const endTime = Date.now();
+    this.logger.log("유저 검증 끝");
+    this.logger.log(`decoding jwt ${endTime - startTime}ms`);
     return user;
   }
 }

@@ -7,7 +7,7 @@ import { UsersModule } from "src/users/users.module";
 import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
 import { HttpModule } from "@nestjs/axios";
-import { AppleGuard, CustomJwtGuard, GoogleGuard } from "./jwt/jwt.guard";
+import { AppleGuard, CustomJwtGuards, GoogleGuard } from "./jwt/jwt.guard";
 
 @Module({
   imports: [
@@ -21,10 +21,18 @@ import { AppleGuard, CustomJwtGuard, GoogleGuard } from "./jwt/jwt.guard";
     }),
     forwardRef(() => UsersModule),
   ],
-  exports: [AuthService, CustomJwtGuard, GoogleGuard, AppleGuard],
+  exports: [AuthService, CustomJwtGuards, GoogleGuard, AppleGuard],
 
   controllers: [AuthController],
 
-  providers: [AuthService, GooleJwtStrategy, AppleJwtStrategy, GoogleStrategy, CustomJwtGuard, GoogleGuard, AppleGuard],
+  providers: [
+    AuthService,
+    GooleJwtStrategy,
+    AppleJwtStrategy,
+    GoogleStrategy,
+    CustomJwtGuards,
+    GoogleGuard,
+    AppleGuard,
+  ],
 })
 export class AuthModule {}

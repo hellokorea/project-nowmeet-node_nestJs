@@ -46,6 +46,9 @@ export class User {
   @Column("simple-array")
   profileImages: string[];
 
+  @Column({ default: "Disuse" })
+  sub: string;
+
   @CreateDateColumn()
   createdAt: string;
 

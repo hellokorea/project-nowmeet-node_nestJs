@@ -16,18 +16,30 @@ export class AuthService {
     private httpService: HttpService
   ) {}
 
-  async isUserExist(email: string) {
+  async isUserExist(uuid: string) {
     try {
-      const findUser = await this.usersRepository.findOneGetByEmail(email);
+      //Google
+      if (uuid.includes("@gmail.com")) {
+        const findGoogleUser = await this.usersRepository.findOneGetByEmail(uuid);
 
-      if (!findUser) {
-        return false;
+        if (!findGoogleUser) {
+          return false;
+        } else if (findGoogleUser.sub === "Disuse") {
+          return true;
+        }
       }
 
-      return true;
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException("유저 검증 도중 문제가 발생했습니다.");
+      //Apple
+      const findAppleUser = await this.usersRepository.findAppleSub(uuid);
+
+      if (!findAppleUser) {
+        return false;
+      } else {
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException("유저 검증에 실패했습니다.");
     }
   }
 
@@ -79,6 +91,7 @@ export class AuthService {
   }
 
   //----------------Apple idToken Logic
+
   async makeNewIdTokenApple(authCode: string) {
     const appleTokenEndpoint = "https://appleid.apple.com/auth/oauth2/v2/token";
     const clientSecret = await this.createSecretKeyApple();

@@ -8,6 +8,7 @@ import { MatchRepository } from "./match.repository";
 import { ChatModule } from "src/chat/chat.module";
 import { DevMatch } from "./entity/devmatch.entity";
 import { AppModule } from "src/app.module";
+import { AuthModule } from "src/auth/auth.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AppModule } from "src/app.module";
     forwardRef(() => UsersModule),
     forwardRef(() => ChatModule),
     forwardRef(() => AppModule),
+    forwardRef(() => AuthModule),
   ],
   exports: [MatchService, MatchRepository],
   controllers: [MatchController],

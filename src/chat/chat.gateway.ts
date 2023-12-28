@@ -12,7 +12,7 @@ import { Socket } from "socket.io";
 import { ChatRoom, ChatState } from "./entity/chats.entity";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
-import { UseGuards, Req, InternalServerErrorException, BadRequestException, NotFoundException } from "@nestjs/common";
+import { Req, InternalServerErrorException, BadRequestException, NotFoundException } from "@nestjs/common";
 import { SendMessageDto } from "./dtos/response/chat.dto";
 // import { JwtAuthGuard } from "src/auth/jwt/jwt.guard";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";

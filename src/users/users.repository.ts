@@ -34,6 +34,14 @@ export class UsersRepository {
     return await this.usersRepository.findOne(option);
   }
 
+  async findAppleSub(sub: string): Promise<User | null> {
+    const option: FindOneOptions<User> = {
+      where: { sub },
+    };
+    console.log(sub);
+    return await this.usersRepository.findOne(option);
+  }
+
   //-----update Logic
   async saveUser(user: UserCreateDto): Promise<User> {
     return await this.usersRepository.save(user);

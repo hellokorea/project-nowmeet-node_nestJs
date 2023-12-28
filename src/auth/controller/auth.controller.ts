@@ -23,16 +23,17 @@ export class AuthController {
   googleLoginCallback(@Req() req: GoogleRequest) {
     return this.authService.googleLogin(req);
   }
+  //------------------------
 
   @ApiResponse({
     description: "유저 => true / 유저 X => false",
     type: Boolean,
   })
   @ApiOperation({ summary: "로그인 시 유저 검증" })
-  @ApiBody({ description: "이메일 정보 입력", type: IsUserRequsetDto })
+  @ApiBody({ description: "uuid 정보 입력", type: IsUserRequsetDto })
   @Post("isUser")
-  isUserExist(@Body("email") email: string) {
-    return this.authService.isUserExist(email);
+  isUserExist(@Body("uuid") uuid: string) {
+    return this.authService.isUserExist(uuid);
   }
 
   @ApiOperation({ summary: "구글 id_token 발행" })

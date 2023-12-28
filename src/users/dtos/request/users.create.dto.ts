@@ -6,9 +6,7 @@ export class UserCreateDto {
     example: "test@naver.com",
     description: "email",
   })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  email: string | null;
 
   @ApiProperty({
     example: "nowmmet대박가자",
@@ -80,6 +78,11 @@ export class UserCreateDto {
   })
   @IsNotEmpty()
   latitude: number;
+
+  @ApiProperty({
+    example: 232323,
+  })
+  sub: string;
 
   @ApiProperty({
     example: ["Example.jpg", "Example.jpg,"],
