@@ -67,6 +67,7 @@ export class CustomJwtGuards implements CanActivate {
       }
     } catch (e) {
       console.error(e);
+      throw new UnauthorizedException("발급자가 올바르지 않습니다.");
     }
 
     // 발급자가 Google이나 Apple이 아닐 경우 거부

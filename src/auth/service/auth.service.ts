@@ -23,9 +23,15 @@ export class AuthService {
         const findGoogleUser = await this.usersRepository.findOneGetByEmail(uuid);
 
         if (!findGoogleUser) {
-          return false;
-        } else if (findGoogleUser.sub === "Disuse") {
-          return true;
+          return {
+            isUser: false,
+            email: uuid,
+          };
+        } else {
+          return {
+            isUser: true,
+            email: uuid,
+          };
         }
       }
 
@@ -33,9 +39,16 @@ export class AuthService {
       const findAppleUser = await this.usersRepository.findAppleSub(uuid);
 
       if (!findAppleUser) {
-        return false;
+        return {
+          isUser: false,
+          //email 추가? 안가렸을 경우
+          sub: uuid,
+        };
       } else {
-        return true;
+        return {
+          isUser: true,
+          sub: uuid,
+        };
       }
     } catch (e) {
       console.error(e);

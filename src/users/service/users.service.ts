@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/request/users.create.dto";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
@@ -10,6 +16,8 @@ import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { AwsService } from "src/aws.service";
 import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
+import { AuthService } from "src/auth/service/auth.service";
+import * as jwt from "jsonwebtoken";
 
 @Injectable()
 export class UsersService {
@@ -18,7 +26,8 @@ export class UsersService {
     private readonly matchRepository: MatchRepository,
     private readonly chatGateway: ChatGateway,
     private readonly connection: Connection,
-    private readonly awsService: AwsService
+    private readonly awsService: AwsService,
+    private readonly authService: AuthService
   ) {}
 
   async getAllUsers() {
@@ -26,8 +35,29 @@ export class UsersService {
   }
 
   //-----------------------Signup Logic
-  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>) {
-    let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub } = body;
+  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>, request: Request) {
+    let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
+
+    const headrsAuth = (request.headers as { authorization?: string }).authorization;
+    const token = headrsAuth.split(" ")[1];
+    const decoded = jwt.decode(token);
+
+    const issuer = (decoded as jwt.JwtPayload).iss;
+
+    if (!issuer) {
+      throw new UnauthorizedException("유효하지 않는 토큰 발급자 입니다.");
+    }
+
+    //함수로 따로 빼자 번거롭다.
+    // email hide 했을 때 처리 필요
+    let email: string;
+    let sub: string;
+
+    if (issuer.includes("accounts.google.com")) {
+      email = (decoded as jwt.JwtPayload).email;
+    } else if (issuer.includes("appleid.apple.com")) {
+      sub = (decoded as jwt.JwtPayload).sub;
+    }
 
     const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
@@ -46,7 +76,7 @@ export class UsersService {
     });
 
     //Apple Email Hide Case
-    if (email === null) {
+    if (email === undefined) {
       const randomAlg1 = Date.now().toString().slice(0, 5);
       const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
       email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();

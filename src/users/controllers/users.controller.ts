@@ -47,8 +47,8 @@ export class UsersController {
   @ApiOperation({ summary: "유저 회원가입" })
   @UseInterceptors(FilesInterceptor("profileImages"))
   @Post("signup")
-  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: Array<Express.Multer.File>) {
-    return this.userService.createUser(body, files);
+  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: Array<Express.Multer.File>, @Req() request: Request) {
+    return this.userService.createUser(body, files, request);
   }
 
   @ApiResponse({ description: "true || false", type: Boolean })
