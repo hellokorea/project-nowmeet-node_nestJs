@@ -39,8 +39,12 @@ export class UsersService {
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
     const headrsAuth = (request.headers as { authorization?: string }).authorization;
+    console.log(`헤더 \n ${headrsAuth}`);
     const token = headrsAuth.split(" ")[1];
+    console.log(`토큰 \n ${token}`);
     const decoded = jwt.decode(token);
+
+    console.log(`디코딩 \n ${JSON.stringify(decoded)})}`);
 
     const issuer = (decoded as jwt.JwtPayload).iss;
 
