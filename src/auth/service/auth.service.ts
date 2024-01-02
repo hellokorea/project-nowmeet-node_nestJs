@@ -23,15 +23,9 @@ export class AuthService {
         const findGoogleUser = await this.usersRepository.findOneGetByEmail(uuid);
 
         if (!findGoogleUser) {
-          return {
-            isUser: false,
-            email: uuid,
-          };
+          return false;
         } else {
-          return {
-            isUser: true,
-            email: uuid,
-          };
+          return true;
         }
       }
 
@@ -39,16 +33,9 @@ export class AuthService {
       const findAppleUser = await this.usersRepository.findAppleSub(uuid);
 
       if (!findAppleUser) {
-        return {
-          isUser: false,
-          //email 추가? 안가렸을 경우
-          sub: uuid,
-        };
+        return false;
       } else {
-        return {
-          isUser: true,
-          sub: uuid,
-        };
+        return true;
       }
     } catch (e) {
       console.error(e);
