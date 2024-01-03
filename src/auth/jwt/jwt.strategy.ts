@@ -12,13 +12,31 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
     //* Local Use
     // super({
-    //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    //   jwtFromRequest: (request) => {
+    //     const authHeader = request.headers.authorization;
+    //     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    //       console.log(`Invalid Authorization header: ${authHeader}`);
+    //       throw new UnauthorizedException("Invalid Authorization header");
+    //     }
+    //     const token = authHeader.split(" ")[1];
+    //     console.log(token);
+    //     return token;
+    //   },
     //   secretOrKey: process.env.JWT_KEY,
     //   ignoreExpiration: false,
     // });
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (request) => {
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+          console.log(`Invalid Authorization header: ${authHeader}`);
+          throw new UnauthorizedException("Invalid Authorization header");
+        }
+        const token = authHeader.split(" ")[1];
+        console.log(token);
+        return token;
+      },
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
         cache: true,
         rateLimit: true,
@@ -33,16 +51,21 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   }
 
   async validate(payload: GooglePayload): Promise<User> {
-    //* Local Use
-    // const user = await this.userRepository.findById(payload.sub);
+    console.log("구글 유저 검증 시작");
+    try {
+      const user = await this.userRepository.findOneGetByEmail(payload.email);
 
-    const user = await this.userRepository.findOneGetByEmail(payload.email);
+      if (!user) {
+        throw new UnauthorizedException("유저가 존재하지 않습니다.");
+      }
 
-    if (!user) {
-      throw new UnauthorizedException("접근 오류");
+      console.log("구글 유저 검증 끝");
+
+      return user;
+    } catch (e) {
+      console.error("구글 인증 실패:", e);
+      throw e;
     }
-
-    return user;
   }
 }
 
@@ -53,7 +76,16 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
 
   constructor(private readonly userRepository: UsersRepository) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (request) => {
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+          console.log(`Invalid Authorization header: ${authHeader}`);
+          throw new UnauthorizedException("Invalid Authorization header");
+        }
+        const token = authHeader.split(" ")[1];
+        console.log(token);
+        return token;
+      },
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
         cache: true,
         rateLimit: true,
@@ -69,14 +101,15 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
 
   async validate(payload: ApplePayload): Promise<User> {
     const startTime = Date.now();
-    this.logger.log("유저 검증 시작");
+    this.logger.log("애플 유저 검증 시작");
     const user = await this.userRepository.findAppleSub(payload.sub);
 
     if (!user) {
-      throw new UnauthorizedException("접근 오류");
+      throw new UnauthorizedException("유저가 존재하지 않습니다.");
     }
+
     const endTime = Date.now();
-    this.logger.log("유저 검증 끝");
+    this.logger.log("애플 유저 검증 끝");
     this.logger.log(`decoding jwt ${endTime - startTime}ms`);
     return user;
   }

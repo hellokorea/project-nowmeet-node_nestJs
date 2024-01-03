@@ -29,6 +29,8 @@ export class CustomJwtGuards implements CanActivate {
       throw new UnauthorizedException("Authorization header is missing");
     }
 
+    console.log(`authHeader: \n ${JSON.stringify(authHeader)}`);
+
     // Bearer 토큰 추출
     const token = authHeader.split(" ")[1];
     if (!token) {
@@ -58,16 +60,22 @@ export class CustomJwtGuards implements CanActivate {
         this.logger.log("Using GoogleGuard");
         const endTime = Date.now();
         this.logger.log(`canActivate method finished in ${endTime - startTime}ms`);
-        return this.googleGuard.canActivate(context) as Promise<boolean>;
+        console.log("GoogleGuard 호출 전");
+        const result = await this.googleGuard.canActivate(context);
+        console.log("GoogleGuard 호출 후 ");
+        return result as boolean;
       } else if (issuer.includes("appleid.apple.com")) {
         this.logger.log("Using AppleGuard");
         const endTime = Date.now();
         this.logger.log(`canActivate method finished in ${endTime - startTime}ms`);
-        return this.appleGuard.canActivate(context) as Promise<boolean>;
+        console.log("애플 가드 호출 전 ");
+        const result = await this.appleGuard.canActivate(context);
+        console.log("애플 가드 호출 후 ");
+        return result as boolean;
       }
     } catch (e) {
       console.error(e);
-      throw new UnauthorizedException("발급자가 올바르지 않습니다.");
+      throw e;
     }
 
     // 발급자가 Google이나 Apple이 아닐 경우 거부

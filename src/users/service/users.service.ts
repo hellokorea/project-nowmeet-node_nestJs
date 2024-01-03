@@ -52,7 +52,6 @@ export class UsersService {
       throw new UnauthorizedException("유효하지 않는 토큰 발급자 입니다.");
     }
 
-    //함수로 따로 빼자 번거롭다.
     // email hide 했을 때 처리 필요
     let email: string;
     let sub: string;
