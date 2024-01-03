@@ -28,8 +28,8 @@ export class CustomJwtGuards implements CanActivate {
     if (!authHeader) {
       throw new UnauthorizedException("Authorization header is missing");
     }
-
-    console.log(`authHeader: \n ${JSON.stringify(authHeader)}`);
+    console.log("authHeader : ");
+    console.log(authHeader);
 
     // Bearer 토큰 추출
     const token = authHeader.split(" ")[1];

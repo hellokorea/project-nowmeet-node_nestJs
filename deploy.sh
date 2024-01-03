@@ -3,7 +3,7 @@
 set -e
 
 REPOSITORY=/home/ec2-user/applications/nowmeet
-DEPLOY_NAME=nowmeet-aws-12
+DEPLOY_NAME=nowmeet-aws-13
 
 echo "> 현재 구동중인 애플리케이션 $DEPLOY_NAME 확인"
 CURRENT_DEPLOY="$(/usr/local/bin/pm2 list | grep $DEPLOY_NAME || true)"
@@ -55,7 +55,7 @@ GOOGLE_WEB_CLIENT_ID=$(aws ssm get-parameter --name "/nowmeet/GOOGLE_WEB_CLIENT_
 JWKS_URI=$(aws ssm get-parameter --name "/nowmeet/JWKS_URI" --with-decryption --query "Parameter.Value" --output text)
 ISSUER=$(aws ssm get-parameter --name "/nowmeet/ISSUER" --with-decryption --query "Parameter.Value" --output text)
 GOOGLE_WEB_SECRET=$(aws ssm get-parameter --name "/nowmeet/GOOGLE_WEB_SECRET" --with-decryption --query "Parameter.Value" --output text)
-APPLE_APP_ID=$(aws ssm get-parameter --name "/nowmeet/APPLE_APP_ID" --with-decryption --query "Parameter.Value" --output text)
+APPLE_TEAM_ID=$(aws ssm get-parameter --name "/nowmeet/APPLE_TEAM_ID" --with-decryption --query "Parameter.Value" --output text)
 APPLE_APP_KEY=$(aws ssm get-parameter --name "/nowmeet/APPLE_APP_KEY" --with-decryption --query "Parameter.Value" --output text)
 APPLE_CLIENT_ID=$(aws ssm get-parameter --name "/nowmeet/APPLE_CLIENT_ID" --with-decryption --query "Parameter.Value" --output text)
 
@@ -99,7 +99,7 @@ echo "GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" >> $REPOSITORY/.env
 echo "JWKS_URI=$JWKS_URI" >> $REPOSITORY/.env
 echo "ISSUER=$ISSUER" >> $REPOSITORY/.env
 echo "GOOGLE_WEB_SECRET=$GOOGLE_WEB_SECRET" >> $REPOSITORY/.env
-echo "APPLE_APP_ID=$APPLE_APP_ID" >> $REPOSITORY/.env
+echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> $REPOSITORY/.env
 echo "APPLE_APP_KEY=$APPLE_APP_KEY" >> $REPOSITORY/.env
 echo "APPLE_CLIENT_ID=$APPLE_CLIENT_ID" >> $REPOSITORY/.env
 

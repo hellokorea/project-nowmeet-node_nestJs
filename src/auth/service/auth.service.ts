@@ -140,7 +140,7 @@ export class AuthService {
     };
 
     const applePayload = {
-      iss: process.env.APPLE_APP_ID,
+      iss: process.env.APPLE_TEAM_ID,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,
       aud: "https://appleid.apple.com",

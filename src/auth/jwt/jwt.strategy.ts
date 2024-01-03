@@ -94,7 +94,7 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
       }),
       ignoreExpiration: false,
       issuer: "https://appleid.apple.com",
-      audience: process.env.APPLE_APP_ID,
+      audience: process.env.APPLE_CLIENT_ID,
       algorithms: ["RS256"],
     });
   }
