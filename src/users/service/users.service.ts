@@ -38,6 +38,7 @@ export class UsersService {
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>, request: Request) {
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
+    //*Jwt Furcate Rogic
     const headrsAuth = (request.headers as { authorization?: string }).authorization;
     console.log(`헤더 \n ${headrsAuth}`);
     const token = headrsAuth.split(" ")[1];
@@ -52,22 +53,44 @@ export class UsersService {
       throw new UnauthorizedException("유효하지 않는 토큰 발급자 입니다.");
     }
 
-    // email hide 했을 때 처리 필요
     let email: string;
     let sub: string;
 
+    //Google Issuer
     if (issuer.includes("accounts.google.com")) {
       email = (decoded as jwt.JwtPayload).email;
-    } else if (issuer.includes("appleid.apple.com")) {
-      sub = (decoded as jwt.JwtPayload).sub;
     }
 
+    //Apple Issuer
+    if (issuer.includes("appleid.apple.com")) {
+      sub = (decoded as jwt.JwtPayload).sub;
+
+      const appleEmail = (decoded as jwt.JwtPayload).email;
+
+      console.log("apple Email : ");
+      console.log(appleEmail);
+
+      if (appleEmail === null) {
+        //Hide
+        const randomAlg1 = Date.now().toString().slice(0, 5);
+        const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
+        email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();
+      } else {
+        //Don't Hide
+        email = appleEmail;
+      }
+    }
+    //*
+
+    //*Nickname Data
     const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
     if (isExistNickname) {
       throw new BadRequestException("이미 존재하는 닉네임 입니다");
     }
+    //*
 
+    //*Profile Img Data
     if (!files.length) {
       throw new BadRequestException("프로필 사진을 최소 1장 등록하세요");
     }
@@ -77,14 +100,9 @@ export class UsersService {
     const userFilesKeys = uploadUserProfiles.map((filesObj) => {
       return filesObj.key;
     });
+    //*
 
-    //Apple Email Hide Case
-    if (email === undefined) {
-      const randomAlg1 = Date.now().toString().slice(0, 5);
-      const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
-      email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();
-    }
-
+    //*Save User Data
     const users = await this.usersRepository.saveUser({
       email,
       nickname,
