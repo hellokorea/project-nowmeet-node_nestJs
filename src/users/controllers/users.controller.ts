@@ -16,10 +16,8 @@ import { SuccessInterceptor } from "src/common/interceptors/success.interceptor"
 import { UserCreateDto } from "../dtos/request/users.create.dto";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
-import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplicate";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { RefreshLocationUserResDto } from "../dtos/response/user.locationResponse.dto";
-import { UserCreateResDto } from "../dtos/response/users.create.response.dto";
 import {
   UpdateIntroduceDto,
   UpdateJobDto,
@@ -43,7 +41,6 @@ export class UsersController {
   }
 
   //-----------------------Signup Logic
-  @ApiResponse({ type: UserCreateResDto })
   @ApiOperation({ summary: "유저 회원가입" })
   @UseInterceptors(FilesInterceptor("profileImages"))
   @Post("signup")
@@ -53,9 +50,9 @@ export class UsersController {
 
   @ApiResponse({ description: "true || false", type: Boolean })
   @ApiOperation({ summary: "유저 회원가입 시 닉네임 중복 체크" })
-  @Get("signup/nickname")
-  nicknameDuplicate(@Body() body: UserNicknameDuplicateDto) {
-    return this.userService.nicknameDuplicate(body);
+  @Get("signup/nickname/:nickname")
+  nicknameDuplicate(@Param("nickname") nickname: string) {
+    return this.userService.nicknameDuplicate(nickname);
   }
 
   //-----------------------Location Logic

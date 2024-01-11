@@ -9,7 +9,7 @@ export class UserCreateDto {
   email: string | null;
 
   @ApiProperty({
-    example: "nowmmet대박가자",
+    example: "helloWorld",
     description: "nickname",
   })
   @IsString()
@@ -80,7 +80,7 @@ export class UserCreateDto {
   latitude: number;
 
   @ApiProperty({
-    example: 232323,
+    example: "Google = Disuse || Apple = 123.23dd12",
   })
   sub: string;
 

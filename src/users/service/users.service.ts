@@ -11,7 +11,6 @@ import { UserRequestDto } from "../dtos/request/users.request.dto";
 import { MatchRepository } from "./../../match/match.repository";
 import { ChatGateway } from "src/chat/chat.gateway";
 import { Connection } from "typeorm";
-import { UserNicknameDuplicateDto } from "../dtos/request/users.nickname.duplicate";
 import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { AwsService } from "src/aws.service";
 import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/request/user.putMyInfo.dto";
@@ -67,8 +66,7 @@ export class UsersService {
 
       const appleEmail = (decoded as jwt.JwtPayload).email;
 
-      console.log("apple Email : ");
-      console.log(appleEmail);
+      console.log(`apple Email : \n ${appleEmail}`);
 
       if (appleEmail === null) {
         //Hide
@@ -121,9 +119,7 @@ export class UsersService {
     return users;
   }
 
-  async nicknameDuplicate(body: UserNicknameDuplicateDto) {
-    const { nickname } = body;
-
+  async nicknameDuplicate(nickname: string) {
     const isExistNickname = await this.usersRepository.findByNickname(nickname);
 
     if (!isExistNickname) {
