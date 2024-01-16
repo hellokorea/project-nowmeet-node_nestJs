@@ -15,7 +15,6 @@ import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { AwsService } from "src/aws.service";
 import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
-import { AuthService } from "src/auth/service/auth.service";
 import * as jwt from "jsonwebtoken";
 
 @Injectable()
@@ -25,8 +24,7 @@ export class UsersService {
     private readonly matchRepository: MatchRepository,
     private readonly chatGateway: ChatGateway,
     private readonly connection: Connection,
-    private readonly awsService: AwsService,
-    private readonly authService: AuthService
+    private readonly awsService: AwsService
   ) {}
 
   async getAllUsers() {
@@ -176,7 +174,8 @@ export class UsersService {
 
       const responseUserList = nearbyUsers.map((user) => new UserProfileResponseDto(user));
       const filteredResponseUserList = responseUserList.filter(
-        (responseUser) => user.nickname !== responseUser.nickname && responseUser.ghostMode === false
+        (responseUser) =>
+          user.nickname !== responseUser.nickname && responseUser.ghostMode === false && user.sex !== responseUser.sex
       );
 
       if (!filteredResponseUserList.length) {

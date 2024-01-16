@@ -16,6 +16,7 @@ import { DevMatch } from "./match/entity/devmatch.entity";
 import { DevChatRoom } from "./chat/entity/devchats.entity";
 import { AwsService } from "./aws.service";
 import { ScheduleModule } from "@nestjs/schedule";
+import { InAppModule } from './in-app/in-app.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     MatchModule,
     ChatModule,
     ScheduleModule.forRoot(),
+    InAppModule,
   ],
   exports: [AwsService],
   controllers: [AppController],
