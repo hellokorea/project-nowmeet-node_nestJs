@@ -25,7 +25,7 @@ import {
   UpdateProfileDto,
 } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
-import { CustomJwtGuards } from "src/auth/jwt/jwt.guard";
+import { CustomJwtGuards, GoogleGuard } from "src/auth/jwt/jwt.guard";
 
 @ApiBearerAuth()
 @Controller("users")

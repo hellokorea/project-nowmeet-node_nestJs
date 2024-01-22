@@ -32,6 +32,9 @@ export class UserProfileResponseDto {
   @ApiProperty({ example: "-90.000000" })
   latitude: number;
 
+  @ApiProperty({ example: "null" })
+  matchStatus: string;
+
   @ApiProperty({
     example:
       "profileImages/1697729883735_%EA%B9%80%EC%A0%95%EB%8F%99%EB%8B%98.jpg,profileImages/1697729883735_%EA%B9%80%EC%A0%95%EB%8F%99%EB%8B%98.jpg ",

@@ -21,7 +21,7 @@ import { ChatAllListResponseDto } from "../../chat/dtos/response/chat.listAllRes
 import { ChatRoomResponseDto } from "src/chat/dtos/response/chat.chatRoomResponse.dto";
 import { GetProfileResponseDto } from "src/users/dtos/response/user.getProfiles.dto";
 import { OpenChatResponseDto } from "src/chat/dtos/response/chat.open.dto";
-import { CustomJwtGuards } from "src/auth/jwt/jwt.guard";
+import { CustomJwtGuards, GoogleGuard } from "src/auth/jwt/jwt.guard";
 
 @ApiBearerAuth()
 @Controller("match")

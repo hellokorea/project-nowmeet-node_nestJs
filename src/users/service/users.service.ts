@@ -1,9 +1,11 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  forwardRef,
 } from "@nestjs/common";
 import { UsersRepository } from "../users.repository";
 import { UserCreateDto } from "../dtos/request/users.create.dto";
@@ -16,6 +18,7 @@ import { AwsService } from "src/aws.service";
 import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 import * as jwt from "jsonwebtoken";
+import { MatchService } from "src/match/service/match.service";
 
 @Injectable()
 export class UsersService {
@@ -24,7 +27,9 @@ export class UsersService {
     private readonly matchRepository: MatchRepository,
     private readonly chatGateway: ChatGateway,
     private readonly connection: Connection,
-    private readonly awsService: AwsService
+    private readonly awsService: AwsService,
+    @Inject(forwardRef(() => MatchService))
+    private readonly matchService: MatchService
   ) {}
 
   async getAllUsers() {
@@ -157,6 +162,7 @@ export class UsersService {
 
     const loggedId = req.user.id;
     const user = await this.validateUser(loggedId);
+    console.log(user);
 
     try {
       const findMyLocation = await this.usersRepository.findUserLocation(user.id);
@@ -172,7 +178,19 @@ export class UsersService {
 
       let nearbyUsers = await this.usersRepository.findUsersNearLocaction(xCoordNumber, yCoordNumber, SEARCH_BOUNDARY);
 
-      const responseUserList = nearbyUsers.map((user) => new UserProfileResponseDto(user));
+      console.log(nearbyUsers);
+
+      const responseUserPromises = nearbyUsers.map(async (user) => {
+        const nearbyUsersMatchStatus = await this.matchService.getMatchStatus(user.id, loggedId);
+        const userInfo = new UserProfileResponseDto(user);
+
+        userInfo.matchStatus = nearbyUsersMatchStatus;
+
+        return userInfo;
+      });
+
+      const responseUserList = await Promise.all(responseUserPromises);
+
       const filteredResponseUserList = responseUserList.filter(
         (responseUser) =>
           user.nickname !== responseUser.nickname && responseUser.ghostMode === false && user.sex !== responseUser.sex

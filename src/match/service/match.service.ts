@@ -31,15 +31,28 @@ export class MatchService {
       throw new NotFoundException("존재하지 않는 유저 입니다");
     }
 
-    const profiledId = oppUser.id;
+    const oppUserId = oppUser.id;
+
     if (oppUser.id === loggedId) {
       throw new BadRequestException("본인 프로필 조회 불가");
     }
 
-    const isMatch = await this.matchRepository.findMatchByUserIds(profiledId, loggedId);
-    const isChats = await this.chatGateway.findChatsByUserIds(profiledId, loggedId);
-
+    //Return User Profile
     const userInfo = new UserProfileResponseDto(oppUser);
+    const oppUserMatchStatus = await this.getMatchStatus(oppUserId, loggedId);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
+
+    return {
+      user: userInfo,
+      matchStatus: oppUserMatchStatus,
+      PreSignedUrl: preSignedUrl,
+    };
+  }
+
+  //-----Get Match Status Common
+  async getMatchStatus(oppUserId: number, loggedId: number) {
+    const isMatch = await this.matchRepository.findMatchByUserIds(oppUserId, loggedId);
+    const isChats = await this.chatGateway.findChatsByUserIds(oppUserId, loggedId);
 
     let matchStatus = isMatch ? isMatch.status : null;
 
@@ -50,14 +63,7 @@ export class MatchService {
         matchStatus = MatchState.MATCH;
       }
     }
-
-    const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
-
-    return {
-      user: userInfo,
-      matchStatus: matchStatus,
-      PreSignedUrl: preSignedUrl,
-    };
+    return matchStatus;
   }
 
   //-----Create Match Logic
