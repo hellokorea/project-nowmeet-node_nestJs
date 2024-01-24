@@ -105,24 +105,12 @@ export class MatchService {
   }
 
   //Matching Common Logic
-  private async updateMatchStatus(nickname: string, req: UserRequestDto, newStatus: MatchState) {
+  private async updateMatchStatus(matchId: number, req: UserRequestDto, newStatus: MatchState) {
     const loggedId = req.user.id;
     await this.usersService.validateUser(loggedId);
 
-    const matchedUser = await this.usersRepository.findByNickname(nickname);
-
-    if (!matchedUser) {
-      throw new NotFoundException("좋아요를 전송한 유저의 정보가 존재하지 않습니다.");
-    }
-
-    const findMatch = await this.matchRepository.findMatchByUserIds(matchedUser.id, loggedId);
-
-    if (!findMatch) {
-      throw new NotFoundException("해당 유저와의 매치 정보가 존재하지 않습니다.");
-    }
-
-    const devMatch = await this.matchRepository.findDevMatchById(findMatch.id); //Dev
-    const match = await this.matchRepository.findMatchById(findMatch.id);
+    const devMatch = await this.matchRepository.findDevMatchById(matchId); //Dev
+    const match = await this.matchRepository.findMatchById(matchId);
 
     if (!match) {
       throw new NotFoundException("매치가 존재하지 않습니다");
@@ -151,8 +139,8 @@ export class MatchService {
   }
   //--
 
-  async matchAccept(nickname: string, req: UserRequestDto) {
-    const updateMatch = await this.updateMatchStatus(nickname, req, MatchState.MATCH);
+  async matchAccept(matchId: number, req: UserRequestDto) {
+    const updateMatch = await this.updateMatchStatus(matchId, req, MatchState.MATCH);
 
     const chatRoom = await this.chatGateway.createChatRoom(
       updateMatch.matchId,
@@ -177,8 +165,8 @@ export class MatchService {
     };
   }
 
-  async matchReject(nickname: string, req: UserRequestDto) {
-    const updateMatch = await this.updateMatchStatus(nickname, req, MatchState.REJECT);
+  async matchReject(matchId: number, req: UserRequestDto) {
+    const updateMatch = await this.updateMatchStatus(matchId, req, MatchState.REJECT);
 
     const rejectUpdateMatch = {
       matchStatus: updateMatch.matchStatus,
