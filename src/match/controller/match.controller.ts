@@ -94,7 +94,7 @@ export class MatchController {
     isArray: true,
   })
   @ApiOperation({ summary: "내가 받은 좋아요 수신함" })
-  @Get("me/reciveBox")
+  @Get("me/receiveBox")
   getLikeReceiveBox(@Req() req: UserRequestDto) {
     return this.matchService.getLikeReceiveBox(req);
   }
