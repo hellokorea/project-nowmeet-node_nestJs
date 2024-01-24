@@ -60,7 +60,7 @@ export class MatchController {
   })
   @ApiOperation({ summary: "수신함에서 유저 좋아요 수락" })
   @ApiParam({ name: "matchId", description: "좋아요 수락할 매치 id 입력", type: Number })
-  @Post("me/reciveBox/:matchId/accept")
+  @Post("me/receiveBox/:matchId/accept")
   acceptLike(@Param("matchId", ParseIntPipe) matchId: number, @Req() req: UserRequestDto) {
     return this.matchService.matchAccept(matchId, req);
   }
@@ -70,7 +70,7 @@ export class MatchController {
     type: MatchRejectResponseDto,
   })
   @ApiOperation({ summary: "수신함에서 유저 좋아요 거절" })
-  @Post("me/reciveBox/:matchId/reject")
+  @Post("me/receiveBox/:matchId/reject")
   @ApiParam({ name: "matchId", description: "좋아요 거절할 매치 id 입력", type: Number })
   rejectLike(@Param("matchId", ParseIntPipe) matchId: number, @Req() req: UserRequestDto) {
     return this.matchService.matchReject(matchId, req);
