@@ -56,9 +56,9 @@ export class MatchRepository {
   //-----Create Logic
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const PROD_TIMER: number = 24 * 60 * 60 * 1000;
-    const TEST_TIMER: number = 30 * 1000;
+    const TEST_TIMER: number = 120 * 1000;
 
-    const expireMatch = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    const expireMatch = moment().add(PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const newMatch = this.matchRepository.create({
       sender: { id: senderId },

@@ -77,7 +77,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const PROD_TIMER: number = 12 * 60 * 60 * 1000;
     const TEST_TIMER: number = 60 * 1000;
 
-    const expireTime = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    const expireTime = moment().add(PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const createChatRoom = this.chatRoomRepository.create({
       matchId: matchId,
@@ -140,7 +140,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       //
 
       delete this.chatRoomTimers[matchId];
-    }, TEST_TIMER);
+    }, PROD_TIMER);
   }
 
   //DisconnectEnd Chat Room Logic
@@ -150,7 +150,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     //^DisconnectTime Field Data Active, status OPEN Save
     const chatRoom = await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
-    chatRoom.disconnectTime = moment().add(TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    chatRoom.disconnectTime = moment().add(PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
     chatRoom.status = ChatState.OPEN;
     const addDisconnectTime = await this.chatRoomRepository.save(chatRoom);
 
@@ -188,7 +188,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       //
 
       delete this.chatRoomTimers[matchId];
-    }, TEST_TIMER);
+    }, PROD_TIMER);
 
     return addDisconnectTime;
   }

@@ -162,7 +162,6 @@ export class UsersService {
 
     const loggedId = req.user.id;
     const user = await this.validateUser(loggedId);
-    console.log(user);
 
     try {
       const findMyLocation = await this.usersRepository.findUserLocation(user.id);
@@ -177,8 +176,6 @@ export class UsersService {
       const SEARCH_BOUNDARY = Number(process.env.SEARCH_BOUNDARY);
 
       let nearbyUsers = await this.usersRepository.findUsersNearLocaction(xCoordNumber, yCoordNumber, SEARCH_BOUNDARY);
-
-      console.log(nearbyUsers);
 
       const responseUserPromises = nearbyUsers.map(async (user) => {
         const nearbyUsersMatchStatus = await this.matchService.getMatchStatus(user.id, loggedId);
