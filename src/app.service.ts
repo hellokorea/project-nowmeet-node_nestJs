@@ -19,6 +19,7 @@ export class AppService {
     } catch (e) {
       console.error("매치 삭제 처리 중 오류 발생", e);
     }
+    return;
   }
 
   //Expire Matches Chnage
@@ -27,19 +28,18 @@ export class AppService {
     try {
       const matchesToExpire = await this.matchRepository.findExpiredMatches();
 
-      for (const match of matchesToExpire) {
-        match.status = MatchState.EXPIRE;
-        await this.matchRepository.saveMatch(match);
-      }
-
       if (!matchesToExpire.length) {
         console.log("만료 된 매치 데이터가 없습니다");
         return;
       }
+
+      for (const match of matchesToExpire) {
+        match.status = MatchState.EXPIRE;
+        await this.matchRepository.saveMatch(match);
+      }
     } catch (e) {
       console.error("매치 만료 처리 중 오류 발생:", e);
     }
-
     return;
   }
 
