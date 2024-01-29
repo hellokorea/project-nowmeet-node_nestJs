@@ -5,6 +5,7 @@ export enum MatchState {
   PENDING = "PENDING",
   MATCH = "MATCH",
   REJECT = "REJECT",
+  EXPIRE = "EXPIRE",
 }
 
 @Entity()

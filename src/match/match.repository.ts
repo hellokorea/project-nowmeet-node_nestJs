@@ -48,7 +48,7 @@ export class MatchRepository {
     return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
   }
 
-  async findExpireMatchesById(): Promise<Match[]> {
+  async findExpiredMatches(): Promise<Match[]> {
     const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
     return this.matchRepository.find({ where: { expireMatch: LessThan(currentKoreaTime) } });
   }

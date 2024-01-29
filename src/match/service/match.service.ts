@@ -9,6 +9,7 @@ import { ChatGateway } from "src/chat/chat.gateway";
 import { AwsService } from "src/aws.service";
 import { ChatState } from "src/chat/entity/chats.entity";
 import { UsersService } from "src/users/service/users.service";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
 export class MatchService {
@@ -188,21 +189,22 @@ export class MatchService {
     if (!matched.length) {
       return null;
     }
-
     const receiverProfiles = matched.map((data) => data.receiver.profileImages);
     const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
 
-    const sendBox = matched.map((matchData) => ({
-      matchId: matchData.id,
-      isMatch: matchData.status,
-      receiverId: matchData.receiver.id,
-      receiverNickname: matchData.receiver.nickname,
-      expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-      profileImages: {
-        ProfileImages: matchData.receiver.profileImages,
-        PreSignedUrl: preSignedUrl,
-      },
-    }));
+    const sendBox = matched
+      .filter((matchData) => matchData.status !== MatchState.MATCH && matchData.status !== MatchState.EXPIRE)
+      .map((matchData) => ({
+        matchId: matchData.id,
+        matchStatus: matchData.status,
+        receiverId: matchData.receiver.id,
+        receiverNickname: matchData.receiver.nickname,
+        expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
+        profileImages: {
+          ProfileImages: matchData.receiver.profileImages,
+          PreSignedUrl: preSignedUrl,
+        },
+      }));
 
     if (!sendBox.length) {
       return null;
@@ -228,7 +230,7 @@ export class MatchService {
       .filter((matchData) => matchData.status === MatchState.PENDING)
       .map((matchData) => ({
         matchId: matchData.id,
-        isMatch: matchData.status,
+        matchStatus: matchData.status,
         senderId: matchData.sender.id,
         senderNickname: matchData.sender.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
@@ -248,7 +250,7 @@ export class MatchService {
   //-----Match Delete Logic
   async removeExpireMatches() {
     try {
-      const expireMatches = await this.matchRepository.findExpireMatchesById();
+      const expireMatches = await this.matchRepository.findExpiredMatches();
 
       if (!expireMatches.length) {
         console.log("삭제 할 매치 데이터가 존재하지 않습니다.");
