@@ -330,7 +330,7 @@ export class MatchService {
         matchId: chat.matchId,
         me,
         matchUserId,
-        // lastMessage: chat.message[0],
+        lastMessage: chat.message,
         matchUserNickname: oppUser.nickname,
         chatStatus: chat.status, //profileImg decide
         preSignedUrl,
@@ -356,6 +356,10 @@ export class MatchService {
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
     const chatUserData = {
+      id: findChat.id,
+      matchId: findChat.matchId,
+      chatStatus: findChat.status,
+      message: findChat.message,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       preSignedUrl,
@@ -363,7 +367,6 @@ export class MatchService {
 
     if (findChat.status === ChatState.PENDING) {
       return {
-        findChat,
         chatUserData,
         expireTime,
       };
@@ -371,14 +374,13 @@ export class MatchService {
 
     if (findChat.status === ChatState.OPEN) {
       return {
-        findChat,
         chatUserData,
         disconnectTime,
       };
     }
 
     //Another Status (expireEnd, disconnectEnd, ...Exit)
-    return { findChat, chatUserData };
+    return chatUserData;
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {

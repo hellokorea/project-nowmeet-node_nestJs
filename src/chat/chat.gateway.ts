@@ -145,6 +145,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         chatId: chat.id,
         chatStatus: chat.status,
         reason: "chatRoomExpired",
+        messageType: "system",
         message: "유저가 12시간 내 채팅방을 오픈하지 않아 소멸 됩니다",
       });
       console.log(`채팅 오픈 가능 시간이 종료되어 ${matchId}의 채팅방이 EXIPRE_END 상태가 됩니다.`);
@@ -193,6 +194,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         matchId: matchId,
         chatId: chat.id,
         reason: "chatRoomDisconnect",
+        messageType: "system",
         message: "채팅 가능한 시간이 종료 되어 연결이 끊깁니다",
       });
       console.log(`채팅 가능 시간이 종료되어 ${matchId}의 채팅방이 DISCONNECT_END 상태가 됩니다.`);
@@ -245,6 +247,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async findChatsByUserId(userId: number): Promise<ChatRoom[]> {
     const chats = await this.chatRoomRepository.find({
       where: [{ senderId: userId }, { receiverId: userId }],
+      relations: ["message"],
     });
 
     return chats;
@@ -262,7 +265,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
-    return await this.chatRoomRepository.findOne({ where: { id: chatId } });
+    return await this.chatRoomRepository.findOne({ where: { id: chatId }, relations: ["message"] });
   }
 
   async findChatRoomsByMatchId(matchId: number): Promise<ChatRoom> {
