@@ -306,35 +306,36 @@ export class MatchService {
       return null;
     }
 
-    const chatListPromises = findChats
-      .filter((chat) => {
-        return (
-          (loggedId === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
-          (loggedId === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
-        );
-      })
-      .map(async (chat) => {
-        let me: number;
-        let matchUserId: number;
+    const chatListFilter = findChats.filter((chat) => {
+      return (
+        (loggedId === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
+        (loggedId === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
+      );
+    });
 
-        if (loggedId === chat.receiverId || loggedId === chat.senderId) {
-          me = loggedId;
-          matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
-        }
+    const chatListPromises = chatListFilter.map(async (chat) => {
+      let me: number;
+      let matchUserId: number;
 
-        const oppUser = await this.usersRepository.findById(matchUserId);
-        const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
+      if (loggedId === chat.receiverId || loggedId === chat.senderId) {
+        me = loggedId;
+        matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
+      }
 
-        return {
-          chatId: chat.id,
-          matchId: chat.matchId,
-          me,
-          matchUserId,
-          matchUserNickname: oppUser.nickname,
-          chatStatus: chat.status, //profileImg decide
-          preSignedUrl,
-        };
-      });
+      const oppUser = await this.usersRepository.findById(matchUserId);
+      const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
+
+      return {
+        chatId: chat.id,
+        matchId: chat.matchId,
+        me,
+        matchUserId,
+        // lastMessage: chat.message[0],
+        matchUserNickname: oppUser.nickname,
+        chatStatus: chat.status, //profileImg decide
+        preSignedUrl,
+      };
+    });
 
     const chatList = await Promise.all(chatListPromises);
 
@@ -345,40 +346,39 @@ export class MatchService {
     const loggedId = req.user.id;
     const findChat = await this.verifyFindChatRoom(chatId, loggedId);
 
-    let matchUserId: number;
+    let chathUserId: number;
 
-    loggedId === findChat.receiverId ? (matchUserId = findChat.senderId) : (matchUserId = findChat.receiverId);
+    loggedId === findChat.receiverId ? (chathUserId = findChat.senderId) : (chathUserId = findChat.receiverId);
 
-    const opponentUser = await this.usersRepository.findById(matchUserId);
+    const opponentUser = await this.usersRepository.findById(chathUserId);
     const preSignedUrl = await this.awsService.createPreSignedUrl(opponentUser.profileImages);
     const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
 
-    const chatData = {
-      chatId: findChat.id,
-      matchId: findChat.matchId,
-      matchUserId,
-      matchUserNickname: opponentUser.nickname,
-      chatStatus: findChat.status,
+    const chatUserData = {
+      chathUserId,
+      chatUserNickname: opponentUser.nickname,
       preSignedUrl,
     };
 
     if (findChat.status === ChatState.PENDING) {
       return {
-        chatData,
+        findChat,
+        chatUserData,
         expireTime,
       };
     }
 
     if (findChat.status === ChatState.OPEN) {
       return {
-        chatData,
+        findChat,
+        chatUserData,
         disconnectTime,
       };
     }
 
     //Another Status (expireEnd, disconnectEnd, ...Exit)
-    return chatData;
+    return { findChat, chatUserData };
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {
@@ -399,12 +399,13 @@ export class MatchService {
     //과금 처리
 
     try {
-      const openChatActive = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);
-      const disconnectTime = moment(openChatActive.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
+      const openStatusChatRoom = await this.chatGateway.setChatRoomDisconnectTimer(findChat.matchId);
 
       return {
-        chatStatus: openChatActive.status,
-        disconnectTime,
+        chatId: openStatusChatRoom.id,
+        matchId: openStatusChatRoom.matchId,
+        chatStatus: openStatusChatRoom.status,
+        disconnectTime: openStatusChatRoom.disconnectTime,
       };
     } catch (e) {
       console.error(e);
@@ -414,24 +415,25 @@ export class MatchService {
 
   async exitChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
+    const currentUser = await this.usersRepository.findById(loggedId);
+    const chat = await this.verifyFindChatRoom(chatId, currentUser.id);
+
+    if (chat.status === ChatState.SENDER_EXIT || chat.status === ChatState.RECEIVER_EXIT) {
+      throw new BadRequestException("이미 나간 채팅방 입니다.");
+    }
 
     try {
-      loggedId === findChat.senderId
-        ? (findChat.status = ChatState.SENDER_EXIT)
-        : (findChat.status = ChatState.RECEIVER_EXIT);
+      currentUser.id === chat.senderId
+        ? (chat.status = ChatState.SENDER_EXIT)
+        : (chat.status = ChatState.RECEIVER_EXIT);
 
-      await this.chatGateway.saveChatData(findChat);
+      await this.chatGateway.saveChatData(chat);
 
-      let oppId: number;
+      await this.chatGateway.alertUserExit(chat.id, currentUser.nickname);
 
-      loggedId === findChat.senderId ? (oppId = findChat.receiverId) : (oppId = findChat.senderId);
-
-      const oppInfo = await this.usersRepository.findById(oppId);
-
-      await this.chatGateway.notifyUserExit(findChat.id, oppInfo.nickname);
-
-      return { chatStatus: findChat.status, message: `${findChat.id}의 채팅방을 나갔습니다.` };
+      return {
+        message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,
+      };
     } catch (e) {
       console.error(e);
       throw new BadRequestException("채팅방 나가는 도중 문제가 발생했습니다.");
@@ -440,13 +442,12 @@ export class MatchService {
 
   async deleteChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const findChat = await this.verifyFindChatRoom(chatId, loggedId);
-
+    const chat = await this.verifyFindChatRoom(chatId, loggedId);
     try {
-      await this.chatGateway.handleDisconnect(findChat.matchId);
+      await this.chatGateway.handleDisconnect(chat.matchId);
 
       return {
-        message: `matchId :  ${findChat.matchId} 로 이루어진 채팅방 데이터 id는 ${findChat.id}가 삭제 되었습니다.`,
+        message: `matchId : ${chat.matchId}번으로 이루어진 chatId: ${chat.id}번이 삭제 되었습니다.`,
       };
     } catch (err) {
       console.error(err);

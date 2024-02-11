@@ -1,6 +1,6 @@
-import { ExtractJwt, Strategy } from "passport-jwt";
+import { Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable, Logger, Param, Req, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ApplePayload, GooglePayload } from "./jwt.payload";
 import { UsersRepository } from "src/users/users.repository";
 import { User } from "src/users/entity/users.entity";
@@ -15,11 +15,9 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
     //   jwtFromRequest: (request) => {
     //     const authHeader = request.headers.authorization;
     //     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    //       console.log(`Invalid Authorization header: ${authHeader}`);
     //       throw new UnauthorizedException("Invalid Authorization header");
     //     }
     //     const token = authHeader.split(" ")[1];
-    //     console.log(token);
     //     return token;
     //   },
     //   secretOrKey: process.env.JWT_KEY,
@@ -30,11 +28,9 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
       jwtFromRequest: (request) => {
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-          console.log(`Invalid Authorization header: ${authHeader}`);
           throw new UnauthorizedException("Invalid Authorization header");
         }
         const token = authHeader.split(" ")[1];
-        console.log(token);
         return token;
       },
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
@@ -51,7 +47,6 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   }
 
   async validate(payload: GooglePayload): Promise<User> {
-    console.log("구글 유저 검증 시작");
     try {
       const user = await this.userRepository.findOneGetByEmail(payload.email);
 
@@ -59,12 +54,10 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
         throw new UnauthorizedException("유저가 존재하지 않습니다.");
       }
 
-      console.log("구글 유저 검증 끝");
-
       return user;
     } catch (e) {
-      console.error("구글 인증 실패:", e);
-      throw e;
+      console.error(e);
+      throw new UnauthorizedException("구글 유저 인증 실패");
     }
   }
 }
@@ -72,18 +65,15 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
 //Apple Jwt Validate
 @Injectable()
 export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
-  private readonly logger = new Logger(AppleJwtStrategy.name);
-
   constructor(private readonly userRepository: UsersRepository) {
     super({
       jwtFromRequest: (request) => {
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-          console.log(`Invalid Authorization header: ${authHeader}`);
           throw new UnauthorizedException("Invalid Authorization header");
         }
         const token = authHeader.split(" ")[1];
-        console.log(token);
+
         return token;
       },
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
@@ -100,17 +90,17 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
   }
 
   async validate(payload: ApplePayload): Promise<User> {
-    const startTime = Date.now();
-    this.logger.log("애플 유저 검증 시작");
-    const user = await this.userRepository.findAppleSub(payload.sub);
+    try {
+      const user = await this.userRepository.findAppleSub(payload.sub);
 
-    if (!user) {
-      throw new UnauthorizedException("유저가 존재하지 않습니다.");
+      if (!user) {
+        throw new UnauthorizedException("유저가 존재하지 않습니다.");
+      }
+
+      return user;
+    } catch (e) {
+      console.error(e);
+      throw new UnauthorizedException("애플 유저 인증 실패");
     }
-
-    const endTime = Date.now();
-    this.logger.log("애플 유저 검증 끝");
-    this.logger.log(`decoding jwt ${endTime - startTime}ms`);
-    return user;
   }
 }

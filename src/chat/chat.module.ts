@@ -6,12 +6,14 @@ import { ChatMessage } from "./entity/chatmessage.entity";
 import { UsersModule } from "src/users/users.module";
 import { DevChatRoom } from "./entity/devchats.entity";
 import { AuthModule } from "src/auth/auth.module";
+import { MatchModule } from "src/match/match.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ChatRoom, DevChatRoom, ChatMessage]),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    forwardRef(() => MatchModule),
   ],
   exports: [ChatGateway],
   controllers: [],

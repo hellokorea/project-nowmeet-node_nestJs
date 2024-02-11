@@ -25,6 +25,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly matchRepository: MatchRepository,
+    @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
     private readonly connection: Connection,
     private readonly awsService: AwsService,
