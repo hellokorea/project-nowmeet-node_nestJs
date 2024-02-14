@@ -9,7 +9,6 @@ import { ChatGateway } from "src/chat/chat.gateway";
 import { AwsService } from "src/aws.service";
 import { ChatState } from "src/chat/entity/chats.entity";
 import { UsersService } from "src/users/service/users.service";
-import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
 export class MatchService {

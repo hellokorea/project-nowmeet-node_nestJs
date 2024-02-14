@@ -12,14 +12,20 @@ import { Server, Socket } from "socket.io";
 import { ChatRoom, ChatState } from "./entity/chats.entity";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
-import { Req, InternalServerErrorException, BadRequestException, NotFoundException, UseGuards } from "@nestjs/common";
+import {
+  InternalServerErrorException,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { SendMessageDto } from "./dtos/response/chat.dto";
-import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { DevChatRoom } from "./entity/devchats.entity";
 import * as moment from "moment-timezone";
-import { CustomJwtGuards } from "src/auth/jwt/jwt.guard";
 import { UsersService } from "./../users/service/users.service";
 import { MatchRepository } from "./../match/match.repository";
+import * as jwt from "jsonwebtoken";
+import { UsersRepository } from "src/users/users.repository";
+import { User } from "src/users/entity/users.entity";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -30,6 +36,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @InjectRepository(ChatRoom) private chatRoomRepository: Repository<ChatRoom>,
     @InjectRepository(DevChatRoom) private devChatRoomRepository: Repository<DevChatRoom>,
     @InjectRepository(ChatMessage) private chatMessageRepository: Repository<ChatMessage>,
+    private readonly usersRepository: UsersRepository,
     private readonly usersService: UsersService,
     private readonly matchRepository: MatchRepository
   ) {}
@@ -195,17 +202,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //*--------------------------Message Logic
   @SubscribeMessage("message")
-  async handleMessage(
-    @MessageBody() messageDto: SendMessageDto,
-    @ConnectedSocket() client: Socket,
-    @Req() req: UserRequestDto
-  ) {
-    const loggedId = req.user.id;
-    const user = await this.usersService.validateUser(loggedId);
-
+  async handleMessage(@MessageBody() messageDto: SendMessageDto, @ConnectedSocket() client: Socket) {
+    const token = client.handshake?.auth?.token;
+    console.log(token);
+    const user = await this.verifyWebSocketToken(token);
+    console.log(user);
     const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
-
-    console.log(chatRoom);
 
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
@@ -223,6 +225,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     client.to(messageDto.chatRoomId.toString()).emit("new_message", message);
+  }
+
+  //*--------------------------Web Socket Token Verify Logic
+  async verifyWebSocketToken(token: string): Promise<User> {
+    if (!token) throw new UnauthorizedException("WebSocket token is missing");
+
+    const decoded = jwt.decode(token);
+    if (!decoded || typeof decoded !== "object") {
+      throw new UnauthorizedException("WebSocket Invalid token");
+    }
+
+    const issuer = (decoded as jwt.JwtPayload).iss;
+    if (!issuer) throw new UnauthorizedException("WebSocket Issuer is missing in token");
+
+    try {
+      let user: User;
+      if (issuer.includes("accounts.google.com")) {
+        user = await this.usersRepository.findOneGetByEmail(decoded.email);
+      } else if (issuer.includes("appleid.apple.com")) {
+        user = await this.usersRepository.findAppleSub(decoded.sub);
+      }
+
+      const result = await this.usersService.validateUser(user.id);
+
+      return result;
+    } catch (e) {
+      console.error(e);
+      throw new UnauthorizedException("CustomJwtGuards 작동 실패");
+    }
   }
 
   //*--------------------------Repository Logic
