@@ -208,6 +208,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.verifyWebSocketToken(token);
     console.log(user);
     const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
+    console.log(chatRoom);
+    console.log(chatRoom.id);
+    console.log(messageDto);
 
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
@@ -217,6 +220,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     message.sender = user;
     message.chatRoom = chatRoom;
     message.content = messageDto.content;
+    console.log(message);
 
     try {
       await this.chatMessageRepository.save(message);
