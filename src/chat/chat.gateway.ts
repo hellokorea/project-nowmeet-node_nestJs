@@ -34,13 +34,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly matchRepository: MatchRepository
   ) {}
 
-  //-----Connect Chat Logic
   async handleConnection(client: Socket) {
-    console.log(`ChatRoom Create! clientId : ${client.id}`);
+    console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
+  }
+
+  async handleDisconnect(client: Socket) {
+    console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
   }
 
   //-----Delete Chat Logic
-  async handleDisconnect(chatId: number) {
+  async removeUserChatRoom(chatId: number) {
     try {
       const chat = await this.findChatRoomsByChatId(chatId);
       if (!chat) {

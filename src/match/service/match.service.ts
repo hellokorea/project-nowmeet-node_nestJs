@@ -272,11 +272,11 @@ export class MatchService {
   //Find Chat Common Exception
   async verifyFindChatRoom(chatId: number, loggedId: number) {
     const user = await this.usersRepository.findById(loggedId);
-    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
 
     if (!user) {
       throw new NotFoundException("해당 유저가 존재하지 않습니다");
     }
+    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
 
     if (!findChat) {
       throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
@@ -447,7 +447,7 @@ export class MatchService {
     const user = await this.usersService.validateUser(loggedId);
     const chat = await this.verifyFindChatRoom(chatId, user.id);
     try {
-      await this.chatGateway.handleDisconnect(chat.id);
+      await this.chatGateway.removeUserChatRoom(chat.id);
 
       return {
         message: `matchId : ${chat.matchId}번으로 이루어진 chatId: ${chat.id}번이 삭제 되었습니다.`,
