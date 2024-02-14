@@ -35,35 +35,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   //-----Connect Chat Logic
-  @UseGuards(CustomJwtGuards)
-  async handleConnection(matchId: number, req: UserRequestDto) {
-    console.log(matchId);
-    console.log(`${matchId}번 매칭 Id와 채팅방 연결`);
-    const loggedId = req.user.id;
-    const user = await this.usersService.validateUser(loggedId);
-    console.log(user);
-    const match = await this.matchRepository.findMatchById(matchId);
-
-    if (!match) {
-      throw new NotFoundException("연결 된 채팅 매칭 정보가 없습니다");
-    }
-
-    const chat = await this.findChatRoomsByMatchId(match.id);
-    console.log(chat);
-
-    if (!chat) {
-      throw new NotFoundException("연결 된 채팅 채팅 정보가 없습니다");
-    }
-
-    let oppUserNickname: string;
-
-    if (loggedId === match.sender.id) oppUserNickname = match.receiver.nickname;
-    else if (loggedId === match.receiver.id) oppUserNickname = match.sender.nickname;
-
-    const message = `${oppUserNickname}님과 채팅이 시작 되었습니다.`;
-
-    this.server.to(chat.id.toString()).emit("openChatRoomStart", { messageType: "system", message });
-    return;
+  async handleConnection(client: Socket) {
+    console.log(`ChatRoom Create! clientId : ${client.id}`);
   }
 
   //-----Delete Chat Logic
