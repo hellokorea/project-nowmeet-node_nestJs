@@ -195,7 +195,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //*--------------------------Message Logic
   @SubscribeMessage("message")
-  @UseGuards(CustomJwtGuards)
   async handleMessage(
     @MessageBody() messageDto: SendMessageDto,
     @ConnectedSocket() client: Socket,
