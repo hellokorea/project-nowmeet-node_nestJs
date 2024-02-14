@@ -216,19 +216,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
     }
 
-    const message = new ChatMessage();
-    message.sender = user;
-    message.chatRoom = chatRoom;
-    message.content = messageDto.content;
-    console.log(message);
-
     try {
-      await this.chatMessageRepository.save(message);
+      // 메시지 저장
+      const savedMessage = await this.chatMessageRepository.save({
+        sender: user,
+        chatRoom: chatRoom,
+        content: messageDto.content,
+      });
+
+      // 전송할 메시지 데이터 구성
+      const messageData = {
+        id: savedMessage.id,
+        chatRoomId: savedMessage.chatRoom,
+        content: savedMessage.content,
+        senderId: user.id,
+        senderNickname: user.nickname,
+      };
+
+      // 클라이언트에게 메시지 전송
+      client.to(messageDto.chatRoomId.toString()).emit("new_message", messageData);
     } catch (error) {
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
     }
-
-    client.to(messageDto.chatRoomId.toString()).emit("new_message", message);
   }
 
   //*--------------------------Web Socket Token Verify Logic
