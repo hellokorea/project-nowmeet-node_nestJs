@@ -8,7 +8,7 @@ import {
   MessageBody,
   ConnectedSocket,
 } from "@nestjs/websockets";
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { ChatRoom, ChatState } from "./entity/chats.entity";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
 import { ChatMessage } from "./entity/chatmessage.entity";
@@ -23,7 +23,7 @@ import { MatchRepository } from "./../match/match.repository";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() socket: Socket;
+  @WebSocketServer() server: Server;
   chatRoomTimers: Record<number, NodeJS.Timeout> = {};
 
   constructor(
@@ -35,6 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   //-----Connect Chat Logic
+  @UseGuards(CustomJwtGuards)
   async handleConnection(matchId: number, req: UserRequestDto) {
     console.log(`${matchId}번 매칭 Id와 채팅방 연결`);
     const loggedId = req.user.id;
@@ -58,7 +59,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const message = `${oppUserNickname}님과 채팅이 시작 되었습니다.`;
 
-    this.socket.to(chat.id.toString()).emit("openChatRoomStart", { messageType: "system", message });
+    this.server.to(chat.id.toString()).emit("openChatRoomStart", { messageType: "system", message });
     return;
   }
 
@@ -66,6 +67,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleDisconnect(matchId: number) {
     try {
       const chat = await this.findChatRoomsByMatchId(matchId);
+      if (!chat) {
+        throw new NotFoundException("연결을 종료할 채팅방이 존재하지 않습니다.");
+      }
       await this.removeChatRoom(chat);
       return;
     } catch (error) {
@@ -76,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //-----Alert User Exit
   async alertUserExit(chatId: number, userNickname: string) {
     const message = `${userNickname}님이 채팅방을 나갔습니다.`;
-    this.socket.to(chatId.toString()).emit("chatRoomUserExit", { messageType: "system", message });
+    this.server.to(chatId.toString()).emit("chatRoomUserExit", { messageType: "system", message });
     return;
   }
 
@@ -118,7 +122,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //ExpireEnd Chat Room Logic
   async setChatRoomExpireTimer(matchId: number) {
-    const PROD_TIMER = 24 * 60 * 60 * 1000;
+    const PROD_TIMER = 12 * 60 * 60 * 1000;
     const TEST_TIMER = 60 * 1000;
 
     this.chatRoomTimers[matchId] = setTimeout(async () => {
@@ -140,7 +144,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       //^Chat Status PENDING..
-      this.socket.to(String(matchId)).emit("chatRoomExpired", {
+      this.server.to(String(matchId)).emit("chatRoomExpired", {
         matchId: matchId,
         chatId: chat.id,
         chatStatus: chat.status,
@@ -148,7 +152,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         messageType: "system",
         message: "유저가 12시간 내 채팅방을 오픈하지 않아 소멸 됩니다",
       });
-      console.log(`채팅 오픈 가능 시간이 종료되어 ${matchId}의 채팅방이 EXIPRE_END 상태가 됩니다.`);
+      console.log(`채팅 오픈 가능 시간이 종료되어 matchId : ${matchId}의 채팅방이 EXIPRE_END 상태가 됩니다.`);
 
       //^Chat Status Field Data Save
       chat.status = ChatState.EXIPRE_END;
@@ -185,19 +189,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (chat.status === ChatState.RECEIVER_EXIT || chat.status === ChatState.SENDER_EXIT) {
         console.log(
-          `해당 채팅방은 ${chat.status} 상태이기 때문에 matchId: ${matchId}는 DISCONNECT_END 상태가 되지 않습니다.`
+          `해당 채팅방은 ${chat.status} 상태이기 때문에 matchId : ${matchId}는 DISCONNECT_END 상태가 되지 않습니다.`
         );
         return;
       }
 
-      this.socket.to(String(matchId)).emit("chatRoomDisconnect", {
+      this.server.to(String(matchId)).emit("chatRoomDisconnect", {
         matchId: matchId,
         chatId: chat.id,
         reason: "chatRoomDisconnect",
         messageType: "system",
         message: "채팅 가능한 시간이 종료 되어 연결이 끊깁니다",
       });
-      console.log(`채팅 가능 시간이 종료되어 ${matchId}의 채팅방이 DISCONNECT_END 상태가 됩니다.`);
+      console.log(`채팅 가능 시간이 종료되어  matchId : ${matchId}의 채팅방이 DISCONNECT_END 상태가 됩니다.`);
 
       //^Chat Status Field Data Save
       chat.status = ChatState.DISCONNECT_END;
@@ -215,7 +219,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(CustomJwtGuards)
   async handleMessage(
     @MessageBody() messageDto: SendMessageDto,
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() client: Socket,
     @Req() req: UserRequestDto
   ) {
     const loggedId = req.user.id;
@@ -240,7 +244,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
     }
 
-    socket.to(messageDto.chatRoomId.toString()).emit("new_message", message);
+    client.to(messageDto.chatRoomId.toString()).emit("new_message", message);
   }
 
   //*--------------------------Repository Logic
