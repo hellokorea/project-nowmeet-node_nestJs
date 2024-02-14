@@ -37,9 +37,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //-----Connect Chat Logic
   @UseGuards(CustomJwtGuards)
   async handleConnection(matchId: number, req: UserRequestDto) {
+    console.log(matchId);
     console.log(`${matchId}번 매칭 Id와 채팅방 연결`);
     const loggedId = req.user.id;
-
+    const user = await this.usersService.validateUser(loggedId);
+    console.log(user);
     const match = await this.matchRepository.findMatchById(matchId);
 
     if (!match) {
@@ -47,6 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const chat = await this.findChatRoomsByMatchId(match.id);
+    console.log(chat);
 
     if (!chat) {
       throw new NotFoundException("연결 된 채팅 채팅 정보가 없습니다");
@@ -64,9 +67,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   //-----Delete Chat Logic
-  async handleDisconnect(matchId: number) {
+  async handleDisconnect(chatId: number) {
     try {
-      const chat = await this.findChatRoomsByMatchId(matchId);
+      const chat = await this.findChatRoomsByChatId(chatId);
       if (!chat) {
         throw new NotFoundException("연결을 종료할 채팅방이 존재하지 않습니다.");
       }

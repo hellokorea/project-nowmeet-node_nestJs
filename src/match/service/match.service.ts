@@ -444,9 +444,10 @@ export class MatchService {
 
   async deleteChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
-    const chat = await this.verifyFindChatRoom(chatId, loggedId);
+    const user = await this.usersService.validateUser(loggedId);
+    const chat = await this.verifyFindChatRoom(chatId, user.id);
     try {
-      await this.chatGateway.handleDisconnect(chat.matchId);
+      await this.chatGateway.handleDisconnect(chat.id);
 
       return {
         message: `matchId : ${chat.matchId}번으로 이루어진 chatId: ${chat.id}번이 삭제 되었습니다.`,
