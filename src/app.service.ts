@@ -19,6 +19,7 @@ export class AppService {
     } catch (e) {
       console.error("매치 삭제 처리 중 오류 발생", e);
     }
+
     return;
   }
 
