@@ -324,14 +324,22 @@ export class MatchService {
       const oppUser = await this.usersRepository.findById(matchUserId);
       const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
 
-      const lastMessage = await this.chatGateway.findOneLastMessage(chat.id);
+      let lastMessageData = await this.chatGateway.findOneLastMessage(chat.id);
+
+      let lastMessage: string;
+
+      if (!lastMessageData) {
+        lastMessage = "";
+      } else {
+        lastMessage = lastMessageData.content;
+      }
 
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
-        lastMessage: lastMessage.content,
+        lastMessage: lastMessage,
         matchUserNickname: oppUser.nickname,
         chatStatus: chat.status, //profileImg decide
         preSignedUrl,
