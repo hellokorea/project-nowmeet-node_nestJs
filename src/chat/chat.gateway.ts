@@ -238,7 +238,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(savedMessage.content);
       console.log(messageData);
 
-      client.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
+      this.server.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
