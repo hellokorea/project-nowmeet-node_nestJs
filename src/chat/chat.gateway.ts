@@ -209,8 +209,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(user);
     const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
     console.log(chatRoom);
-    console.log(chatRoom.id);
-    console.log(messageDto);
+    console.log(messageDto.chatRoomId);
+    console.log(messageDto.content);
 
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
@@ -232,10 +232,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderId: user.id,
         senderNickname: user.nickname,
       };
-      console.log("콘텐츠");
+      console.log("세이브 메시지 콘텐츠");
       console.log(savedMessage.content);
+      console.log(savedMessage);
 
-      // 클라이언트에게 메시지 전송
+      // 클라이언트에게 메시지 데이터 전송
       client.to(messageDto.chatRoomId.toString()).emit("new_message", messageData);
     } catch (e) {
       console.error(e);
