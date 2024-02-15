@@ -202,15 +202,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //*--------------------------Message Logic
   @SubscribeMessage("message")
-  async handleMessage(@MessageBody() messageDto: SendMessageDto, @ConnectedSocket() client: Socket) {
+  async handleMessage(@MessageBody() data: string, @ConnectedSocket() client: Socket) {
     const token = client.handshake?.auth?.token;
     console.log(token);
+    console.log("데이터");
+    console.log(data);
     const user = await this.verifyWebSocketToken(token);
     console.log(user);
     const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
     console.log(chatRoom);
-    console.log(messageDto.chatRoomId);
-    console.log(messageDto.content);
+    // console.log(messageDto.chatRoomId);
+    // console.log(messageDto.content);
 
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
