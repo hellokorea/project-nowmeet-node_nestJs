@@ -228,7 +228,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Response Data
       const messageData = {
         id: savedMessage.id,
-        chatRoomId: savedMessage.chatRoom,
+        chatRoomId: savedMessage.chatRoom.id,
         content: savedMessage.content,
         senderId: user.id,
         senderNickname: user.nickname,
@@ -236,9 +236,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(savedMessage.chatRoom.id);
       console.log("세이브 메시지 콘텐츠");
       console.log(savedMessage.content);
-      console.log(savedMessage);
+      console.log(messageData);
 
-      client.to(savedMessage.chatRoom.id.toString()).emit("new_message", messageData);
+      client.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
