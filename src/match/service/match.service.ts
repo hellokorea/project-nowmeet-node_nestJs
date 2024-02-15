@@ -297,9 +297,9 @@ export class MatchService {
 
   async getChatRoomsAllList(req: UserRequestDto) {
     const loggedId = req.user.id;
-    await this.usersService.validateUser(loggedId);
+    const user = await this.usersService.validateUser(loggedId);
 
-    const findChats = await this.chatGateway.findChatsByUserId(loggedId);
+    const findChats = await this.chatGateway.findChatsByUserId(user.id);
 
     if (!findChats.length) {
       return null;
@@ -324,12 +324,14 @@ export class MatchService {
       const oppUser = await this.usersRepository.findById(matchUserId);
       const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
 
+      const lastMessage = await this.chatGateway.findOneLastMessage(chat.id);
+
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
-        lastMessage: chat.message,
+        lastMessage: lastMessage.content,
         matchUserNickname: oppUser.nickname,
         chatStatus: chat.status, //profileImg decide
         preSignedUrl,

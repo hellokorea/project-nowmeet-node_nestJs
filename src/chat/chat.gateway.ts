@@ -233,12 +233,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderId: user.id,
         senderNickname: user.nickname,
       };
-
+      console.log(savedMessage.chatRoom.id);
       console.log("세이브 메시지 콘텐츠");
       console.log(savedMessage.content);
       console.log(savedMessage);
 
-      client.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
+      client.to(savedMessage.chatRoom.id.toString()).emit("new_message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
@@ -318,6 +318,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     await chatRoomRepository.remove(chats);
+  }
+
+  async findOneLastMessage(chatId: number): Promise<ChatMessage> {
+    const option: FindOneOptions<ChatMessage> = {
+      where: { chatRoom: { id: chatId } },
+      order: { createdAt: "DESC" },
+    };
+    return await this.chatMessageRepository.findOne(option);
   }
 
   //*---------------Dev Logic
