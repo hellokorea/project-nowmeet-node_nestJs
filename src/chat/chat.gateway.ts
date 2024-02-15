@@ -209,37 +209,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(data);
     const user = await this.verifyWebSocketToken(token);
     console.log(user);
-    const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
-    console.log(chatRoom);
+    // const chatRoom = await this.chatRoomRepository.findOne({ where: { id: messageDto.chatRoomId } });
+    // console.log(chatRoom);
     // console.log(messageDto.chatRoomId);
     // console.log(messageDto.content);
 
-    if (!chatRoom) {
-      throw new NotFoundException("존재하지 않는 채팅방 입니다");
-    }
+    // if (!chatRoom) {
+    //   throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    // }
 
     try {
       // 메시지 저장
-      const savedMessage = await this.chatMessageRepository.save({
-        sender: user,
-        chatRoom: chatRoom,
-        content: messageDto.content,
-      });
-
+      // const savedMessage = await this.chatMessageRepository.save({
+      //   sender: user,
+      //   chatRoom: chatRoom,
+      //   content: messageDto.content,
+      // });
       // 전송할 메시지 데이터 구성
-      const messageData = {
-        id: savedMessage.id,
-        chatRoomId: savedMessage.chatRoom,
-        content: savedMessage.content,
-        senderId: user.id,
-        senderNickname: user.nickname,
-      };
-      console.log("세이브 메시지 콘텐츠");
-      console.log(savedMessage.content);
-      console.log(savedMessage);
-
+      // const messageData = {
+      //   id: savedMessage.id,
+      //   chatRoomId: savedMessage.chatRoom,
+      //   content: savedMessage.content,
+      //   senderId: user.id,
+      //   senderNickname: user.nickname,
+      // };
+      // console.log("세이브 메시지 콘텐츠");
+      // console.log(savedMessage.content);
+      // console.log(savedMessage);
       // 클라이언트에게 메시지 데이터 전송
-      client.to(messageDto.chatRoomId.toString()).emit("new_message", messageData);
+      // client.to(messageDto.chatRoomId.toString()).emit("new_message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
