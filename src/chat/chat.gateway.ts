@@ -233,12 +233,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderId: user.id,
         senderNickname: user.nickname,
       };
-      console.log(savedMessage.chatRoom.id);
+      console.log(messageData.chatRoomId);
       console.log("세이브 메시지 콘텐츠");
       console.log(savedMessage.content);
       console.log(messageData);
 
-      this.server.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
+      // this.server.to(messageData.chatRoomId.toString()).emit("new_message", messageData);
+      this.server.emit("new_message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
