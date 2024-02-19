@@ -203,37 +203,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("message")
   async handleMessage(@MessageBody() msg: string, @ConnectedSocket() client: Socket) {
     // User Verify
-    // const token = client.handshake?.auth?.token;
-    // const user = await this.verifyWebSocketToken(token);
+    const token = client.handshake?.auth?.token;
+    const user = await this.verifyWebSocketToken(token);
 
     // Chat Data
     const roomId = client.handshake.query.roomId;
 
-    // const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
-    // if (!chatRoom) {
-    //   throw new NotFoundException("존재하지 않는 채팅방 입니다");
-    // }
+    const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
+    if (!chatRoom) {
+      throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    }
     console.log("클라이언트로부터 메시지를 수신했습니다:", msg);
 
     try {
-      // // Chat Data Save
-      // const savedMessage = await this.chatMessageRepository.save({
-      //   sender: user,
-      //   chatRoom: chatRoom,
-      //   content: msg,
-      // });
+      // Chat Data Save
+      const savedMessage = await this.chatMessageRepository.save({
+        sender: user,
+        chatRoom: chatRoom,
+        content: msg,
+      });
 
-      // // Response Data
-      // const messageData = {
-      //   id: savedMessage.id,
-      //   chatRoomId: savedMessage.chatRoom.id,
-      //   content: savedMessage.content,
-      //   senderId: savedMessage.sender.id,
-      //   senderNickname: savedMessage.sender.nickname,
-      // };
-      // console.log(messageData);
+      // Response Data
+      const messageData = {
+        id: savedMessage.id,
+        chatRoomId: savedMessage.chatRoom.id,
+        content: savedMessage.content,
+        senderId: savedMessage.sender.id,
+        senderNickname: savedMessage.sender.nickname,
+      };
+      console.log(messageData);
 
-      this.server.to(roomId.toString()).emit("message", msg);
+      // this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
+      this.server.emit("message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
