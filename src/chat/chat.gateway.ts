@@ -206,14 +206,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // const token = client.handshake?.auth?.token;
     // const user = await this.verifyWebSocketToken(token);
 
-    // // Chat Data
-    // const roomId = client.handshake.query.roomId;
+    // Chat Data
+    const roomId = client.handshake.query.roomId;
 
     // const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
     // if (!chatRoom) {
     //   throw new NotFoundException("존재하지 않는 채팅방 입니다");
     // }
-    // console.log("클라이언트로부터 메시지를 수신했습니다:", msg);
+    console.log("클라이언트로부터 메시지를 수신했습니다:", msg);
 
     try {
       // // Chat Data Save
@@ -233,8 +233,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // };
       // console.log(messageData);
 
-      // this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-      this.server.emit("message", msg);
+      this.server.to(roomId.toString()).emit("message", msg);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
