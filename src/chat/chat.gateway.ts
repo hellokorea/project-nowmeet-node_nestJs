@@ -244,6 +244,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: savedMessage.content,
         senderId: savedMessage.sender.id,
         senderNickname: savedMessage.sender.nickname,
+        createAt: moment(savedMessage.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       };
 
       console.log(messageData);
