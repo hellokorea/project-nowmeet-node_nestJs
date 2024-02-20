@@ -397,11 +397,17 @@ export class UsersService {
 
     try {
       await this.connection.transaction(async (txManager) => {
-        // 연관된 데이터 삭제
-        await this.matchRepository.deleteMatchesByUserId(txManager, loggedId);
-        await this.matchRepository.deleteDevMatchesByUserId(txManager, loggedId);
+        // 채팅 메시지 삭제 (Query)
+        await this.chatGateway.deleteMsgDataByUserId(txManager, loggedId);
+
+        // 채팅 데이터 삭제
         await this.chatGateway.deleteChatDataByUserId(txManager, loggedId);
         await this.chatGateway.deleteDevChatDataByUserId(txManager, loggedId);
+
+        // 매치 데이터 삭제
+        await this.matchRepository.deleteMatchesByUserId(txManager, loggedId);
+        await this.matchRepository.deleteDevMatchesByUserId(txManager, loggedId);
+
         console.log(`userId: ${loggedId} 번 유저 관련 데이터 삭제 완료`);
 
         //s3 profileImages 삭제

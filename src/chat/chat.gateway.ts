@@ -41,7 +41,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    //여기서 클라가 쏴줘야함 chatId를
     const roomId = client.handshake.query.roomId;
     const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
 
@@ -62,14 +61,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async removeUserChatRoom(chatId: number) {
     try {
       const chat = await this.findChatRoomsByChatId(chatId);
+      const chatMsg = await this.findChatMsgByChatId(chatId);
+
       if (!chat) {
-        throw new NotFoundException("연결을 종료할 채팅방이 존재하지 않습니다.");
+        throw new NotFoundException("삭제할 채팅방이 존재하지 않습니다.");
       }
+      await this.removeChatMessage(chatMsg);
       await this.removeChatRoom(chat);
-      //!여기서 chatMessage data 삭제
       return;
     } catch (error) {
       console.error(error);
+      throw new BadRequestException("채팅방 삭제 도중 문제가 발생했습니다.");
     }
   }
 
@@ -247,7 +249,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(messageData);
 
       this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-      // this.server.emit("message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
@@ -283,7 +284,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  //*--------------------------Repository Logic
+  //*--------------------------Chat Room Repository Logic
   async findChatsByUserId(userId: number): Promise<ChatRoom[]> {
     const chats = await this.chatRoomRepository.find({
       where: [{ senderId: userId }, { receiverId: userId }],
@@ -312,12 +313,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return await this.chatRoomRepository.findOne({ where: { matchId: matchId } });
   }
 
-  async removeChatRoom(chat: ChatRoom) {
-    return await this.chatRoomRepository.remove(chat);
-  }
-
   async saveChatData(chat: ChatRoom): Promise<ChatRoom> {
     return this.chatRoomRepository.save(chat);
+  }
+
+  // Delete
+  async removeChatRoom(chat: ChatRoom) {
+    return await this.chatRoomRepository.remove(chat);
   }
 
   async deleteChatDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
@@ -329,12 +331,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await chatRoomRepository.remove(chats);
   }
 
-  async findOneLastMessage(chatId: number): Promise<ChatMessage> {
+  //*--------------------------Chat Message Repository Logic
+
+  async findChatMsgByChatId(roomId: number): Promise<ChatMessage[]> {
+    return await this.chatMessageRepository.find({
+      where: { chatRoom: { id: roomId } },
+      relations: ["sender", "chatRoom"],
+    });
+  }
+
+  async findOneLastMessage(roomId: number): Promise<ChatMessage> {
     const option: FindOneOptions<ChatMessage> = {
-      where: { chatRoom: { id: chatId } },
+      where: { chatRoom: { id: roomId } },
       order: { createdAt: "DESC" },
     };
     return await this.chatMessageRepository.findOne(option);
+  }
+
+  async removeChatMessage(chatMsg: ChatMessage[]) {
+    return await this.chatMessageRepository.remove(chatMsg);
+  }
+
+  async deleteMsgDataByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    await txManager
+      .createQueryBuilder()
+      .delete()
+      .from(ChatMessage)
+      .where("chatRoomId IN (SELECT id FROM chat_room WHERE senderId = :userId OR receiverId = :userId)", { userId })
+      .execute();
   }
 
   //*---------------Dev Logic

@@ -363,12 +363,23 @@ export class MatchService {
     const preSignedUrl = await this.awsService.createPreSignedUrl(opponentUser.profileImages);
     const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
+    const messagesArray = await this.chatGateway.findChatMsgByChatId(findChat.id);
+
+    const msgData = messagesArray.map((msg) => {
+      return {
+        id: msg.id,
+        content: msg.content,
+        senderId: msg.sender.id,
+        senderNickname: msg.sender.nickname,
+        createdAt: moment(msg.createdAt).format("YYYY-MM-DD HH:mm:ss"),
+      };
+    });
 
     const chatUserData = {
       id: findChat.id,
       matchId: findChat.matchId,
       chatStatus: findChat.status,
-      message: findChat.message,
+      message: msgData,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       preSignedUrl,
