@@ -41,7 +41,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
+    //여기서 클라가 쏴줘야함 chatId를
+    const roomId = client.handshake.query.roomId;
+    const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
+
+    if (chatRoom) {
+      client.join(roomId);
+      console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
+      console.log(`ChatRoom Socket Connect! roomId : ${roomId}`);
+    } else {
+      throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    }
   }
 
   async handleDisconnect(client: Socket) {
@@ -210,9 +220,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId;
 
     const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
+
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
     }
+
     console.log("클라이언트로부터 메시지를 수신했습니다:", msg);
 
     try {
@@ -231,10 +243,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderId: savedMessage.sender.id,
         senderNickname: savedMessage.sender.nickname,
       };
+
       console.log(messageData);
 
-      // this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-      this.server.emit("message", messageData);
+      this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
+      // this.server.emit("message", messageData);
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
