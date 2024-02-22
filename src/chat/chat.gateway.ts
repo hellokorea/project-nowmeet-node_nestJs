@@ -36,31 +36,55 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @InjectRepository(DevChatRoom) private devChatRoomRepository: Repository<DevChatRoom>,
     @InjectRepository(ChatMessage) private chatMessageRepository: Repository<ChatMessage>,
     private readonly usersRepository: UsersRepository,
-    private readonly usersService: UsersService,
-    private readonly matchRepository: MatchRepository
+    private readonly usersService: UsersService
   ) {}
 
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
-    const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
+    const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
-    if (chatRoom) {
-      client.join(roomId);
-      console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
-      console.log(`ChatRoom Socket Connect! roomId : ${roomId}`);
-    } else {
+    if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    }
+
+    try {
+      client.join(roomId);
+
+      console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
+      console.log(`ChatRoom Socket Connect! rommId : ${roomId}`);
+
+      const statusMessages = {
+        [ChatState.PENDING]: "채팅이 연결 되었습니다",
+        [ChatState.OPEN]: "채팅이 시작 되었습니다",
+        [ChatState.SENDER_EXIT]: "상대방이 채팅을 종료하였습니다",
+        [ChatState.RECEIVER_EXIT]: "상대방이 채팅을 종료하였습니다",
+        [ChatState.EXIPRE_END]: "채팅방 오픈 가능 시간이 만료되어 종료 되었습니다",
+        [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
+      };
+
+      const message = statusMessages[chatRoom.status] || "채팅방 상태 확인 불가능";
+
+      this.server.to(roomId.toString()).emit("systemMessage", {
+        messageType: "system",
+        message,
+      });
+    } catch (e) {
+      console.log(e);
+      throw new NotFoundException("채팅방 입장에 실패 했습니다");
     }
   }
 
   async handleDisconnect(client: Socket) {
+    const roomId = client.handshake.query.roomId;
+
     console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
+    console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
   }
 
   //-----Delete Chat Logic
   async removeUserChatRoom(chatId: number) {
     try {
-      const chat = await this.findChatRoomsByChatId(chatId);
+      const chat = await this.findOneChatRoomsByChatId(chatId);
       const chatMsg = await this.findChatMsgByChatId(chatId);
 
       if (!chat) {
@@ -119,8 +143,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   //ExpireEnd Chat Room Logic
+  // @SubscribeMessage()
   async setChatRoomExpireTimer(matchId: number) {
-    const PROD_TIMER = 12 * 60 * 60 * 1000;
+    const PROD_TIMER = 24 * 60 * 60 * 1000;
     const TEST_TIMER = 60 * 1000;
 
     this.chatRoomTimers[matchId] = setTimeout(async () => {
@@ -221,7 +246,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Chat Data
     const roomId = client.handshake.query.roomId;
 
-    const chatRoom = await this.findChatRoomsByChatId(Number(roomId));
+    const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
@@ -306,7 +331,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return await this.chatRoomRepository.find(option);
   }
 
-  async findChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
+  async findOneChatRoomsByChatId(chatId: number): Promise<ChatRoom> {
     return await this.chatRoomRepository.findOne({ where: { id: chatId }, relations: ["message"] });
   }
 

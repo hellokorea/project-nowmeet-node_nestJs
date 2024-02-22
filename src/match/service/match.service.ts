@@ -275,7 +275,7 @@ export class MatchService {
     if (!user) {
       throw new NotFoundException("해당 유저가 존재하지 않습니다");
     }
-    const findChat = await this.chatGateway.findChatRoomsByChatId(chatId);
+    const findChat = await this.chatGateway.findOneChatRoomsByChatId(chatId);
 
     if (!findChat) {
       throw new NotFoundException("해당 채팅방이 존재하지 않습니다");
@@ -385,22 +385,12 @@ export class MatchService {
       preSignedUrl,
     };
 
-    if (findChat.status === ChatState.PENDING) {
-      return {
-        chatUserData,
-        expireTime,
-      };
-    }
+    let chatTime = findChat.status === ChatState.PENDING ? expireTime : disconnectTime;
 
-    if (findChat.status === ChatState.OPEN) {
-      return {
-        chatUserData,
-        disconnectTime,
-      };
-    }
-
-    //Another Status (expireEnd, disconnectEnd, ...Exit)
-    return chatUserData;
+    return {
+      chatUserData,
+      chatTime,
+    };
   }
 
   async openChatRoom(chatId: number, req: UserRequestDto) {
