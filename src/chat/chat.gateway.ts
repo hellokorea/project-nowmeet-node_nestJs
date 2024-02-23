@@ -39,6 +39,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly usersService: UsersService
   ) {}
 
+  // Send Message Status
+  private statusMessages = {
+    [ChatState.PENDING]: "채팅이 연결 되었습니다",
+    [ChatState.OPEN]: "채팅이 시작 되었습니다",
+    //
+    [ChatState.SENDER_EXIT]: "상대방이 채팅을 종료하였습니다",
+    [ChatState.RECEIVER_EXIT]: "상대방이 채팅을 종료하였습니다",
+    //
+    [ChatState.EXIPRE_END]: "채팅방 오픈 가능 시간이 만료되어 종료 되었습니다",
+    [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
+  };
+
+  //*----Connection Logic
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
     const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
@@ -49,25 +62,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       client.join(roomId);
-
       console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
       console.log(`ChatRoom Socket Connect! rommId : ${roomId}`);
 
-      const statusMessages = {
-        [ChatState.PENDING]: "채팅이 연결 되었습니다",
-        [ChatState.OPEN]: "채팅이 시작 되었습니다",
-        [ChatState.SENDER_EXIT]: "상대방이 채팅을 종료하였습니다",
-        [ChatState.RECEIVER_EXIT]: "상대방이 채팅을 종료하였습니다",
-        [ChatState.EXIPRE_END]: "채팅방 오픈 가능 시간이 만료되어 종료 되었습니다",
-        [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
-      };
+      const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
+      const messageToSend = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const message = statusMessages[chatRoom.status] || "채팅방 상태 확인 불가능";
-
-      this.server.to(roomId.toString()).emit("systemMessage", {
-        messageType: "system",
-        message,
-      });
+      this.server.to(chatRoom.id.toString()).emit("systemMessage", messageToSend);
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -76,12 +77,61 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: Socket) {
     const roomId = client.handshake.query.roomId;
+    const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
-    console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
-    console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
+    if (!chatRoom) {
+      throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    }
+
+    try {
+      console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
+      console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
+
+      const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
+      const messageToSend = await this.combineMessageToClient(messagesArray, chatRoom.status);
+
+      this.server.to(chatRoom.id.toString()).emit("systemMessage", messageToSend);
+    } catch (e) {
+      console.log(e);
+      throw new NotFoundException("채팅방 종료에 실패 했습니다");
+    }
   }
 
-  //-----Delete Chat Logic
+  //*----System Message Common Logic
+  async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
+    try {
+      // Message Data
+      const messages = chatMessage.map((msg) => {
+        return {
+          id: msg.id,
+          content: msg.content,
+          senderId: msg.sender.id,
+          senderNickname: msg.sender.nickname,
+          createdAt: moment(msg.createdAt).format("YYYY-MM-DD HH:mm:ss"),
+        };
+      });
+
+      // System Message Data
+      const statusSystemMessage: string = this.statusMessages[status] || "채팅방 상태 확인 불가능";
+
+      const systemMessage = {
+        id: null,
+        content: statusSystemMessage,
+        senderId: null,
+        senderNickname: "System",
+        createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
+        type: "system",
+      };
+
+      // Message Combine
+      return [...messages, systemMessage];
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException("채팅 메시지 배열 결합에 실패했습니다");
+    }
+  }
+
+  //*-----Delete Chat Logic
   async removeUserChatRoom(chatId: number) {
     try {
       const chat = await this.findOneChatRoomsByChatId(chatId);

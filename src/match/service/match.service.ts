@@ -365,7 +365,7 @@ export class MatchService {
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
     const messagesArray = await this.chatGateway.findChatMsgByChatId(findChat.id);
 
-    const msgData = messagesArray.map((msg) => {
+    const messageData = messagesArray.map((msg) => {
       return {
         id: msg.id,
         content: msg.content,
@@ -375,11 +375,13 @@ export class MatchService {
       };
     });
 
+    // const messageToSend = await this.chatGateway.combineMessageToClient(messagesArray, findChat.status);
+
     const chatUserData = {
       id: findChat.id,
       matchId: findChat.matchId,
       chatStatus: findChat.status,
-      message: msgData,
+      message: messageData,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       preSignedUrl,
