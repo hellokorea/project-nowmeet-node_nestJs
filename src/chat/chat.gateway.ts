@@ -104,6 +104,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messages = chatMessage.map((msg) => {
         return {
           id: msg.id,
+          roomId: msg.chatRoom.id,
           content: msg.content,
           senderId: msg.sender.id,
           senderNickname: msg.sender.nickname,
