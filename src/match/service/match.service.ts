@@ -443,8 +443,6 @@ export class MatchService {
 
       await this.chatGateway.saveChatData(chat);
 
-      await this.chatGateway.alertUserExit(chat.id, currentUser.nickname);
-
       return {
         message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,
       };

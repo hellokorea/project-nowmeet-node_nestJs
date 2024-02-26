@@ -150,13 +150,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  //-----Alert User Exit
-  async alertUserExit(chatId: number, userNickname: string) {
-    const message = `${userNickname}님이 채팅방을 나갔습니다.`;
-    this.server.to(chatId.toString()).emit("chatRoomUserExit", { messageType: "system", message });
-    return;
-  }
-
   //*------------Chat Logic
   //Create Chat Room
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
