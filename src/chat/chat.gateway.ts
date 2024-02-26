@@ -119,7 +119,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const statusSystemMessage: string = this.statusMessages[status] || "채팅방 상태 확인 불가능";
 
       const systemMessage = {
-        type: "System",
+        type: "system",
         content: statusSystemMessage,
         createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
       };
