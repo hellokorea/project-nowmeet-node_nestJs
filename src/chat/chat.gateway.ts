@@ -79,10 +79,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
       const systemMessage = messageCombineData.pop();
+      const messageToSend = [systemMessage, ...messageCombineData];
 
-      console.log(systemMessage);
-
-      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
+      this.server.to(chatRoom.id.toString()).emit("message", messageToSend);
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -104,10 +103,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const systemMessage = messageCombineData.pop();
-      const messageToSend = [systemMessage];
-
-      this.server.to(chatRoom.id.toString()).emit("message", { message: messageToSend });
+      this.server.to(chatRoom.id.toString()).emit("message", messageCombineData);
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
@@ -115,7 +111,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   //*----System Message Common Logic
-  // 이거는 나중에 message 배열 빼자 ...
   async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
     try {
       // Message Data
