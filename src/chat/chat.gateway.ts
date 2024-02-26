@@ -21,7 +21,6 @@ import {
 import { DevChatRoom } from "./entity/devchats.entity";
 import * as moment from "moment-timezone";
 import { UsersService } from "./../users/service/users.service";
-import { MatchRepository } from "./../match/match.repository";
 import * as jwt from "jsonwebtoken";
 import { UsersRepository } from "src/users/users.repository";
 import { User } from "src/users/entity/users.entity";
@@ -80,9 +79,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
       const systemMessage = messageCombineData.pop();
-      const messageToSend = [systemMessage, ...messageCombineData];
+      const messageToSend = [systemMessage];
 
-      this.server.to(chatRoom.id.toString()).emit("message", messageToSend);
+      this.server.to(chatRoom.id.toString()).emit("message", { message: messageToSend });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -102,9 +101,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
 
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
-      const messageToSend = await this.combineMessageToClient(messagesArray, chatRoom.status);
+      const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      this.server.to(chatRoom.id.toString()).emit("message", messageToSend);
+      const systemMessage = messageCombineData.pop();
+      const messageToSend = [systemMessage];
+
+      this.server.to(chatRoom.id.toString()).emit("message", { message: messageToSend });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
@@ -112,6 +114,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   //*----System Message Common Logic
+  // 이거는 나중에 message 배열 빼자 ...
   async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
     try {
       // Message Data

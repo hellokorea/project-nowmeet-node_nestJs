@@ -43,7 +43,7 @@ export class AuthService {
     }
   }
 
-  //----------------Google idToken Logic
+  //*----------------Google idToken Logic
   async makeNewIdTokenGoogle(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
     const clientId = process.env.GOOGLE_WEB_CLIENTID;
@@ -90,8 +90,7 @@ export class AuthService {
     return idTokenData;
   }
 
-  //----------------Apple idToken Logic
-
+  //*----------------Apple idToken Logic
   async makeNewIdTokenApple(authCode: string) {
     const appleTokenEndpoint = "https://appleid.apple.com/auth/oauth2/v2/token";
     const clientSecret = await this.createSecretKeyApple();
