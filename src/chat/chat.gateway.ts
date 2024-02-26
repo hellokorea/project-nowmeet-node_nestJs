@@ -79,9 +79,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
       const systemMessage = messageCombineData.pop();
-      const messageToSend = [systemMessage, ...messageCombineData];
-
-      this.server.to(chatRoom.id.toString()).emit("message", messageToSend);
+      console.log(systemMessage);
+      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -103,7 +102,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      this.server.to(chatRoom.id.toString()).emit("message", messageCombineData);
+      const systemMessage = messageCombineData.pop();
+
+      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
