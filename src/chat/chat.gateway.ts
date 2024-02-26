@@ -79,9 +79,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
       const systemMessage = messageCombineData.pop();
-      const messageToSend = [systemMessage];
 
-      this.server.to(chatRoom.id.toString()).emit("message", { message: messageToSend });
+      console.log(systemMessage);
+
+      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
