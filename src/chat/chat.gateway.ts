@@ -119,12 +119,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const statusSystemMessage: string = this.statusMessages[status] || "채팅방 상태 확인 불가능";
 
       const systemMessage = {
-        id: null,
+        type: "System",
         content: statusSystemMessage,
-        senderId: null,
-        senderNickname: "System",
         createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
-        type: "system",
       };
 
       // Message Combine
@@ -217,6 +214,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       chat.status = ChatState.EXIPRE_END;
       await this.chatRoomRepository.save(chat);
 
+      //&await this.handleDisconnect(client);
+
       delete this.chatRoomTimers[matchId];
 
       // Socket Emit
@@ -266,6 +265,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Chat Status Field Data Save
       chat.status = ChatState.DISCONNECT_END;
       await this.chatRoomRepository.save(chat);
+
+      //&await this.handleDisconnect(client);
 
       delete this.chatRoomTimers[matchId];
 

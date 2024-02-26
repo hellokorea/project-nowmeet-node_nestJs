@@ -375,13 +375,22 @@ export class MatchService {
       };
     });
 
-    // const messageToSend = await this.chatGateway.combineMessageToClient(messagesArray, findChat.status);
+    const messageCombineData = await this.chatGateway.combineMessageToClient(messagesArray, findChat.status);
+
+    let messageToSend;
+
+    if (findChat.status === ChatState.PENDING || findChat.status === ChatState.OPEN) {
+      const systemMessage = messageCombineData.pop();
+      messageToSend = [systemMessage, ...messageCombineData];
+    } else {
+      messageToSend = messageCombineData;
+    }
 
     const chatUserData = {
       id: findChat.id,
       matchId: findChat.matchId,
       chatStatus: findChat.status,
-      message: messageData,
+      message: messageToSend,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       preSignedUrl,
