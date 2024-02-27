@@ -93,6 +93,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId;
     const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
+    if (!chatRoom) {
+      return;
+    }
+
     try {
       console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
       console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
@@ -137,7 +141,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (status === ChatState.OPEN || status === ChatState.PENDING) {
         emitMessage = [systemMessage, ...regularmessages];
       } else {
-        emitMessage = [...regularmessages, systemMessage];
+        emitMessage = [systemMessage];
       }
 
       return emitMessage;
