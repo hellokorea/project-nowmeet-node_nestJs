@@ -94,7 +94,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
-      return;
+      throw new InternalServerErrorException("시발");
     }
 
     try {
