@@ -78,9 +78,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const systemMessage = messageCombineData.pop();
-      console.log(systemMessage);
-      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
+      const systemMessage = messageCombineData.filter(
+        (message): message is { id: number; type: string; content: string; createdAt: string } => {
+          return "type" in message && message.type === "system";
+        }
+      );
+
+      this.server.to(chatRoom.id.toString()).emit("message", { message: systemMessage });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -102,9 +106,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
       const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const systemMessage = messageCombineData.pop();
+      const systemMessage = messageCombineData.filter(
+        (message): message is { id: number; type: string; content: string; createdAt: string } => {
+          return "type" in message && message.type === "system";
+        }
+      );
 
-      this.server.to(chatRoom.id.toString()).emit("message", { message: [systemMessage] });
+      this.server.to(chatRoom.id.toString()).emit("message", { message: systemMessage });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
