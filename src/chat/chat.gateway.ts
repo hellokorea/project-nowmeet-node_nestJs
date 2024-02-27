@@ -24,6 +24,7 @@ import { UsersService } from "./../users/service/users.service";
 import * as jwt from "jsonwebtoken";
 import { UsersRepository } from "src/users/users.repository";
 import { User } from "src/users/entity/users.entity";
+import { socketMessageReqDto } from "./dtos/request/chat.socekr.message.dto";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -303,7 +304,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //*--------------------------Message Logic
   @SubscribeMessage("message")
-  async handleMessage(@MessageBody() msg: string, @ConnectedSocket() client: Socket) {
+  async handleMessage(@MessageBody() msg: socketMessageReqDto, @ConnectedSocket() client: Socket) {
     // User Verify
     const token = client.handshake?.auth?.token;
     const user = await this.verifyWebSocketToken(token);
@@ -316,14 +317,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
     }
 
-    console.log("클라이언트로부터 메시지를 수신했습니다:", msg);
-
     try {
       // Chat Data Save
       const savedMessage = await this.chatMessageRepository.save({
         sender: user,
         chatRoom: chatRoom,
-        content: msg,
+        content: msg.message,
+        createdAt: msg.date,
       });
 
       // Response Data
