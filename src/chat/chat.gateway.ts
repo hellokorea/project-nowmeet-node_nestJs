@@ -76,15 +76,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`ChatRoom Socket Connect! rommId : ${roomId}`);
 
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
-      const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
+      const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const systemMessage = messageCombineData.filter(
-        (message): message is { id: number; type: string; content: string; createdAt: string } => {
-          return "type" in message && message.type === "system";
-        }
-      );
+      console.log(emitMessage);
 
-      this.server.to(chatRoom.id.toString()).emit("message", { message: systemMessage });
+      this.server.to(chatRoom.id.toString()).emit("message", { message: emitMessage });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
@@ -104,15 +100,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
 
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
-      const messageCombineData = await this.combineMessageToClient(messagesArray, chatRoom.status);
+      const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      const systemMessage = messageCombineData.filter(
-        (message): message is { id: number; type: string; content: string; createdAt: string } => {
-          return "type" in message && message.type === "system";
-        }
-      );
-
-      this.server.to(chatRoom.id.toString()).emit("message", { message: systemMessage });
+      this.server.to(chatRoom.id.toString()).emit("message", { message: emitMessage });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
@@ -123,7 +113,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
     try {
       // Message Data
-      const messages = chatMessage.map((msg) => {
+      const regularmessages = chatMessage.map((msg) => {
         return {
           id: msg.id,
           roomId: msg.chatRoom.id,
@@ -145,8 +135,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
       };
 
-      // Message Combine
-      return [...messages, systemMessage];
+      let emitMessage;
+      if (status === ChatState.OPEN || status === ChatState.PENDING) {
+        emitMessage = [systemMessage, ...regularmessages];
+      } else {
+        emitMessage = [...regularmessages, systemMessage];
+      }
+
+      return emitMessage;
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("채팅 메시지 배열 결합에 실패했습니다");

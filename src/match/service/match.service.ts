@@ -365,9 +365,10 @@ export class MatchService {
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
     const messagesArray = await this.chatGateway.findChatMsgByChatId(findChat.id);
 
-    const messageData = messagesArray.map((msg) => {
+    const message = messagesArray.map((msg) => {
       return {
         id: msg.id,
+        roomId: msg.chatRoom.id,
         content: msg.content,
         senderId: msg.sender.id,
         senderNickname: msg.sender.nickname,
@@ -375,11 +376,13 @@ export class MatchService {
       };
     });
 
+    // const messageCombineData = await this.chatGateway.combineMessageToClient(messagesArray, findChat.status);
+
     const chatUserData = {
       id: findChat.id,
       matchId: findChat.matchId,
       chatStatus: findChat.status,
-      message: messageData,
+      message,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       preSignedUrl,
