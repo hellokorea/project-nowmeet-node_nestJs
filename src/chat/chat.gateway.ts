@@ -65,6 +65,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //*----Connection Logic
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
+
     const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
@@ -92,10 +93,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId;
     const chatRoom = await this.findOneChatRoomsByChatId(Number(roomId));
 
-    if (!chatRoom) {
-      throw new NotFoundException("존재하지 않는 채팅방 입니다");
-    }
-
     try {
       console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
       console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
@@ -103,7 +100,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.findChatMsgByChatId(chatRoom.id);
       const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      this.server.to(chatRoom.id.toString()).emit("message_list", emitMessage);
+      this.server.to(chatRoom.id.toString()).emit("message_list", { emitMessage });
     } catch (e) {
       console.log(e);
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
