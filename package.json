@@ -52,6 +52,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
+    "sharp": "^0.33.2",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {

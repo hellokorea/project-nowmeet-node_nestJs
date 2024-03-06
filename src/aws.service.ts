@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as sharp from "sharp";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -36,17 +37,22 @@ export class AwsService {
   async uploadFilesToS3(folder: string, files: Array<Express.Multer.File>) {
     try {
       const uploadPromises = files.map(async (file) => {
+        const imgResizingBuffer = await sharp(file.buffer)
+          .resize(2048, 2048, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toBuffer();
+
         const key = `${folder}/${Date.now()}_${path.basename(file.originalname)}`.replace(/ /g, "");
 
         const putCommand = new PutObjectCommand({
           Bucket: this.S3_USER_PROFILES_BUCKET_NAME, //*
           Key: key,
-          Body: file.buffer,
-          ContentType: file.mimetype,
+          Body: imgResizingBuffer,
+          ContentType: "image/webp",
         });
 
         const s3Object = await this.s3Client.send(putCommand);
-        return { key, s3Object, contentType: file.mimetype };
+        return { key, s3Object, contentType: "image/webp" };
       });
 
       return Promise.all(uploadPromises);
