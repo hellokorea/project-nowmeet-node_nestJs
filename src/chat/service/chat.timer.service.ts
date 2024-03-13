@@ -36,7 +36,7 @@ export class ChatTimerService {
       delete this.chatRoomTimers[matchId];
 
       console.log(`채팅 오픈 가능 시간이 종료되어 matchId : ${matchId}의 채팅방이 EXPIRE_END 상태가 됩니다.`);
-    }, TEST_TIMER);
+    }, PROD_TIMER);
   }
 
   async setChatRoomDisconnectTimer(matchId: number) {
@@ -75,7 +75,7 @@ export class ChatTimerService {
       delete this.chatRoomTimers[matchId];
 
       console.log(`채팅 가능 시간이 종료되어  matchId : ${matchId}의 채팅방이 DISCONNECT_END 상태가 됩니다.`);
-    }, TEST_TIMER);
+    }, PROD_TIMER);
 
     return openStatusChatRoom;
   }
