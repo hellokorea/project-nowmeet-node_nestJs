@@ -2,11 +2,11 @@ import { Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ApplePayload, GooglePayload } from "./jwt.payload";
-import { UsersRepository } from "src/users/users.repository";
-import { User } from "src/users/entity/users.entity";
+import { UsersRepository } from "src/users/database/repository/users.repository";
+import { User } from "src/users/database/entity/users.entity";
 import * as jwksRsa from "jwks-rsa";
 
-//Google Jwt Validate
+// Google Jwt Validate
 @Injectable()
 export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
@@ -56,13 +56,13 @@ export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
 
       return user;
     } catch (e) {
-      console.error(e);
+      console.error("googleJwtValidate :", e);
       throw new UnauthorizedException("구글 유저 인증 실패");
     }
   }
 }
 
-//Apple Jwt Validate
+// Apple Jwt Validate
 @Injectable()
 export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
@@ -91,7 +91,7 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
 
   async validate(payload: ApplePayload): Promise<User> {
     try {
-      const user = await this.userRepository.findAppleSub(payload.sub);
+      const user = await this.userRepository.findOneAppleSub(payload.sub);
 
       if (!user) {
         throw new UnauthorizedException("유저가 존재하지 않습니다.");
@@ -99,7 +99,7 @@ export class AppleJwtStrategy extends PassportStrategy(Strategy, "apple-jwt") {
 
       return user;
     } catch (e) {
-      console.error(e);
+      console.error("AppleJwtValidate :", e);
       throw new UnauthorizedException("애플 유저 인증 실패");
     }
   }

@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Match } from "./entity/match.entity";
+import { Match } from "../entity/match.entity";
 import { EntityManager, FindOneOptions, LessThan, Repository } from "typeorm";
-import { DevMatch } from "./entity/devmatch.entity";
+import { DevMatch } from "../entity/match.dev.entity";
 import * as moment from "moment-timezone";
 
 @Injectable()
@@ -12,8 +12,8 @@ export class MatchRepository {
     @InjectRepository(DevMatch) private devMatchRepository: Repository<DevMatch>
   ) {}
 
-  //-----Find Logic
-  async findMatchById(matchId: number): Promise<Match> {
+  //*---Find Logic
+  async findOneMatchById(matchId: number): Promise<Match> {
     const option: FindOneOptions<Match> = {
       where: { id: matchId },
       relations: ["receiver", "sender"],
@@ -30,7 +30,7 @@ export class MatchRepository {
     });
   }
 
-  async findMatchByUserIds(profileId: number, loggedId: number): Promise<Match | null> {
+  async findOneMatchByUserIds(profileId: number, loggedId: number): Promise<Match | null> {
     const option: FindOneOptions<Match> = {
       where: [
         { sender: { id: loggedId }, receiver: { id: profileId } },
@@ -40,20 +40,20 @@ export class MatchRepository {
     return await this.matchRepository.findOne(option);
   }
 
-  async getSendMatch(userId: number): Promise<Match[]> {
-    return await this.matchRepository.find({ where: { sender: { id: userId } }, relations: ["receiver"] });
-  }
-
-  async getReceiveMatch(userId: number): Promise<Match[]> {
-    return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
-  }
-
   async findExpiredMatches(): Promise<Match[]> {
     const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
     return this.matchRepository.find({ where: { expireMatch: LessThan(currentKoreaTime) } });
   }
 
-  //-----Create Logic
+  async getSendMatches(userId: number): Promise<Match[]> {
+    return await this.matchRepository.find({ where: { sender: { id: userId } }, relations: ["receiver"] });
+  }
+
+  async getReceiveMatches(userId: number): Promise<Match[]> {
+    return await this.matchRepository.find({ where: { receiver: { id: userId } }, relations: ["sender"] });
+  }
+
+  //*---Create Logic
   async createMatch(senderId: number, receiverId: number): Promise<Match> {
     const PROD_TIMER: number = 24 * 60 * 60 * 1000;
     const TEST_TIMER: number = 120 * 1000;
@@ -68,26 +68,18 @@ export class MatchRepository {
     return await this.matchRepository.save(newMatch);
   }
 
-  //-----Save Logic
+  //*---Save Logic
   async saveMatch(match: Match): Promise<Match> {
     return await this.matchRepository.save(match);
   }
 
-  //-----Delete Logic
+  //*---Delete Logic
   async removeExpireMatch(match: Match): Promise<void> {
     await this.matchRepository.remove(match);
   }
 
-  async deleteMatchesByUserId(txManager: EntityManager, userId: number): Promise<void> {
-    const matchRepository = txManager.getRepository(Match);
-    const matches = await matchRepository.find({
-      where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
-    });
-    await matchRepository.remove(matches);
-  }
-
-  //*-------------------------------------Internal DB Keep Dev_Match Logic
-  async findDevMatchById(matchId: number): Promise<DevMatch> {
+  //*---Dev Logic
+  async findOneDevMatchById(matchId: number): Promise<DevMatch> {
     const option: FindOneOptions<DevMatch> = {
       where: { id: matchId },
       relations: ["receiver", "sender"],
@@ -105,6 +97,15 @@ export class MatchRepository {
 
   async saveDevMatch(match: DevMatch): Promise<DevMatch> {
     return await this.devMatchRepository.save(match);
+  }
+
+  //*---Delete Account Logic
+  async deleteMatchesByUserId(txManager: EntityManager, userId: number): Promise<void> {
+    const matchRepository = txManager.getRepository(Match);
+    const matches = await matchRepository.find({
+      where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
+    });
+    await matchRepository.remove(matches);
   }
 
   async deleteDevMatchesByUserId(txManager: EntityManager, userId: number): Promise<void> {

@@ -1,5 +1,11 @@
-import { Injectable, Logger, UnauthorizedException, BadRequestException } from "@nestjs/common";
-import { UsersRepository } from "./../../users/users.repository";
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  BadRequestException,
+  InternalServerErrorException,
+} from "@nestjs/common";
+import { UsersRepository } from "../../users/database/repository/users.repository";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
 import { HttpService } from "@nestjs/axios";
@@ -18,28 +24,14 @@ export class AuthService {
 
   async isUserExist(uuid: string) {
     try {
-      //Google
-      if (uuid.includes("@gmail.com")) {
-        const findGoogleUser = await this.usersRepository.findOneGetByEmail(uuid);
+      const user = uuid.includes("@gmail.com")
+        ? await this.usersRepository.findOneGetByEmail(uuid)
+        : await this.usersRepository.findOneAppleSub(uuid);
 
-        if (!findGoogleUser) {
-          return false;
-        } else {
-          return true;
-        }
-      }
-
-      //Apple
-      const findAppleUser = await this.usersRepository.findAppleSub(uuid);
-
-      if (!findAppleUser) {
-        return false;
-      } else {
-        return true;
-      }
+      return !!user;
     } catch (e) {
-      console.error(e);
-      throw new BadRequestException("유저 검증에 실패했습니다.");
+      console.error("isUserExist :", e);
+      throw new InternalServerErrorException("유저 검증 도중 서버에 오류가 발생했습니다.");
     }
   }
 
@@ -59,8 +51,8 @@ export class AuthService {
 
         return response.data;
       } catch (e) {
-        console.log(e);
-        throw new BadRequestException("토큰 발급에 실패했습니다. With Goole");
+        console.error("makeNewIdTokenGoogle :", e);
+        throw new InternalServerErrorException("토큰 발급에 실패했습니다. With Goole");
       }
     };
 
@@ -105,7 +97,7 @@ export class AuthService {
         });
         return response.data;
       } catch (e) {
-        console.error(e);
+        console.error("makeNewIdTokenApple :", e);
         throw new BadRequestException("토큰 발급에 실패했습니다. With Apple");
       }
     };
@@ -181,8 +173,8 @@ export class AuthService {
       };
 
       return jwtToken;
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error("googleLogin :", e);
       throw new UnauthorizedException("로그인 실패");
     }
   }

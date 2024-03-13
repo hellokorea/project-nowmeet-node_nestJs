@@ -10,7 +10,7 @@ import { ENV_VARS } from "./configService";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  //Global Use Inspector
+  // Global Use Inspector
   app.enableCors({
     origin: process.env.AWS,
   });
@@ -24,7 +24,7 @@ async function bootstrap() {
     })
   );
 
-  //Env Logic
+  // Env Logic
   const configService = app.get(ConfigService);
 
   const missingVars = [];
@@ -43,7 +43,7 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  //Swagger Setting
+  // Swagger Setting
   const config = new DocumentBuilder()
     .setTitle("Now Meet")
     .setDescription("Now Meet API")
@@ -55,7 +55,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("docs", app, document);
 
-  //Port Setting!
+  // Port Setting!
   const PORT = process.env.PORT;
   const MODE = process.env.MODE;
 

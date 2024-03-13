@@ -1,4 +1,4 @@
-import { User } from "src/users/entity/users.entity";
+import { User } from "src/users/database/entity/users.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export enum MatchState {

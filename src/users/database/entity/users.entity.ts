@@ -1,4 +1,4 @@
-import { Match } from "src/match/entity/match.entity";
+import { Match } from "src/match/database/entity/match.entity";
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()

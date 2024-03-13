@@ -6,17 +6,19 @@ import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { LoggerMiddleware } from "./common/middleware/logging.middleware";
-import { User } from "./users/entity/users.entity";
+import { User } from "./users/database/entity/users.entity";
 import { MatchModule } from "./match/match.module";
-import { Match } from "./match/entity/match.entity";
+import { Match } from "./match/database/entity/match.entity";
 import { ChatModule } from "./chat/chat.module";
-import { ChatRoom } from "./chat/entity/chats.entity";
-import { ChatMessage } from "./chat/entity/chatmessage.entity";
-import { DevMatch } from "./match/entity/devmatch.entity";
-import { DevChatRoom } from "./chat/entity/devchats.entity";
+import { ChatRoom } from "./chat/database/entity/chat.entity";
+import { ChatMessage } from "./chat/database/entity/chat.message.entity";
+import { DevMatch } from "./match/database/entity/match.dev.entity";
+import { DevChatRoom } from "./chat/database/entity/chat.dev.entity";
 import { AwsService } from "./aws.service";
 import { ScheduleModule } from "@nestjs/schedule";
-import { InAppModule } from './in-app/in-app.module';
+import { InAppModule } from "./in-app/in-app.module";
+import { ScheduleSearchModule } from "./schedule/schedule.module";
+import { RecognizeModule } from "./recognize/recognize.module";
 
 @Module({
   imports: [
@@ -41,8 +43,8 @@ import { InAppModule } from './in-app/in-app.module';
                 entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
                 synchronize: true, //^ TODO: prod => false
               });
-            } catch (error) {
-              console.error(error);
+            } catch (e) {
+              console.error("ConfigModule :", e);
               rej(new BadRequestException(`db 연결에 실패했습니다.`));
             }
           }, 3000);
@@ -54,8 +56,10 @@ import { InAppModule } from './in-app/in-app.module';
     AuthModule,
     MatchModule,
     ChatModule,
-    ScheduleModule.forRoot(),
     InAppModule,
+    ScheduleSearchModule,
+    RecognizeModule,
+    ScheduleModule.forRoot(),
   ],
   exports: [AwsService],
   controllers: [AppController],

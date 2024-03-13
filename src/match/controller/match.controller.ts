@@ -22,15 +22,23 @@ import { ChatRoomResponseDto } from "src/chat/dtos/response/chat.chatRoomRespons
 import { GetProfileResponseDto } from "src/users/dtos/response/user.getProfiles.dto";
 import { OpenChatResponseDto } from "src/chat/dtos/response/chat.open.dto";
 import { CustomJwtGuards, GoogleGuard } from "src/auth/jwt/jwt.guard";
+import { MatchProfileService } from "src/match/service/match.profile.service";
+import { MatchBoxService } from "../service/match.chat.box.service";
+import { MatchChatService } from "../service/match.chat.service";
 
 @ApiBearerAuth()
 @Controller("match")
 @UseGuards(CustomJwtGuards)
 @UseInterceptors(SuccessInterceptor)
 export class MatchController {
-  constructor(private readonly matchService: MatchService) {}
+  constructor(
+    private readonly matchProfileService: MatchProfileService,
+    private readonly matchService: MatchService,
+    private readonly matchBoxService: MatchBoxService,
+    private readonly matchChatService: MatchChatService
+  ) {}
 
-  //-----------------------Get User Profile Logic
+  //*----Profile Logic
   @ApiResponse({
     description: "유저 DB 내 정보 반환 / id, gem 항목은 제거",
     type: GetProfileResponseDto,
@@ -39,10 +47,10 @@ export class MatchController {
   @ApiParam({ name: "nickname", description: "유저 닉네임 입력", type: String })
   @Get("profile/:nickname")
   getUserProfile(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
-    return this.matchService.getUserProfile(nickname, req);
+    return this.matchProfileService.getUserProfile(nickname, req);
   }
 
-  //-----------------------Create Match Logic
+  //*----Match Logic
   @ApiResponse({
     description: "matchId, senderId, reciverId, matchStatus = PENDING 반환 ",
     type: SendLikeResponseDto,
@@ -76,7 +84,7 @@ export class MatchController {
     return this.matchService.matchReject(matchId, req);
   }
 
-  //-----------------------Get Match Box Logic
+  //*----Match Box Logic
   @ApiResponse({
     description: "매칭 정보 반환 / 0일 때 null 반환",
     type: SendBoxResponseDto,
@@ -85,7 +93,7 @@ export class MatchController {
   @ApiOperation({ summary: "내가 보낸 좋아요 발신함" })
   @Get("me/sendBox")
   getLikeSendBox(@Req() req: UserRequestDto) {
-    return this.matchService.getLikeSendBox(req);
+    return this.matchBoxService.getLikeSendBox(req);
   }
 
   @ApiResponse({
@@ -96,10 +104,10 @@ export class MatchController {
   @ApiOperation({ summary: "내가 받은 좋아요 수신함" })
   @Get("me/receiveBox")
   getLikeReceiveBox(@Req() req: UserRequestDto) {
-    return this.matchService.getLikeReceiveBox(req);
+    return this.matchBoxService.getLikeReceiveBox(req);
   }
 
-  //-------------------- Chat Logic
+  //*----Chat Logic
   @ApiResponse({
     description: "있으면 채팅 관련 정보 배열로 모두 반환 / 없으면 null",
     type: ChatAllListResponseDto,
@@ -108,7 +116,7 @@ export class MatchController {
   @ApiOperation({ summary: "나의 채팅 리스트 모두 조회 " })
   @Get("me/chatBox/all")
   getChatRommsList(@Req() req: UserRequestDto) {
-    return this.matchService.getChatRoomsAllList(req);
+    return this.matchChatService.getChatRoomsAllList(req);
   }
 
   @ApiResponse({
@@ -120,7 +128,7 @@ export class MatchController {
   @ApiParam({ name: "chatId", description: "채팅방 입장할 id 입력", type: Number })
   @Get("me/chatBox/:chatId")
   getUserChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
-    return this.matchService.getUserChatRoom(chatId, req);
+    return this.matchChatService.getUserChatRoom(chatId, req);
   }
 
   @ApiResponse({
@@ -131,20 +139,20 @@ export class MatchController {
   @ApiParam({ name: "chatId", description: "오픈할 채팅방 id 입력", type: Number })
   @Post("me/chatBox/:chatId/open")
   openChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
-    return this.matchService.openChatRoom(chatId, req);
+    return this.matchChatService.openChatRoom(chatId, req);
   }
 
   @ApiOperation({ summary: "채팅방 나가기" })
   @ApiParam({ name: "chatId", description: "나갈 채팅방 id 입력", type: Number })
   @Put("me/chatBox/:chatId/exit")
   exitChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
-    return this.matchService.exitChatRoom(chatId, req);
+    return this.matchChatService.exitChatRoom(chatId, req);
   }
 
   @ApiOperation({ summary: "채팅방 삭제" })
   @ApiParam({ name: "chatId", description: "삭제할 채팅방 id 입력", type: Number })
   @Delete("me/chatBox/:chatId/delete")
   deleteChatRoom(@Param("chatId") chatId: number, @Req() req: UserRequestDto) {
-    return this.matchService.deleteChatRoom(chatId, req);
+    return this.matchChatService.deleteChatRoom(chatId, req);
   }
 }

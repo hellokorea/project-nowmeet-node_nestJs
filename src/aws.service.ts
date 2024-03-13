@@ -56,9 +56,9 @@ export class AwsService {
       });
 
       return Promise.all(uploadPromises);
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException(`파일 업로드에 실패 했습니다 : ${error}`);
+    } catch (e) {
+      console.error("uploadFilesToS3", e);
+      throw new BadRequestException(`파일 업로드에 실패 했습니다 : ${e}`);
     }
   }
 
@@ -90,9 +90,8 @@ export class AwsService {
         })
       );
       return signedUrls;
-    } catch (error) {
-      console.error("S3 사전 서명 URL 생성 중 오류 발생:", error);
-
+    } catch (e) {
+      console.error("createPreSignedUrl :", e);
       throw new InternalServerErrorException("S3 사전 서명 URL을 생성하는데 실패했습니다.");
     }
   }
@@ -107,9 +106,9 @@ export class AwsService {
         return this.s3Client.send(deleteCommand);
       });
       await Promise.all(deletePromises);
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException(`파일 삭제에 실패 했습니다 : ${error}`);
+    } catch (e) {
+      console.error("deleteFilesFromS3 :", e);
+      throw new BadRequestException(`파일 삭제에 실패 했습니다 : ${e}`);
     }
   }
 }
