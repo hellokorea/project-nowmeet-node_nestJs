@@ -13,10 +13,13 @@ export class ChatAllListResponseDto {
   @ApiProperty({ example: "5" })
   matchUserId: number;
 
-  @ApiProperty({ example: "매칭된 유저의 닉네임" })
+  @ApiProperty({ example: "최신 메시지" })
+  lastMessage: string;
+
+  @ApiProperty({ example: "김덕배" })
   matchUserNickname: string;
 
-  @ApiProperty({ example: "PENDING || OPEN || EXPIRE_END || DISCONNECT_END" })
+  @ApiProperty({ example: "statusD" })
   chatStatus: string;
 
   @ApiProperty({

@@ -11,7 +11,26 @@ import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  //-----------------Google Login Logic
+  @ApiResponse({ type: Boolean })
+  @ApiOperation({ summary: "유저 검증" })
+  @ApiBody({ description: "uuid input", type: IsUserRequsetDto })
+  @Post("isUser")
+  isUserExist(@Body("uuid") uuid: string) {
+    return this.authService.isUserExist(uuid);
+  }
+
+  @ApiBody({ description: "code input", type: String })
+  @Post("getRefreshToken/google")
+  makeNewIdTokenGoogle(@Body("code") code: string) {
+    return this.authService.makeNewIdTokenGoogle(code);
+  }
+
+  @ApiBody({ description: "Authcode input", type: String })
+  @Post("getRefreshToken/apple")
+  makeNewIdTokenApple(@Body("authCode") authCode: string) {
+    return this.authService.makeNewIdTokenApple(authCode);
+  }
+
   @Get("google")
   @UseGuards(AuthGuard("google"))
   async googleLogin(@Req() req: Request) {}
@@ -20,28 +39,5 @@ export class AuthController {
   @UseGuards(AuthGuard("google"))
   googleLoginCallback(@Req() req: GoogleRequest) {
     return this.authService.googleLogin(req);
-  }
-  //------------------------
-
-  @ApiResponse({ type: Boolean })
-  @ApiOperation({ summary: "로그인 시 유저 검증" })
-  @ApiBody({ description: "uuid input", type: IsUserRequsetDto })
-  @Post("isUser")
-  isUserExist(@Body("uuid") uuid: string) {
-    return this.authService.isUserExist(uuid);
-  }
-
-  @ApiOperation({ summary: "Google idToken publish" })
-  @ApiBody({ description: "code input", type: String })
-  @Post("getRefreshToken/google")
-  makeNewIdTokenGoogle(@Body("code") code: string) {
-    return this.authService.makeNewIdTokenGoogle(code);
-  }
-
-  @ApiOperation({ summary: "Apple idToken publish" })
-  @ApiBody({ description: "Authcode input", type: String })
-  @Post("getRefreshToken/apple")
-  makeNewIdTokenApple(@Body("authCode") authCode: string) {
-    return this.authService.makeNewIdTokenApple(authCode);
   }
 }

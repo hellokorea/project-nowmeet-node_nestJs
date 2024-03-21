@@ -15,7 +15,6 @@ export class UpdateIntroduceDto {
     example: "내 자기소개 수정하고자 하는 글",
   })
   @IsString()
-  @IsNotEmpty()
   introduce: string;
 }
 

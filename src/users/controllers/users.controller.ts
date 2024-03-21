@@ -24,7 +24,7 @@ import {
   UpdateProfileDto,
 } from "../dtos/request/user.putMyInfo.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
-import { CustomJwtGuards, GoogleGuard } from "src/auth/jwt/jwt.guard";
+import { GoogleGuard, CustomJwtGuards } from "src/auth/jwt/jwt.guard";
 import { UserSignupService } from "../service/user.signup.service";
 import { UserMapService } from "../service/user.map.service";
 import { UserAccountService } from "../service/user.account.service";
@@ -59,7 +59,7 @@ export class UsersController {
     description: "유저의 좌표 위치를 최신화하고, 반경 2km 이내의 모든 유저 정보를 반환한다",
     type: RefreshLocationUserResDto,
   })
-  @ApiOperation({ summary: "유저 위치 정보 최신화" })
+  @ApiOperation({ summary: "위치 최신화 및 주변 유저 탐색" })
   @UseGuards(CustomJwtGuards)
   @Get("location/:lon/:lat")
   UserLocationRefresh(@Param("lon") lon: string, @Param("lat") lat: string, @Req() req: UserRequestDto) {
@@ -86,7 +86,7 @@ export class UsersController {
   @ApiBody({ type: UpdateJobDto })
   @UseGuards(CustomJwtGuards)
   @Put("me/update/job")
-  putMyJobInfo(@Body() body: any, @Req() req: UserRequestDto) {
+  putMyJobInfo(@Body() body: UpdateJobDto, @Req() req: UserRequestDto) {
     return this.userAccountService.putMyJobInfo(body, req);
   }
 
@@ -94,7 +94,7 @@ export class UsersController {
   @ApiBody({ type: UpdateIntroduceDto })
   @UseGuards(CustomJwtGuards)
   @Put("me/update/introduce")
-  putMyIntroInfo(@Body() body: any, @Req() req: UserRequestDto) {
+  putMyIntroInfo(@Body() body: UpdateIntroduceDto, @Req() req: UserRequestDto) {
     return this.userAccountService.putMyIntroduceInfo(body, req);
   }
 
@@ -102,7 +102,7 @@ export class UsersController {
   @ApiBody({ type: UpdatePreferenceDto })
   @UseGuards(CustomJwtGuards)
   @Put("me/update/preference")
-  putMyPreInfo(@Body() body: any, @Req() req: UserRequestDto) {
+  putMyPreInfo(@Body() body: UpdatePreferenceDto, @Req() req: UserRequestDto) {
     return this.userAccountService.putMyPreferenceInfo(body, req);
   }
 

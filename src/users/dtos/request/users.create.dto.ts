@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 
 export class UserCreateDto {
   @ApiProperty({
-    example: "test@naver.com",
+    example: "test@gmail.com",
     description: "email",
   })
   email: string | null;
@@ -49,7 +49,7 @@ export class UserCreateDto {
   job: string;
 
   @ApiProperty({
-    example: "여! 반갑다. 내 이름은 홍길동이고, 아버지를 아버지라 부르지 못하지.",
+    example: "잘 부탁드립니다.",
     description: "introduce",
   })
   @IsString()
@@ -57,7 +57,7 @@ export class UserCreateDto {
   introduce: string;
 
   @ApiProperty({
-    example: "게임, 독서, 술, 여행",
+    example: ["게임, 독서, 술, 여행"],
     description: "preference",
     isArray: true,
   })
@@ -80,7 +80,7 @@ export class UserCreateDto {
   latitude: number;
 
   @ApiProperty({
-    example: "Google = Disuse || Apple = 123.23dd12",
+    example: "Google = Disuse || Apple = apple.sub.12345",
   })
   sub: string;
 
