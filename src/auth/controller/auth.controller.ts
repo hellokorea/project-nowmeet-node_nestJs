@@ -1,16 +1,23 @@
-import { Controller, Get, UseInterceptors, Request, Response, Post, UseGuards, Req, Res, Body } from "@nestjs/common";
+import { Controller, Get, UseInterceptors, Request, Post, UseGuards, Req, Body } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
+import { CustomJwtGuards } from "../jwt/jwt.guard";
+import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
+import { AuthJwtService } from "./../service/auth.jwt.service";
 
 @Controller("auth")
 @UseInterceptors(SuccessInterceptor)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authJwtService: AuthJwtService
+  ) {}
 
+  //*----User Check Logic
   @ApiResponse({ type: Boolean })
   @ApiOperation({ summary: "유저 검증" })
   @ApiBody({ description: "uuid input", type: IsUserRequsetDto })
@@ -19,18 +26,26 @@ export class AuthController {
     return this.authService.isUserExist(uuid);
   }
 
+  @UseGuards(CustomJwtGuards)
+  @Post("token")
+  saveToken(@Body() body: { fcmToken: string }, req: UserRequestDto) {
+    return this.authService.saveToken(body, req);
+  }
+
+  //*----Jwt Logic
   @ApiBody({ description: "code input", type: String })
   @Post("getRefreshToken/google")
   makeNewIdTokenGoogle(@Body("code") code: string) {
-    return this.authService.makeNewIdTokenGoogle(code);
+    return this.authJwtService.makeNewIdTokenGoogle(code);
   }
 
   @ApiBody({ description: "Authcode input", type: String })
   @Post("getRefreshToken/apple")
   makeNewIdTokenApple(@Body("authCode") authCode: string) {
-    return this.authService.makeNewIdTokenApple(authCode);
+    return this.authJwtService.makeNewIdTokenApple(authCode);
   }
 
+  //!----Revoke Logic
   @Get("google")
   @UseGuards(AuthGuard("google"))
   async googleLogin(@Req() req: Request) {}

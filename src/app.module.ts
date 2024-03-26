@@ -19,6 +19,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { InAppModule } from "./in-app/in-app.module";
 import { ScheduleSearchModule } from "./schedule/schedule.module";
 import { RecognizeModule } from "./recognize/recognize.module";
+import { FirebaseModule } from "./firebase/firebase.module";
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { RecognizeModule } from "./recognize/recognize.module";
     ScheduleSearchModule,
     RecognizeModule,
     ScheduleModule.forRoot(),
+    FirebaseModule,
   ],
   exports: [AwsService],
   controllers: [AppController],

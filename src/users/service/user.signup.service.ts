@@ -12,7 +12,7 @@ export class UserSignupService {
   ) {}
 
   async createUser(body: UserCreateDto, files: Array<Express.Multer.File>, request: Request) {
-    // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub } = body;
+    // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =  body;
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
     const headrsAuth = (request.headers as { authorization?: string }).authorization;

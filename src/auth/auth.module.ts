@@ -8,6 +8,8 @@ import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
 import { HttpModule } from "@nestjs/axios";
 import { AppleGuard, CustomJwtGuards, GoogleGuard } from "./jwt/jwt.guard";
+import { RecognizeModule } from "src/recognize/recognize.module";
+import { AuthJwtService } from "./service/auth.jwt.service";
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { AppleGuard, CustomJwtGuards, GoogleGuard } from "./jwt/jwt.guard";
       signOptions: { expiresIn: process.env.JWT_EXPIRES },
     }),
     forwardRef(() => UsersModule),
+    forwardRef(() => RecognizeModule),
   ],
   exports: [AuthService, CustomJwtGuards, GoogleGuard, AppleGuard],
 
@@ -27,6 +30,7 @@ import { AppleGuard, CustomJwtGuards, GoogleGuard } from "./jwt/jwt.guard";
 
   providers: [
     AuthService,
+    AuthJwtService,
     GooleJwtStrategy,
     AppleJwtStrategy,
     GoogleStrategy,
