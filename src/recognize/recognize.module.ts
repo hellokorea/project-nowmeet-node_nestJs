@@ -4,7 +4,6 @@ import { UsersModule } from "src/users/users.module";
 import { MatchModule } from "src/match/match.module";
 import { ChatModule } from "src/chat/chat.module";
 import { AppModule } from "src/app.module";
-import { AuthModule } from "src/auth/auth.module";
 
 @Module({
   imports: [
@@ -12,7 +11,6 @@ import { AuthModule } from "src/auth/auth.module";
     forwardRef(() => MatchModule),
     forwardRef(() => ChatModule),
     forwardRef(() => AppModule),
-    forwardRef(() => AuthModule),
   ],
   exports: [RecognizeService],
   controllers: [],

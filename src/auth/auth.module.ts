@@ -8,8 +8,8 @@ import { AuthController } from "./controller/auth.controller";
 import { GoogleStrategy } from "./strategies/google.strategies";
 import { HttpModule } from "@nestjs/axios";
 import { AppleGuard, CustomJwtGuards, GoogleGuard } from "./jwt/jwt.guard";
-import { RecognizeModule } from "src/recognize/recognize.module";
 import { AuthJwtService } from "./service/auth.jwt.service";
+import { FirebaseModule } from "src/firebase/firebase.module";
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { AuthJwtService } from "./service/auth.jwt.service";
       signOptions: { expiresIn: process.env.JWT_EXPIRES },
     }),
     forwardRef(() => UsersModule),
-    forwardRef(() => RecognizeModule),
+    forwardRef(() => FirebaseModule),
   ],
   exports: [AuthService, CustomJwtGuards, GoogleGuard, AppleGuard],
 

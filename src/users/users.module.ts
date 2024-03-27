@@ -13,7 +13,6 @@ import { AppModule } from "src/app.module";
 import { UserSignupService } from "./service/user.signup.service";
 import { UserMapService } from "./service/user.map.service";
 import { RecognizeModule } from "src/recognize/recognize.module";
-import { FirebaseModule } from "src/firebase/firebase.module";
 
 @Module({
   imports: [
@@ -26,7 +25,6 @@ import { FirebaseModule } from "src/firebase/firebase.module";
     forwardRef(() => ChatModule),
     forwardRef(() => AppModule),
     forwardRef(() => RecognizeModule),
-    forwardRef(() => FirebaseModule),
   ],
   exports: [UserAccountService, UsersRepository],
   controllers: [UsersController],

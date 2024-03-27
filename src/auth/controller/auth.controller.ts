@@ -5,8 +5,6 @@ import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
-import { CustomJwtGuards } from "../jwt/jwt.guard";
-import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { AuthJwtService } from "./../service/auth.jwt.service";
 
 @Controller("auth")
@@ -24,12 +22,6 @@ export class AuthController {
   @Post("isUser")
   isUserExist(@Body("uuid") uuid: string) {
     return this.authService.isUserExist(uuid);
-  }
-
-  @UseGuards(CustomJwtGuards)
-  @Post("token")
-  saveToken(@Body() body: { fcmToken: string }, req: UserRequestDto) {
-    return this.authService.saveToken(body, req);
   }
 
   //*----Jwt Logic

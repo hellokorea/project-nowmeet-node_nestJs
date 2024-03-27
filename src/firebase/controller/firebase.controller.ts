@@ -1,14 +1,16 @@
-import { Body, Controller, Post, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards, UseInterceptors } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
-import { PushPushService } from "../service/firebase.push.service";
+import { PushService } from "../service/firebase.push.service";
+import { CustomJwtGuards } from "src/auth/jwt/jwt.guard";
 
 @Controller("firebase")
 @UseInterceptors(SuccessInterceptor)
 export class FirebaseController {
-  constructor(private readonly pushService: PushPushService) {}
+  constructor(private readonly pushService: PushService) {}
 
+  @UseGuards(CustomJwtGuards)
   @Post("push")
-  sendPushNotification(@Body() body: { title: string; message: string; nickname: string }) {
+  sendPushNotification(@Body() body: { fcmToken: string; title: string; message: string }) {
     return this.pushService.sendPushNotification(body);
   }
 }

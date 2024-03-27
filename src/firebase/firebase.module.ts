@@ -1,12 +1,12 @@
 import { Module, forwardRef } from "@nestjs/common";
-import { PushPushService } from "./service/firebase.push.service";
-import { UsersModule } from "src/users/users.module";
+import { PushService } from "./service/firebase.push.service";
 import { FirebaseController } from "./controller/firebase.controller";
+import { AuthModule } from "src/auth/auth.module";
 
 @Module({
-  imports: [forwardRef(() => UsersModule)],
+  imports: [forwardRef(() => AuthModule)],
   exports: [],
   controllers: [FirebaseController],
-  providers: [PushPushService],
+  providers: [PushService],
 })
 export class FirebaseModule {}

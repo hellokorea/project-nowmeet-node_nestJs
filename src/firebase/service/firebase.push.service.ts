@@ -1,10 +1,9 @@
 import { Body, Injectable, InternalServerErrorException, OnModuleInit } from "@nestjs/common";
 import * as fcmAdmin from "firebase-admin";
-import { UsersRepository } from "../../users/database/repository/users.repository";
 import * as path from "path";
 
 @Injectable()
-export class PushPushService implements OnModuleInit {
+export class PushService implements OnModuleInit {
   private fcm: fcmAdmin.app.App;
 
   onModuleInit() {
@@ -15,11 +14,10 @@ export class PushPushService implements OnModuleInit {
     });
   }
 
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor() {}
 
-  // 유저 정보 같이 받아야함!! nickname
-  async sendPushNotification(@Body() body: { title: string; message: string; nickname: string }) {
-    const { title, message, nickname } = body;
+  async sendPushNotification(@Body() body: { fcmToken: string; title: string; message: string }) {
+    const { fcmToken, title, message } = body;
 
     const payload = {
       notification: {
@@ -28,11 +26,10 @@ export class PushPushService implements OnModuleInit {
       },
     };
 
+    console.log("전송 된 push 메시지", payload.notification);
+
     try {
-      const user = await this.usersRepository.findOneByNickname(nickname);
-
-      await this.fcm.messaging().sendToDevice(user.fcmToken, payload);
-
+      await this.fcm.messaging().sendToDevice(fcmToken, payload);
       console.log("푸쉬 ok");
     } catch (e) {
       console.error(e);

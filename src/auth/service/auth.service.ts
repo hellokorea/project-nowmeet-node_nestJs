@@ -2,16 +2,13 @@ import { Injectable, UnauthorizedException, InternalServerErrorException, Body }
 import { UsersRepository } from "../../users/database/repository/users.repository";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
 import { JwtService } from "@nestjs/jwt";
-
-import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { RecognizeService } from "./../../recognize/recognize.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly jwtService: JwtService,
-    private readonly recognizeService: RecognizeService
+    private readonly jwtService: JwtService
   ) {}
 
   async isUserExist(uuid: string) {
@@ -27,26 +24,7 @@ export class AuthService {
     }
   }
 
-  //*Internal Use
-  async saveToken(@Body() body: { fcmToken: string }, req: UserRequestDto) {
-    const loggedId = req.user.id;
-    const user = await this.recognizeService.validateUser(loggedId);
-
-    const { fcmToken } = body;
-
-    user.fcmToken = fcmToken;
-
-    try {
-      await this.usersRepository.saveUser(user);
-    } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException("FCM 토큰 저장에 실패 했습니다 :", e);
-    }
-  }
-
-  //
-  //
-  //Revoke Code
+  //!Revoke Code
   async googleLogin(req: GoogleRequest) {
     try {
       const {
