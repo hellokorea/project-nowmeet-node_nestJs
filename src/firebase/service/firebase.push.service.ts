@@ -1,13 +1,12 @@
 import { Body, Injectable, InternalServerErrorException, OnModuleInit } from "@nestjs/common";
 import * as fcmAdmin from "firebase-admin";
-import * as path from "path";
 
 @Injectable()
 export class PushService implements OnModuleInit {
   private fcm: fcmAdmin.app.App;
 
   onModuleInit() {
-    const account = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
+    const account = "/home/ec2-user/applications/nowmeet/FirebaseAdminKey.json";
 
     this.fcm = fcmAdmin.initializeApp({
       credential: fcmAdmin.credential.cert(account),

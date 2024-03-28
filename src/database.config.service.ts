@@ -32,7 +32,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
             password: this.configService.get<string>("DB_PASSWORD"),
             database: this.configService.get<string>(hostDb),
             entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
-            synchronize: true, // 개발 환경에서만 true로 설정
+            synchronize: isDevMode, // 개발 환경에서만 true로 설정
           });
         }, this.DELAY_TIME);
       });
