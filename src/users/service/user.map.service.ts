@@ -22,8 +22,7 @@ export class UserMapService {
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     try {
-      console.log(request);
-      const fcmtoken = request.headers["fcmToken"];
+      const fcmtoken = request.headers["fcmtoken"];
       await this.recognizeService.saveFcmToken(user.id, fcmtoken);
 
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
@@ -54,8 +53,6 @@ export class UserMapService {
         (responseUser) =>
           user.nickname !== responseUser.nickname && responseUser.ghostMode === false && user.sex !== responseUser.sex
       );
-
-      console.log(filteredResponseUserList);
 
       if (!filteredResponseUserList.length) {
         return null;
