@@ -62,8 +62,13 @@ export class UsersController {
   @ApiOperation({ summary: "위치 최신화 및 주변 유저 탐색" })
   @UseGuards(CustomJwtGuards)
   @Get("location/:lon/:lat")
-  UserLocationRefresh(@Param("lon") lon: string, @Param("lat") lat: string, @Req() req: UserRequestDto) {
-    return this.userMapSerivce.refreshUserLocation(lon, lat, req);
+  UserLocationRefresh(
+    @Param("lon") lon: string,
+    @Param("lat") lat: string,
+    @Req() req: UserRequestDto,
+    Request: Request
+  ) {
+    return this.userMapSerivce.refreshUserLocation(lon, lat, req, Request);
   }
 
   @ApiOperation({ summary: "유령 모드 On/Off" })

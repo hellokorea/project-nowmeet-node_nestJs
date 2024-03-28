@@ -16,23 +16,14 @@ export class UserMapService {
     private readonly matchProfileService: MatchProfileService
   ) {}
 
-  async refreshUserLocation(lon: string, lat: string, req: UserRequestDto) {
+  async refreshUserLocation(lon: string, lat: string, req: UserRequestDto, Request: Request) {
     const loggedId = req.user.id;
     const user = await this.recognizeService.validateUser(loggedId);
 
-    const lonString = parseFloat(lon).toFixed(7);
-    const latString = parseFloat(lat).toFixed(7);
+    const fcmtoken: string = Request.headers["fcmtoken"];
+    await this.recognizeService.saveFcmToken(user.id, fcmtoken);
 
-    const lonNumber = parseFloat(lonString);
-    const latNumber = parseFloat(latString);
-
-    if (isNaN(lonNumber) || isNaN(latNumber)) {
-      throw new BadRequestException("유효하지 않는 좌표 값입니다.");
-    }
-
-    if (lonNumber < -180 || lonNumber > 180 || latNumber < -90 || latNumber > 90) {
-      throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < lon < 180 / -90 < lan < 90");
-    }
+    const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     try {
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
@@ -93,6 +84,24 @@ export class UserMapService {
       console.error("refreshLocation error :", e);
       throw new BadRequestException("위치 정보를 갱신하는 중 오류가 발생했습니다.");
     }
+  }
+
+  async validatePosition(lon: string, lat: string) {
+    const lonString = parseFloat(lon).toFixed(7);
+    const latString = parseFloat(lat).toFixed(7);
+
+    const lonNumber = parseFloat(lonString);
+    const latNumber = parseFloat(latString);
+
+    if (isNaN(lonNumber) || isNaN(latNumber)) {
+      throw new BadRequestException("유효하지 않는 좌표 값입니다.");
+    }
+
+    if (lonNumber < -180 || lonNumber > 180 || latNumber < -90 || latNumber > 90) {
+      throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < lon < 180 / -90 < lan < 90");
+    }
+
+    return { lonNumber, latNumber };
   }
 
   async putGhostMode(setting: GhostModeDto, req: UserRequestDto) {

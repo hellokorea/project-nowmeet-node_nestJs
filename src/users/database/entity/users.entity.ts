@@ -49,6 +49,9 @@ export class User {
   @Column({ default: "Disuse" })
   sub: string;
 
+  @Column()
+  fcmToken: string;
+
   @CreateDateColumn()
   createdAt: string;
 

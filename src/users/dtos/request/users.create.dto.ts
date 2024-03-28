@@ -84,6 +84,8 @@ export class UserCreateDto {
   })
   sub: string;
 
+  fcmToken?: string;
+
   @ApiProperty({
     example: ["Example.jpg", "Example.jpg,"],
     description: "profileImages",

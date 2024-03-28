@@ -70,4 +70,12 @@ export class RecognizeService {
 
     return result;
   }
+
+  async saveFcmToken(id: number, fcmToken: string) {
+    const user = await this.usersRepository.findOneById(id);
+
+    user.fcmToken = fcmToken;
+
+    await this.usersRepository.saveUser(user);
+  }
 }

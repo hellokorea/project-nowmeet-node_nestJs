@@ -3,6 +3,7 @@ import * as fcmAdmin from "firebase-admin";
 import { ReqPushNotificationDto } from "../dtos/firebase.push.dto";
 import * as path from "path";
 import * as fs from "fs";
+import { UsersRepository } from "src/users/database/repository/users.repository";
 
 @Injectable()
 export class PushService implements OnModuleInit {
@@ -20,20 +21,23 @@ export class PushService implements OnModuleInit {
     });
   }
 
-  constructor() {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async sendPushNotification(@Body() body: ReqPushNotificationDto) {
-    const { fcmToken, title, message } = body;
-
-    const payload = {
-      notification: {
-        title,
-        body: message,
-      },
-    };
+    const { title, message, nickname } = body;
 
     try {
-      await this.fcm.messaging().sendToDevice(fcmToken, payload);
+      const user = await this.usersRepository.findOneByNickname(nickname);
+
+      const payload = {
+        notification: {
+          title,
+          body: message,
+        },
+        token: user.fcmToken,
+      };
+
+      await this.fcm.messaging().send(payload);
       console.log("전송 된 push 메시지", payload.notification);
       console.log("푸쉬 ok");
     } catch (e) {
