@@ -9,8 +9,8 @@ export class PushService implements OnModuleInit {
   private fcm: fcmAdmin.app.App;
 
   onModuleInit() {
-    const localPath = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
-    const localAccount = JSON.parse(fs.readFileSync(localPath, "utf8"));
+    // const localPath = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
+    // const localAccount = JSON.parse(fs.readFileSync(localPath, "utf8"));
 
     const prodaccountPath = process.env.firebaseAccount;
     const prodAccount = require(prodaccountPath);
