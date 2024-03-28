@@ -23,6 +23,7 @@ export class UserMapService {
 
     try {
       const fcmtoken: string = request.headers["fcmToken"];
+      console.log(request);
       await this.recognizeService.saveFcmToken(user.id, fcmtoken);
 
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);

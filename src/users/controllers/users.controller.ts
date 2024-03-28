@@ -28,6 +28,7 @@ import { GoogleGuard, CustomJwtGuards } from "src/auth/jwt/jwt.guard";
 import { UserSignupService } from "../service/user.signup.service";
 import { UserMapService } from "../service/user.map.service";
 import { UserAccountService } from "../service/user.account.service";
+import { request } from "http";
 
 @ApiBearerAuth()
 @Controller("users")
@@ -66,9 +67,9 @@ export class UsersController {
     @Param("lon") lon: string,
     @Param("lat") lat: string,
     @Req() req: UserRequestDto,
-    Request: Request
+    request: Request
   ) {
-    return this.userMapSerivce.refreshUserLocation(lon, lat, req, Request);
+    return this.userMapSerivce.refreshUserLocation(lon, lat, req, request);
   }
 
   @ApiOperation({ summary: "유령 모드 On/Off" })
