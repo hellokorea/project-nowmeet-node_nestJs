@@ -67,7 +67,7 @@ export class UsersController {
     @Param("lon") lon: string,
     @Param("lat") lat: string,
     @Req() req: UserRequestDto,
-    request: Request
+    @Req() request: Request
   ) {
     return this.userMapSerivce.refreshUserLocation(lon, lat, req, request);
   }
