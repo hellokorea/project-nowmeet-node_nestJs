@@ -1,22 +1,28 @@
 import { Body, Injectable, InternalServerErrorException, OnModuleInit } from "@nestjs/common";
 import * as fcmAdmin from "firebase-admin";
+import { ReqPushNotificationDto } from "../dtos/firebase.push.dto";
+import * as path from "path";
+import * as fs from "fs";
 
 @Injectable()
 export class PushService implements OnModuleInit {
   private fcm: fcmAdmin.app.App;
 
   onModuleInit() {
-    const accountPath = process.env.firebaseAccount;
-    const account = require(accountPath);
+    const localPath = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
+    const localAccount = JSON.parse(fs.readFileSync(localPath, "utf8"));
+
+    const prodaccountPath = process.env.firebaseAccount;
+    const prodAccount = require(prodaccountPath);
 
     this.fcm = fcmAdmin.initializeApp({
-      credential: fcmAdmin.credential.cert(account),
+      credential: fcmAdmin.credential.cert(prodAccount),
     });
   }
 
   constructor() {}
 
-  async sendPushNotification(@Body() body: { fcmToken: string; title: string; message: string }) {
+  async sendPushNotification(@Body() body: ReqPushNotificationDto) {
     const { fcmToken, title, message } = body;
 
     const payload = {
