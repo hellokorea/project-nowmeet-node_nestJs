@@ -22,8 +22,8 @@ export class UserMapService {
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     try {
-      const fcmtoken: string = request.headers["fcmToken"];
       console.log(request);
+      const fcmtoken = request.headers["fcmToken"];
       await this.recognizeService.saveFcmToken(user.id, fcmtoken);
 
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
