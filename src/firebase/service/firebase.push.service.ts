@@ -12,8 +12,8 @@ export class PushService implements OnModuleInit {
     // const localPath = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
     // const localAccount = JSON.parse(fs.readFileSync(localPath, "utf8"));
 
-    const prodaccountPath = process.env.firebaseAccount;
-    const prodAccount = require(prodaccountPath);
+    const prodAccountPath = process.env.firebaseAccount;
+    const prodAccount = require(prodAccountPath);
 
     this.fcm = fcmAdmin.initializeApp({
       credential: fcmAdmin.credential.cert(prodAccount),
@@ -28,14 +28,13 @@ export class PushService implements OnModuleInit {
     const payload = {
       notification: {
         title,
-        message,
+        body: message,
       },
     };
 
-    console.log("전송 된 push 메시지", payload.notification);
-
     try {
       await this.fcm.messaging().sendToDevice(fcmToken, payload);
+      console.log("전송 된 push 메시지", payload.notification);
       console.log("푸쉬 ok");
     } catch (e) {
       console.error(e);

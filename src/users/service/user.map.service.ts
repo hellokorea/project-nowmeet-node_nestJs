@@ -48,7 +48,6 @@ export class UserMapService {
 
       const nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, SEARCH_BOUNDARY);
 
-      console.log("주변 유저", nearbyUsers);
       const responseUserPromises = nearbyUsers.map(async (user) => {
         const nearbyUsersMatchStatus = await this.matchProfileService.getMatchStatus(user.id, loggedId);
         const userInfo = new UserProfileResponseDto(user);
