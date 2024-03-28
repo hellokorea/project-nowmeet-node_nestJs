@@ -19,13 +19,12 @@ export class UserMapService {
   async refreshUserLocation(lon: string, lat: string, req: UserRequestDto, request: Request) {
     const loggedId = req.user.id;
     const user = await this.recognizeService.validateUser(loggedId);
-
-    const fcmtoken: string = request.headers["fcmtoken"];
-    await this.recognizeService.saveFcmToken(user.id, fcmtoken);
-
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     try {
+      const fcmtoken: string = request.headers["fcmToken"];
+      await this.recognizeService.saveFcmToken(user.id, fcmtoken);
+
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
 
       if (!findMyLocation) {
