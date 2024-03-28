@@ -6,7 +6,8 @@ export class PushService implements OnModuleInit {
   private fcm: fcmAdmin.app.App;
 
   onModuleInit() {
-    const account = "/home/ec2-user/applications/nowmeet/FirebaseAdminKey.json";
+    const accountPath = process.env.firebaseAccount;
+    const account = require(accountPath);
 
     this.fcm = fcmAdmin.initializeApp({
       credential: fcmAdmin.credential.cert(account),

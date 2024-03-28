@@ -59,6 +59,8 @@ env_vars=(
   APPLE_TEAM_ID
   APPLE_APP_KEY
   APPLE_CLIENT_ID
+  clientKeyPath
+  firebaseAccount
 )
 
 

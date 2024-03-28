@@ -112,7 +112,8 @@ export class AuthJwtService {
       sub: process.env.APPLE_CLIENT_ID,
     };
 
-    const clientKeyPath = "/home/ec2-user/applications/nowmeet/AppleSecretKey.p8";
+    const clientKeyPath = process.env.clientKeyPath;
+
     const clientKey = fs.readFileSync(clientKeyPath, "utf8");
 
     const clientSecret = jwt.sign(applePayload, clientKey, {
