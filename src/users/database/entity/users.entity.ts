@@ -49,7 +49,7 @@ export class User {
   @Column({ default: "Disuse" })
   sub: string;
 
-  @Column()
+  @Column({ default: null })
   fcmToken: string;
 
   @CreateDateColumn()
