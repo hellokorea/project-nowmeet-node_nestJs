@@ -21,10 +21,13 @@ export class UserMapService {
     const user = await this.recognizeService.validateUser(loggedId);
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
-    try {
-      const fcmtoken = request.headers["fcmtoken"];
-      await this.recognizeService.saveFcmToken(user.id, fcmtoken);
+    const fcmtoken = request.headers["fcmtoken"];
 
+    if (fcmtoken) {
+      await this.recognizeService.saveFcmToken(user.id, fcmtoken);
+    }
+
+    try {
       const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
 
       if (!findMyLocation) {
