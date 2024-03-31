@@ -61,8 +61,6 @@ export class UsersRepository {
 
   async findUsersNearLocaction(longitude: number, latitude: number, radius: number): Promise<User[] | null> {
     const distanceInMeters = radius * 1000;
-
-    console.log(distanceInMeters);
     return await this.usersRepository
       .createQueryBuilder("user")
       .where(`ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(user.longitude, user.latitude)) < :distance`)

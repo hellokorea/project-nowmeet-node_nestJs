@@ -5,13 +5,25 @@ import { Strategy, Profile, VerifyCallback } from "passport-google-oauth20";
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
   constructor() {
-    super({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_API_KEY,
-      // callbackURL: process.env.LOCAL_GOOGLE_LOGIN_CB, //*dev
-      callbackURL: process.env.EC2_GOOGLE_LOGIN_CB,
-      scope: ["email", "profile"],
-    });
+    const isDevMode = process.env.Mode === "dev";
+
+    const googleStrategyOptions = isDevMode
+      ? {
+          // dev
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_API_KEY,
+          callbackURL: process.env.LOCAL_GOOGLE_LOGIN_CB,
+          scope: ["email", "profile"],
+        }
+      : {
+          // prod
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_API_KEY,
+          callbackURL: process.env.EC2_GOOGLE_LOGIN_CB,
+          scope: ["email", "profile"],
+        };
+
+    super(googleStrategyOptions);
   }
 
   async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) {

@@ -10,40 +10,45 @@ import * as jwksRsa from "jwks-rsa";
 @Injectable()
 export class GooleJwtStrategy extends PassportStrategy(Strategy, "google-jwt") {
   constructor(private readonly userRepository: UsersRepository) {
-    //* Local Use
-    // super({
-    //   jwtFromRequest: (request) => {
-    //     const authHeader = request.headers.authorization;
-    //     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    //       throw new UnauthorizedException("Invalid Authorization header");
-    //     }
-    //     const token = authHeader.split(" ")[1];
-    //     return token;
-    //   },
-    //   secretOrKey: process.env.JWT_KEY,
-    //   ignoreExpiration: false,
-    // });
+    const isDevMode = process.env.MODE === "dev";
 
-    super({
-      jwtFromRequest: (request) => {
-        const authHeader = request.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-          throw new UnauthorizedException("Invalid Authorization header");
+    const strategyOptions = isDevMode
+      ? {
+          // dev
+          jwtFromRequest: (request) => {
+            const authHeader = request.headers.authorization;
+            if (!authHeader || !authHeader.startsWith("Bearer ")) {
+              throw new UnauthorizedException("Invalid Authorization header");
+            }
+            const token = authHeader.split(" ")[1];
+            return token;
+          },
+          secretOrKey: process.env.JWT_KEY,
+          ignoreExpiration: false,
         }
-        const token = authHeader.split(" ")[1];
-        return token;
-      },
-      secretOrKeyProvider: jwksRsa.passportJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 10,
-        jwksUri: "https://www.googleapis.com/oauth2/v3/certs",
-      }),
-      ignoreExpiration: false,
-      issuer: "https://accounts.google.com",
-      audience: process.env.GOOGLE_WEB_CLIENTID,
-      algorithms: ["RS256"],
-    });
+      : {
+          // prod
+          jwtFromRequest: (request) => {
+            const authHeader = request.headers.authorization;
+            if (!authHeader || !authHeader.startsWith("Bearer ")) {
+              throw new UnauthorizedException("Invalid Authorization header");
+            }
+            const token = authHeader.split(" ")[1];
+            return token;
+          },
+          secretOrKeyProvider: jwksRsa.passportJwtSecret({
+            cache: true,
+            rateLimit: true,
+            jwksRequestsPerMinute: 10,
+            jwksUri: "https://www.googleapis.com/oauth2/v3/certs",
+          }),
+          ignoreExpiration: false,
+          issuer: "https://accounts.google.com",
+          audience: process.env.GOOGLE_WEB_CLIENTID,
+          algorithms: ["RS256"],
+        };
+
+    super(strategyOptions);
   }
 
   async validate(payload: GooglePayload): Promise<User> {
