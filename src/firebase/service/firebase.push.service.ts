@@ -16,7 +16,7 @@ export class PushService implements OnModuleInit {
     let firebaseAccount;
 
     if (isDevMode) {
-      keyPath = path.join("C:", "now-meet-backend", "FirebaseAdminKey.json");
+      keyPath = path.join("/Users", "gimjeongdong", "Desktop", "now-meet-backend", "FirebaseAdminKey.json");
       firebaseAccount = JSON.parse(fs.readFileSync(keyPath, "utf8"));
     } else {
       keyPath = process.env.firebaseAccount;
