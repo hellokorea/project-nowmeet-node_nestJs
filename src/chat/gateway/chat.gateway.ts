@@ -40,17 +40,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
   };
 
-  private statusMessagesId = {
-    [ChatState.PENDING]: 1,
-    [ChatState.OPEN]: 2,
-    //
-    [ChatState.SENDER_EXIT]: 3,
-    [ChatState.RECEIVER_EXIT]: 4,
-    //
-    [ChatState.EXPIRE_END]: 5,
-    [ChatState.DISCONNECT_END]: 6,
-  };
-
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -147,10 +136,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       const statusSystemMessage: string = this.statusMessages[status] || "채팅방 상태 확인 불가능";
-      const systemMessageId: number = this.statusMessagesId[status] || "채팅방 상태 확인 불가능";
 
       const systemMessage = {
-        id: systemMessageId,
         type: "system",
         content: statusSystemMessage,
         createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
