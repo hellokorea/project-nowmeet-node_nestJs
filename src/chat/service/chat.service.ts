@@ -3,9 +3,13 @@ import { ChatsRepository } from "../database/repository/chat.repository";
 import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 import * as moment from "moment";
 import { ChatTimerService } from "./chat.timer.service";
+import { ChatState } from "../database/entity/chat.entity";
 
 @Injectable()
 export class ChatService {
+  private PROD_TIMER: number = 24 * 60 * 60 * 1000;
+  private TEST_TIMER: number = 60 * 1000;
+
   constructor(
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
@@ -19,10 +23,7 @@ export class ChatService {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
     }
 
-    const PROD_TIMER: number = 12 * 60 * 60 * 1000;
-    const TEST_TIMER: number = 60 * 1000;
-
-    const expireTime = moment().add(PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    const expireTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const createChatRoom = await this.chatsRepository.createChatRoom(matchId, senderId, receiverId, expireTime);
     const createDevChatRoom = await this.chatsRepository.createDevChatRoom(matchId, senderId, receiverId); // Dev
@@ -33,6 +34,22 @@ export class ChatService {
     await this.chatTimerService.setChatRoomExpireTimer(matchId);
 
     return newChatRooms;
+  }
+
+  async openChat(matchId: number) {
+    const chatRoom = await this.chatsRepository.findOneChatRoomsByMatchId(matchId);
+    chatRoom.disconnectTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    chatRoom.status = ChatState.OPEN;
+    const openChatRoom = await this.chatsRepository.saveChatData(chatRoom);
+
+    // Dev
+    const devChatRoom = await this.chatsRepository.findOneDevChatRoomsByMatchId(matchId);
+    devChatRoom.status = ChatState.OPEN;
+    await this.chatsRepository.saveDevChatData(devChatRoom);
+
+    await this.chatTimerService.setChatRoomDisconnectTimer(matchId);
+
+    return openChatRoom;
   }
 
   async removeUserChatRoom(chatId: number) {

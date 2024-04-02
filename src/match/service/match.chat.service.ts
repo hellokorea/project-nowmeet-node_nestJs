@@ -140,7 +140,7 @@ export class MatchChatService {
     //과금 처리
 
     try {
-      const openStatusChatRoom = await this.chatTimerService.setChatRoomDisconnectTimer(findChat.matchId);
+      const openStatusChatRoom = await this.chatService.openChat(findChat.matchId);
 
       return {
         chatId: openStatusChatRoom.id,

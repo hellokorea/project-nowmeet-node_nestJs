@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ChatRoom } from "../entity/chat.entity";
-import { EntityManager, FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, LessThan, Repository } from "typeorm";
 import { DevChatRoom } from "../entity/chat.dev.entity";
+import * as moment from "moment";
 
 @Injectable()
 export class ChatsRepository {
@@ -40,6 +41,21 @@ export class ChatsRepository {
     return await this.chatsRoomRepository.findOne({ where: { matchId: matchId } });
   }
 
+  async findExpireChats() {
+    const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
+    return this.chatsRoomRepository.find({
+      where: {
+        expireTime: LessThan(currentKoreaTime),
+        status: "PENDING",
+      },
+    });
+  }
+
+  async findDisconnectChats() {
+    const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
+    return this.chatsRoomRepository.find({ where: { disconnectTime: LessThan(currentKoreaTime), status: "OPEN" } });
+  }
+
   //*---Create Logic
   async createChatRoom(matchId: number, senderId: number, receiverId: number, expireTime: Date) {
     return this.chatsRoomRepository.create({
@@ -56,7 +72,7 @@ export class ChatsRepository {
   }
 
   //*---Delete Logic
-  async removeChatRoom(chat: ChatRoom) {
+  async removeChatRoom(chat: ChatRoom): Promise<ChatRoom> {
     return await this.chatsRoomRepository.remove(chat);
   }
 
