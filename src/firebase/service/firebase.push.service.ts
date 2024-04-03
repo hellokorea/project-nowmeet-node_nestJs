@@ -31,16 +31,20 @@ export class PushService implements OnModuleInit {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async sendPushNotification(@Body() body: ReqPushNotificationDto) {
-    const { title, message, nickname } = body;
+    const { title, message, nickname, screenName, chatId } = body;
 
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
+
+      const dataPayload = chatId ? { screenName, chatId: chatId.toString() } : { screenName };
 
       const payload = {
         notification: {
           title,
           body: message,
         },
+
+        data: dataPayload,
         token: user.fcmToken,
       };
 

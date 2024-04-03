@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { IsNumber, IsString } from "class-validator";
 
 export class ReqPushNotificationDto {
   @ApiProperty({ example: "put fcm title" })
@@ -13,4 +13,12 @@ export class ReqPushNotificationDto {
   @ApiProperty({ example: "put nickname" })
   @IsString()
   nickname: string;
+
+  @ApiProperty({ example: "put screenName" })
+  @IsString()
+  screenName: string;
+
+  @ApiProperty({ example: "put chatId" })
+  @IsNumber()
+  chatId: number;
 }
