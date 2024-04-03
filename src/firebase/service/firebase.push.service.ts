@@ -38,6 +38,9 @@ export class PushService implements OnModuleInit {
 
       const dataPayload = chatId ? { screenName, chatId: chatId.toString() } : { screenName };
 
+      console.log(dataPayload);
+      console.log("바디 : ", body);
+
       const payload = {
         notification: {
           title,
@@ -47,6 +50,8 @@ export class PushService implements OnModuleInit {
         data: dataPayload,
         token: user.fcmToken,
       };
+
+      console.log("페이로드 :", payload);
 
       await this.fcm.messaging().send(payload);
       console.log("전송 된 push 메시지", payload.notification);
