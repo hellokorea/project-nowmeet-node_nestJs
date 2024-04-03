@@ -36,16 +36,16 @@ export class PushService implements OnModuleInit {
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
 
-      console.log("body !!! :", body);
-      console.log("chat Id !!!! ;", chatId);
-
       const commonPayload = {
         notification: {
           title: title,
           body: message,
         },
 
-        data: { screenName },
+        data: {
+          screenName,
+          nickname,
+        },
         token: user.fcmToken,
       };
 
@@ -57,6 +57,7 @@ export class PushService implements OnModuleInit {
 
         data: {
           screenName,
+          nickname,
           ...(chatId && { chatId: chatId.toString() }),
         },
         token: user.fcmToken,
