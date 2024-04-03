@@ -36,17 +36,17 @@ export class PushService implements OnModuleInit {
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
 
-      const dataPayload = {
-        screenName,
-        ...(chatId && { chatId: chatId.toString() }),
-      };
+      const dataPayload: { screenName: string; [key: string]: string } = { screenName };
+
+      if (chatId) {
+        dataPayload.chatId = chatId.toString();
+      }
 
       console.log(dataPayload);
-      console.log("바디 : ", body);
 
       const payload = {
         notification: {
-          title,
+          title: title,
           body: message,
         },
 
@@ -57,8 +57,6 @@ export class PushService implements OnModuleInit {
       console.log("페이로드 :", payload);
 
       await this.fcm.messaging().send(payload);
-      console.log("전송 된 push 메시지", payload.notification);
-      console.log("푸쉬 ok");
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("푸쉬 알림 전송에 실패 했습니다 : ", e);
