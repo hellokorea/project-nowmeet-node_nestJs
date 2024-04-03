@@ -36,6 +36,9 @@ export class PushService implements OnModuleInit {
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
 
+      console.log("body !!! :", body);
+      console.log("chat Id !!!! ;", chatId);
+
       const commonPayload = {
         notification: {
           title: title,
