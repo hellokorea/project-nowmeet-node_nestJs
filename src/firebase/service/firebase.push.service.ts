@@ -57,7 +57,7 @@ export class PushService implements OnModuleInit {
 
         data: {
           screenName,
-          chatId: chatId.toString(),
+          ...(chatId && { chatId: chatId.toString() }),
         },
         token: user.fcmToken,
       };
