@@ -20,5 +20,5 @@ export class ReqPushNotificationDto {
 
   @ApiProperty({ example: "put chatId" })
   @IsNumber()
-  chatId: number;
+  chatId?: number;
 }
