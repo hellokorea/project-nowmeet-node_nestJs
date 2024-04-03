@@ -36,7 +36,10 @@ export class PushService implements OnModuleInit {
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
 
-      const dataPayload = chatId ? { screenName, chatId: chatId.toString() } : { screenName };
+      const dataPayload = {
+        screenName,
+        ...(chatId && { chatId: chatId.toString() }),
+      };
 
       console.log(dataPayload);
       console.log("바디 : ", body);
