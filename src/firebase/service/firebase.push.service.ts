@@ -36,27 +36,34 @@ export class PushService implements OnModuleInit {
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
 
-      const dataPayload: { screenName: string; [key: string]: string } = { screenName };
-
-      if (chatId) {
-        dataPayload.chatId = chatId.toString();
-      }
-
-      console.log(dataPayload);
-
-      const payload = {
+      const commonPayload = {
         notification: {
           title: title,
           body: message,
         },
 
-        data: dataPayload,
+        data: { screenName },
         token: user.fcmToken,
       };
 
-      console.log("페이로드 :", payload);
+      const chatPayload = {
+        notification: {
+          title: title,
+          body: message,
+        },
 
-      await this.fcm.messaging().send(payload);
+        data: {
+          screenName,
+          chatId: chatId.toString(),
+        },
+        token: user.fcmToken,
+      };
+
+      if (chatId) {
+        await this.fcm.messaging().send(chatPayload);
+      } else {
+        await this.fcm.messaging().send(commonPayload);
+      }
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException("푸쉬 알림 전송에 실패 했습니다 : ", e);
