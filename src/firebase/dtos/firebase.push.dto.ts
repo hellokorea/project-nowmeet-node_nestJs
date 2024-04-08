@@ -20,4 +20,7 @@ export class ReqPushNotificationDto {
 
   @ApiProperty({ example: "put chatId" })
   chatId?: number;
+
+  @ApiProperty({ example: "put senderNickname" })
+  senderNickname?: string;
 }

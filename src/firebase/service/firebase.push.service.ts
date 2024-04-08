@@ -31,7 +31,7 @@ export class PushService implements OnModuleInit {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async sendPushNotification(@Body() body: ReqPushNotificationDto) {
-    const { title, message, nickname, screenName, chatId } = body;
+    const { title, message, nickname, screenName, chatId, senderNickname } = body;
 
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
@@ -59,6 +59,7 @@ export class PushService implements OnModuleInit {
           screenName,
           nickname,
           ...(chatId && { chatId: chatId.toString() }),
+          ...(senderNickname && { senderNickname }),
         },
         token: user.fcmToken,
       };
