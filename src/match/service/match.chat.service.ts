@@ -18,7 +18,6 @@ export class MatchChatService {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
     private readonly chatService: ChatService,
-    private readonly chatTimerService: ChatTimerService,
     private readonly recognizeService: RecognizeService,
     private readonly awsService: AwsService
   ) {}
@@ -81,6 +80,8 @@ export class MatchChatService {
 
   async getUserChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
+    const user = await this.recognizeService.validateUser(loggedId);
+
     const findChat = await this.recognizeService.verifyFindChatRoom(chatId, loggedId);
 
     let chathUserId: number;
@@ -111,6 +112,7 @@ export class MatchChatService {
       message,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
+      myNickname: user.nickname,
       preSignedUrl,
     };
 

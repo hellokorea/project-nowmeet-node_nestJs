@@ -221,7 +221,7 @@ export class UserAccountService {
   //^ test delete match
   async deleteMatchChats(req: UserRequestDto) {
     const loggedId = req.user.id;
-    console.log(loggedId);
+
     const user = await this.recognizeService.validateUser(loggedId);
 
     if (!user) {
