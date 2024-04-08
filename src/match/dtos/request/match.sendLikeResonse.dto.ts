@@ -5,6 +5,8 @@ export class SendLikeResponseDto {
   matchId: number;
   @ApiProperty({ example: "2" })
   me: number;
+  @ApiProperty({ example: "my nickname" })
+  myNickname: string;
   @ApiProperty({ example: "5" })
   receiverId: number;
   @ApiProperty({ example: "김둑덕" })

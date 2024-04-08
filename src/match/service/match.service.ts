@@ -19,7 +19,7 @@ export class MatchService {
 
   async sendLike(receiverNickname: string, req: UserRequestDto) {
     const loggedId = req.user.id;
-    await this.recognizeService.validateUser(loggedId);
+    const user = await this.recognizeService.validateUser(loggedId);
 
     const oppUser = await this.usersRepository.findOneByNickname(receiverNickname);
 
@@ -45,6 +45,7 @@ export class MatchService {
 
     const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
 
+    console.log(user.nickname);
     return {
       matchId: newMatchData.id,
       me: newMatchData.sender.id,
