@@ -142,4 +142,11 @@ export class UsersController {
   deleteAccount(@Req() req: UserRequestDto) {
     return this.userAccountService.deleteAccount(req);
   }
+
+  //* delete test api
+  @Delete("delete/test")
+  @UseGuards(CustomJwtGuards)
+  deleteMatchChats(@Req() req: UserRequestDto) {
+    return this.userAccountService.deleteMatchChats(req);
+  }
 }

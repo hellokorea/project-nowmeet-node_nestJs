@@ -6,6 +6,9 @@ class MatchAccept {
 
   @ApiProperty({ example: "2" })
   senderId: number;
+
+  @ApiProperty({ example: "nickname" })
+  senderNickname: string;
 }
 
 class MatchReject {

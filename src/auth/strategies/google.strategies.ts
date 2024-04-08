@@ -5,7 +5,7 @@ import { Strategy, Profile, VerifyCallback } from "passport-google-oauth20";
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
   constructor() {
-    const isDevMode = process.env.Mode === "dev";
+    const isDevMode = process.env.MODE === "dev";
 
     const googleStrategyOptions = isDevMode
       ? {

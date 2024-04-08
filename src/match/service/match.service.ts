@@ -48,6 +48,7 @@ export class MatchService {
     return {
       matchId: newMatchData.id,
       me: newMatchData.sender.id,
+      myNickname: newMatchData.sender.nickname,
       receiverId: newMatchData.receiver.id,
       receiverNickname: receiverNickname,
       matchStatus: newMatchData.status,

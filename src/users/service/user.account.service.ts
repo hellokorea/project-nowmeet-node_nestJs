@@ -217,4 +217,31 @@ export class UserAccountService {
       throw new InternalServerErrorException(`userId: ${loggedId} 번 유저의 계정을 삭제하는 도중 오류가 발생했습니다`);
     }
   }
+
+  //^ test delete match
+  async deleteMatchChats(req: UserRequestDto) {
+    const loggedId = req.user.id;
+    console.log(loggedId);
+    const user = await this.recognizeService.validateUser(loggedId);
+
+    if (!user) {
+      throw new NotFoundException("존재하지 않는 유저 입니다");
+    }
+
+    try {
+      await this.connection.transaction(async (txManager) => {
+        await this.chatMessagesRepository.deleteMsgDataByUserId(txManager, loggedId);
+
+        await this.chatsRepository.deleteChatDataByUserId(txManager, loggedId);
+        await this.chatsRepository.deleteDevChatDataByUserId(txManager, loggedId);
+
+        await this.matchRepository.deleteMatchesByUserId(txManager, loggedId);
+        await this.matchRepository.deleteDevMatchesByUserId(txManager, loggedId);
+      });
+
+      return { message: "테스트 삭제 api 실행" };
+    } catch (e) {
+      throw new InternalServerErrorException("테스트 삭제 api 실패!!!");
+    }
+  }
 }
