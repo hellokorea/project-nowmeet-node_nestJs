@@ -38,18 +38,18 @@ export class AuthJwtService {
     });
 
     const tokenData = await getToken(authCodeBody);
-    const refreshToken = tokenData.refresh_token;
 
-    const bodyRefreshToken = new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    });
+    return tokenData.id_token;
+    // const refreshToken = tokenData.refresh_token;
 
-    const idTokenData = await getToken(bodyRefreshToken);
+    // const bodyRefreshToken = new URLSearchParams({
+    //   client_id: clientId,
+    //   client_secret: clientSecret,
+    //   refresh_token: refreshToken,
+    //   grant_type: "refresh_token",
+    // });
 
-    return idTokenData;
+    // const idTokenData = await getToken(bodyRefreshToken);
   }
 
   //*----------------Apple idToken Logic
