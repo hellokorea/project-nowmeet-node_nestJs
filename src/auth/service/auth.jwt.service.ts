@@ -12,7 +12,7 @@ export class AuthJwtService {
   //*----------------Google idToken Logic
   async makeNewIdTokenGoogle(code: string): Promise<any> {
     const googleTokenEndpoint = "https://oauth2.googleapis.com/token";
-    const clientId = process.env.GOOGLE_WEB_CLIENTID;
+    const clientId = process.env.GOOGLE_WEB_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_WEB_SECRET;
 
     const getToken = async (body: URLSearchParams) => {
@@ -39,8 +39,6 @@ export class AuthJwtService {
 
     const tokenData = await getToken(authCodeBody);
     const refreshToken = tokenData.refresh_token;
-    console.log("토큰 데이타!!!!!!!!!! 1차");
-    console.log(tokenData);
 
     const bodyRefreshToken = new URLSearchParams({
       client_id: clientId,
@@ -50,8 +48,6 @@ export class AuthJwtService {
     });
 
     const idTokenData = await getToken(bodyRefreshToken);
-    console.log("리프레쉬 데이타!!!!!!!!!! 2차");
-    console.log(idTokenData);
 
     return idTokenData;
   }
