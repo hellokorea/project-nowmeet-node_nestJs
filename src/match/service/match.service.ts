@@ -87,6 +87,7 @@ export class MatchService {
       matchStatus: result.status,
       senderId: result.sender.id,
       senderNickname: result.sender.nickname,
+      myNickname: result.receiver.nickname,
       receiverId: result.receiver.id,
     };
   }
@@ -105,6 +106,7 @@ export class MatchService {
       matchStatus: updateMatch.matchStatus,
       senderId: updateMatch.senderId,
       senderNickname: updateMatch.senderNickname,
+      myNickname: updateMatch.myNickname,
     };
 
     const returnChatRoom = {
