@@ -20,7 +20,6 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       console.log("Redis URL:", redisUrl);
 
       console.log("requirePassword:", requirePassword);
-
       return new Promise((res) => {
         res({
           type: "single",
