@@ -41,7 +41,7 @@ export class ChatsRepository {
     return await this.chatsRoomRepository.findOne({ where: { matchId: matchId } });
   }
 
-  async findExpireChats() {
+  async findExpireChats(): Promise<ChatRoom[]> {
     const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
     return this.chatsRoomRepository.find({
       where: {
@@ -51,13 +51,13 @@ export class ChatsRepository {
     });
   }
 
-  async findDisconnectChats() {
+  async findDisconnectChats(): Promise<ChatRoom[]> {
     const currentKoreaTime = moment().tz("Asia/Seoul").toDate();
     return this.chatsRoomRepository.find({ where: { disconnectTime: LessThan(currentKoreaTime), status: "OPEN" } });
   }
 
   //*---Create Logic
-  async createChatRoom(matchId: number, senderId: number, receiverId: number, expireTime: Date) {
+  async createChatRoom(matchId: number, senderId: number, receiverId: number, expireTime: Date): Promise<ChatRoom> {
     return this.chatsRoomRepository.create({
       matchId,
       senderId,

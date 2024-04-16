@@ -15,6 +15,9 @@ import { ScheduleSearchModule } from "./schedule/schedule.module";
 import { RecognizeModule } from "./recognize/recognize.module";
 import { FirebaseModule } from "./firebase/firebase.module";
 import { DatabaseConfigService } from "./database.config.service";
+import { RedisModule as CustomRedisModule } from "@nestjs-modules/ioredis";
+import { RedisConfigService } from "./redis.config.service";
+import { RedisModule } from "./redis/redis.module";
 
 @Module({
   imports: [
@@ -22,6 +25,11 @@ import { DatabaseConfigService } from "./database.config.service";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useClass: DatabaseConfigService,
+      inject: [ConfigService],
+    }),
+    CustomRedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useClass: RedisConfigService,
       inject: [ConfigService],
     }),
     UsersModule,
@@ -33,6 +41,7 @@ import { DatabaseConfigService } from "./database.config.service";
     RecognizeModule,
     ScheduleModule.forRoot(),
     FirebaseModule,
+    RedisModule,
   ],
   exports: [AwsService],
   controllers: [AppController],

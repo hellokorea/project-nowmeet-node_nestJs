@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { ChatsRepository } from "../database/repository/chat.repository";
 import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 import * as moment from "moment";
-import { ChatTimerService } from "./chat.timer.service";
 import { ChatState } from "../database/entity/chat.entity";
+import { RedisService } from "src/redis/redis.service";
 
 @Injectable()
 export class ChatService {
@@ -13,7 +13,7 @@ export class ChatService {
   constructor(
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
-    private readonly chatTimerService: ChatTimerService
+    private readonly redisService: RedisService
   ) {}
 
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
@@ -31,7 +31,7 @@ export class ChatService {
     const newChatRooms = await this.chatsRepository.saveChatData(createChatRoom);
     await this.chatsRepository.saveDevChatData(createDevChatRoom); // Dev
 
-    await this.chatTimerService.setChatRoomExpireTimer(matchId);
+    await this.redisService.publishChatStatus(newChatRooms.id, newChatRooms.status);
 
     return newChatRooms;
   }
@@ -47,7 +47,7 @@ export class ChatService {
     devChatRoom.status = ChatState.OPEN;
     await this.chatsRepository.saveDevChatData(devChatRoom);
 
-    await this.chatTimerService.setChatRoomDisconnectTimer(matchId);
+    await this.redisService.publishChatStatus(openChatRoom.id, openChatRoom.status);
 
     return openChatRoom;
   }

@@ -8,10 +8,11 @@ import { DevChatRoom } from "./database/entity/chat.dev.entity";
 import { AuthModule } from "src/auth/auth.module";
 import { MatchModule } from "src/match/match.module";
 import { RecognizeModule } from "src/recognize/recognize.module";
-import { ChatTimerService } from "./service/chat.timer.service";
+import { ChatStatusUpdaterService } from "./service/chat.status.update.service";
 import { ChatService } from "./service/chat.service";
 import { ChatMessagesRepository } from "./database/repository/chat.message.repository";
 import { ChatsRepository } from "./database/repository/chat.repository";
+import { RedisModule } from "src/redis/redis.module";
 
 @Module({
   imports: [
@@ -20,9 +21,10 @@ import { ChatsRepository } from "./database/repository/chat.repository";
     forwardRef(() => AuthModule),
     forwardRef(() => MatchModule),
     forwardRef(() => RecognizeModule),
+    forwardRef(() => RedisModule),
   ],
-  exports: [ChatTimerService, ChatService, ChatMessagesRepository, ChatsRepository],
+  exports: [ChatStatusUpdaterService, ChatService, ChatMessagesRepository, ChatsRepository],
   controllers: [],
-  providers: [ChatGateway, ChatTimerService, ChatService, ChatMessagesRepository, ChatsRepository],
+  providers: [ChatGateway, ChatStatusUpdaterService, ChatService, ChatMessagesRepository, ChatsRepository],
 })
 export class ChatModule {}

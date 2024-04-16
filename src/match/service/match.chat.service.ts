@@ -1,5 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from "@nestjs/common";
-import { ChatGateway } from "src/chat/gateway/chat.gateway";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { ChatState } from "src/chat/database/entity/chat.entity";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/database/repository/users.repository";
@@ -8,8 +7,8 @@ import * as moment from "moment";
 import { AwsService } from "src/aws.service";
 import { ChatService } from "./../../chat/service/chat.service";
 import { ChatsRepository } from "./../../chat/database/repository/chat.repository";
-import { ChatTimerService } from "./../../chat/service/chat.timer.service";
 import { ChatMessagesRepository } from "./../../chat/database/repository/chat.message.repository";
+import { RedisService } from "src/redis/redis.service";
 
 @Injectable()
 export class MatchChatService {
@@ -19,7 +18,8 @@ export class MatchChatService {
     private readonly chatMessagesRepository: ChatMessagesRepository,
     private readonly chatService: ChatService,
     private readonly recognizeService: RecognizeService,
-    private readonly awsService: AwsService
+    private readonly awsService: AwsService,
+    private readonly redisService: RedisService
   ) {}
 
   async getChatRoomsAllList(req: UserRequestDto) {
@@ -164,13 +164,15 @@ export class MatchChatService {
     if (chat.status === ChatState.SENDER_EXIT || chat.status === ChatState.RECEIVER_EXIT) {
       throw new BadRequestException("이미 나간 채팅방 입니다.");
     }
-    //dev에도 반영해줘야 할듯
+
     try {
       currentUser.id === chat.senderId
         ? (chat.status = ChatState.SENDER_EXIT)
         : (chat.status = ChatState.RECEIVER_EXIT);
 
       await this.chatsRepository.saveChatData(chat);
+
+      await this.redisService.deleteChatKey(chat.id);
 
       return {
         message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,

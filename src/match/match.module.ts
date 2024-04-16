@@ -13,6 +13,7 @@ import { MatchProfileService } from "./service/match.profile.service";
 import { MatchChatService } from "./service/match.chat.service";
 import { MatchBoxService } from "./service/match.chat.box.service";
 import { RecognizeModule } from "src/recognize/recognize.module";
+import { RedisModule } from "src/redis/redis.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RecognizeModule } from "src/recognize/recognize.module";
     forwardRef(() => AuthModule),
     forwardRef(() => RecognizeModule),
     forwardRef(() => AppModule),
+    forwardRef(() => RedisModule),
   ],
   exports: [MatchService, MatchProfileService, MatchRepository],
   controllers: [MatchController],

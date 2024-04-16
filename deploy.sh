@@ -61,6 +61,8 @@ env_vars=(
   APPLE_CLIENT_ID
   clientKeyPath
   firebaseAccount
+  DEV_REDIS_URL
+  PROD_REDIS_URL
 )
 
 

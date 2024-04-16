@@ -9,6 +9,9 @@ class MatchAccept {
 
   @ApiProperty({ example: "nickname" })
   senderNickname: string;
+
+  @ApiProperty({ example: "my nickname" })
+  myNickname: string;
 }
 
 class MatchReject {
