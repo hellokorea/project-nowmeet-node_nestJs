@@ -10,16 +10,18 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
     try {
       const isDevMode = process.env.MODE === "dev";
 
-      const redisUrl = isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
+      const redisUrlKey = isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
 
-      console.log("레디스 url", redisUrl);
-      console.log(process.env.PROD_REDIS_URL);
-      console.log(process.env.PROD_REDIS_URL);
+      const redisUrl = this.configService.get<string>(redisUrlKey);
+
+      console.log(isDevMode);
+      console.log("Redis URL Key:", redisUrlKey);
+      console.log("Redis URL:", redisUrl);
 
       return new Promise((res) => {
         res({
           type: "single",
-          url: this.configService.get<string>(redisUrl),
+          url: redisUrl,
         });
       });
     } catch (e) {
