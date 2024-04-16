@@ -13,7 +13,7 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       const redisUrlKey = isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
 
       const redisUrl = this.configService.get<string>(redisUrlKey);
-      console.log(redisUrl);
+      console.log(redisUrl); //
       // const requirePassword = this.configService.get<string>("PROD_REDIS_PASSWORD");
       // console.log(requirePassword);
 
