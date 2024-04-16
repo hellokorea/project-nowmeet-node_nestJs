@@ -63,6 +63,7 @@ env_vars=(
   firebaseAccount
   DEV_REDIS_URL
   PROD_REDIS_URL
+  PROD_REDIS_PASSWORD
 )
 
 
