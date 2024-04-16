@@ -14,6 +14,7 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
 
       console.log("레디스 url", redisUrl);
       console.log(process.env.PROD_REDIS_URL);
+      console.log(process.env.PROD_REDIS_URL);
 
       return new Promise((res) => {
         res({
