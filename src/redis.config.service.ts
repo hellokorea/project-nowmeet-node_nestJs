@@ -12,6 +12,8 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
 
       const redisUrl = isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
 
+      console.log("레디스 url", redisUrl);
+
       return new Promise((res) => {
         res({
           type: "single",
