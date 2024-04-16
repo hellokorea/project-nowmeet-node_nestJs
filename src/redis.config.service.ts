@@ -20,7 +20,7 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       return new Promise((res) => {
         res({
           type: "single",
-          url: redisUrl,
+          url: "redis://:83229577@172.31.45.45:6379/0",
         });
       });
     } catch (e) {
