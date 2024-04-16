@@ -15,11 +15,6 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       const redisUrl = this.configService.get<string>(redisUrlKey);
       const requirePassword = this.configService.get<string>("PROD_REDIS_PASSWORD");
 
-      console.log("Redis URL Key:", redisUrlKey);
-
-      console.log("Redis URL:", redisUrl);
-
-      console.log("requirePassword:", requirePassword);
       return new Promise((res) => {
         res({
           type: "single",
