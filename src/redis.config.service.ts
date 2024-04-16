@@ -15,6 +15,7 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       const redisUrl = this.configService.get<string>(redisUrlKey);
 
       console.log("Redis URL Key:", redisUrlKey);
+
       console.log("Redis URL:", redisUrl);
 
       return new Promise((res) => {
