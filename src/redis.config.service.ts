@@ -13,15 +13,14 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
       const redisUrlKey = isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
 
       const redisUrl = this.configService.get<string>(redisUrlKey);
-      const requirePassword = this.configService.get<string>("PROD_REDIS_PASSWORD");
+      console.log(redisUrl);
+      // const requirePassword = this.configService.get<string>("PROD_REDIS_PASSWORD");
+      // console.log(requirePassword);
 
       return new Promise((res) => {
         res({
           type: "single",
           url: redisUrl,
-          options: {
-            password: requirePassword,
-          },
         });
       });
     } catch (e) {
