@@ -38,6 +38,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
       });
     } catch (e) {
       console.error(e);
+
       throw new InternalServerErrorException("DB Connect Failed");
     }
   }
