@@ -3,6 +3,7 @@ import { InjectRedis } from "@nestjs-modules/ioredis";
 import Redis from "ioredis";
 import { ChatState } from "src/chat/database/entity/chat.entity";
 import { ChatsRepository } from "src/chat/database/repository/chat.repository";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class RedisService implements OnModuleInit {
@@ -12,12 +13,20 @@ export class RedisService implements OnModuleInit {
   private PROD_TIME = 24 * 60 * 60 * 1000;
   private TEST_TIME = 120;
 
+  private isDevMode = process.env.MODE === "dev";
+  private redisUrlKey = this.isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
+  private redisUrl = this.configService.get<string>(this.redisUrlKey);
+
   constructor(
     @InjectRedis() private readonly redis: Redis,
-    private readonly chatsRepository: ChatsRepository
+    private readonly chatsRepository: ChatsRepository,
+    private configService: ConfigService
   ) {
-    this.subscriber = new Redis(); // 구독용
-    this.publisher = redis; // 명령용
+    this.subscriber = new Redis(this.redisUrl); // 구독용
+    this.publisher = new Redis(this.redisUrl); // 명령용
+
+    console.log("Service 연결 시킬 레디스 url ", this.redisUrl);
+    console.log("Service 연결 시킬 레디스 키", this.redisUrlKey);
   }
 
   async onModuleInit() {

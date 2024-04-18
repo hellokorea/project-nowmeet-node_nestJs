@@ -16,6 +16,8 @@ export class RedisConfigService implements RedisModuleOptionsFactory {
 
       return new Promise((res) => {
         console.log("연결 시킬 레디스 url", redisUrl);
+        console.log("연결 시킬 레디스 키", redisUrlKey);
+
         res({
           type: "single",
           url: redisUrl,
