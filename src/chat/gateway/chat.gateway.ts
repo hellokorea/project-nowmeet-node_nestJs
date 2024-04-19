@@ -21,13 +21,6 @@ import { ChatsRepository } from "../database/repository/chat.repository";
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  constructor(
-    private readonly chatsRepository: ChatsRepository,
-    private readonly chatMessagesRepository: ChatMessagesRepository,
-    @Inject(forwardRef(() => RecognizeService))
-    private readonly recognizeService: RecognizeService
-  ) {}
-
   // Send Message Status
   private statusMessages = {
     [ChatState.PENDING]: "채팅이 연결 되었습니다",
@@ -39,6 +32,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     [ChatState.EXPIRE_END]: "채팅방 오픈 가능 시간이 만료되어 종료 되었습니다",
     [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
   };
+
+  constructor(
+    private readonly chatsRepository: ChatsRepository,
+    private readonly chatMessagesRepository: ChatMessagesRepository,
+    @Inject(forwardRef(() => RecognizeService))
+    private readonly recognizeService: RecognizeService
+  ) {}
 
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;

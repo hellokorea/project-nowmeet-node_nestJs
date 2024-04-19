@@ -45,7 +45,7 @@ import { RedisModule } from "./redis/redis.module";
   ],
   exports: [AwsService],
   controllers: [AppController],
-  providers: [AppService, AwsService, DatabaseConfigService],
+  providers: [AppService, AwsService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

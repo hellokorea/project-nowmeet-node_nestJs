@@ -22,8 +22,8 @@ export class RedisService implements OnModuleInit {
     private readonly chatsRepository: ChatsRepository,
     private configService: ConfigService
   ) {
-    this.subscriber = new Redis(this.redisUrl); // 구독용
-    this.publisher = new Redis(this.redisUrl); // 명령용
+    this.subscriber = new Redis(this.redisUrl);
+    this.publisher = new Redis(this.redisUrl);
 
     console.log("Service 연결 시킬 레디스 url ", this.redisUrl);
     console.log("Service 연결 시킬 레디스 키", this.redisUrlKey);
@@ -91,9 +91,35 @@ export class RedisService implements OnModuleInit {
   async deleteChatKey(chatId: number) {
     const key = `chat:${chatId}`;
 
-    await this.redis.del(key);
+    try {
+      await this.redis.del(key);
+      console.log("삭제 된 redis chatId :", key);
+      return;
+    } catch (e) {
+      throw new InternalServerErrorException("redis chatId key 삭제 실패");
+    }
+  }
 
-    console.log("삭제 된 redis chatId :", key);
-    return;
+  // Redis Geo Add Logic
+  async updateUserLocation(userId: number, lon: number, lat: number) {
+    const key: string = "user_locations";
+    const uniqueId: string = `user:${userId}`;
+
+    try {
+      await this.redis.geoadd(key, lon, lat, uniqueId);
+      console.log(`key : ${key}, 유저 id : ${uniqueId}, 경도 : ${lon}, 위도 : ${lat}`);
+    } catch (e) {
+      throw new InternalServerErrorException("redis 위, 경도 업데이트 실패");
+    }
+  }
+
+  // Redis Geospatial Logic
+  async findNearRedisbyUsers(lon: number, lat: number, radius: number) {
+    try {
+      const key: string = "user_locations";
+      return await this.redis.georadius(key, lon, lat, radius, "km", "WITHCOORD", "WITHDIST");
+    } catch (e) {
+      throw new InternalServerErrorException("redis 유저 반경 탐색 실패");
+    }
   }
 }

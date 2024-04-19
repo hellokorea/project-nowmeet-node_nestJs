@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, forwardRef, Inject, Injectable } from "@nestjs/common";
 import { UsersRepository } from "../database/repository/users.repository";
 import { AwsService } from "src/aws.service";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
@@ -6,14 +6,19 @@ import { UserProfileResponseDto } from "../dtos/response/user.profile.dto";
 import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { MatchProfileService } from "src/match/service/match.profile.service";
+import { RedisService } from "src/redis/redis.service";
+import { User } from "../database/entity/users.entity";
 
 @Injectable()
 export class UserMapService {
+  private SEARCH_BOUNDARY = Number(process.env.SEARCH_BOUNDARY);
+
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly awsService: AwsService,
     private readonly recognizeService: RecognizeService,
-    private readonly matchProfileService: MatchProfileService
+    private readonly matchProfileService: MatchProfileService,
+    private readonly redisService: RedisService
   ) {}
 
   async refreshUserLocation(lon: string, lat: string, req: UserRequestDto, request: Request) {
@@ -28,19 +33,28 @@ export class UserMapService {
     }
 
     try {
-      const findMyLocation = await this.usersRepository.findOneUserLocation(user.id);
+      // 둘다 업데이트
+      await this.redisService.updateUserLocation(user.id, lonNumber, latNumber);
+      await this.usersRepository.updateUserLocation(user.id, lonNumber, latNumber);
 
-      if (!findMyLocation) {
-        user.longitude = lonNumber;
-        user.latitude = latNumber;
+      // redis에서 조회
+      const redisSearch = await this.redisService.findNearRedisbyUsers(lonNumber, latNumber, this.SEARCH_BOUNDARY);
+      console.log("redis 서치 : ", redisSearch);
+
+      const userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
+
+      console.log("ids : ", userIds);
+
+      // redis 리턴된 userIds로 유저 정보 검색
+      let nearbyUsers = await this.usersRepository.findByUserIds(userIds);
+
+      // 나 밖에 없거나 redis에 데이터가 없을 때
+      if (!nearbyUsers.length) {
+        nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
+        console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
       }
 
-      const refreshLocation = await this.usersRepository.refreshUserLocation(user.id, lonNumber, latNumber);
-
-      const SEARCH_BOUNDARY = Number(process.env.SEARCH_BOUNDARY);
-
-      const nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, SEARCH_BOUNDARY);
-
+      //
       const responseUserPromises = nearbyUsers.map(async (user) => {
         const nearbyUsersMatchStatus = await this.matchProfileService.getMatchStatus(user.id, loggedId);
         const userInfo = new UserProfileResponseDto(user);
@@ -76,8 +90,8 @@ export class UserMapService {
 
       return {
         myId: user.id,
-        myLongitude: refreshLocation.longitude,
-        myLatitude: refreshLocation.latitude,
+        myLongitude: user.longitude,
+        myLatitude: user.latitude,
         nearbyUsers: filteredResponseUserList,
       };
     } catch (e) {
@@ -97,7 +111,8 @@ export class UserMapService {
       throw new BadRequestException("유효하지 않는 좌표 값입니다.");
     }
 
-    if (lonNumber < -180 || lonNumber > 180 || latNumber < -90 || latNumber > 90) {
+    // redis 위도 값 범위
+    if (lonNumber < -180 || lonNumber > 180 || latNumber < -85.05112878 || latNumber > 85.05112878) {
       throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < lon < 180 / -90 < lan < 90");
     }
 

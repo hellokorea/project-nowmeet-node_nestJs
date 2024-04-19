@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "../entity/users.entity";
-import { EntityManager, FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, In, Repository } from "typeorm";
 import { UserCreateDto } from "../../dtos/request/users.create.dto";
 
 @Injectable()
@@ -18,6 +18,14 @@ export class UsersRepository {
       where: { id },
     };
     return await this.usersRepository.findOne(option);
+  }
+
+  async findByUserIds(ids: number[]): Promise<User[] | null> {
+    return await this.usersRepository.find({
+      where: {
+        id: In(ids),
+      },
+    });
   }
 
   async findOneByNickname(nickname: string): Promise<User | null> {
@@ -50,7 +58,7 @@ export class UsersRepository {
     return await this.usersRepository.findOne(option);
   }
 
-  async refreshUserLocation(id: number, lon: number, lan: number): Promise<User | null> {
+  async updateUserLocation(id: number, lon: number, lan: number): Promise<User | null> {
     const userLocation = await this.usersRepository.findOne({ where: { id } });
 
     userLocation.latitude = lan;

@@ -23,7 +23,7 @@ import { RedisModule } from "src/redis/redis.module";
     forwardRef(() => RecognizeModule),
     forwardRef(() => RedisModule),
   ],
-  exports: [ChatStatusUpdaterService, ChatService, ChatMessagesRepository, ChatsRepository],
+  exports: [ChatService, ChatMessagesRepository, ChatsRepository],
   controllers: [],
   providers: [ChatGateway, ChatStatusUpdaterService, ChatService, ChatMessagesRepository, ChatsRepository],
 })
