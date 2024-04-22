@@ -17,6 +17,8 @@ export class RedisService implements OnModuleInit {
   private redisUrlKey = this.isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
   private redisUrl = this.configService.get<string>(this.redisUrlKey);
 
+  private locationsKey = "user_locations";
+
   constructor(
     @InjectRedis() private readonly redis: Redis,
     private readonly chatsRepository: ChatsRepository,
@@ -39,8 +41,10 @@ export class RedisService implements OnModuleInit {
 
     this.subscriber.on("message", async (channel, message) => {
       const handler = messageHandler[channel];
+      const isChatSub = message.split(":")[0] === "chat";
 
-      if (handler) {
+      if (handler && isChatSub) {
+        console.log("챗 스테이터스 구독 함수 실행!");
         await handler.call(this, message);
       }
     });
@@ -50,9 +54,15 @@ export class RedisService implements OnModuleInit {
   async handlerSubChatExpire(message: string) {
     const chatId: number = parseInt(message.split(":")[1]);
 
-    const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
-
+    console.log(chatId);
     try {
+      const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
+      console.log(chat);
+      if (!chat) {
+        console.log("chat없으므로 구독 함수 정상 종료");
+        return;
+      }
+
       if (chat.status === ChatState.PENDING) {
         if (chat) {
           chat.status = ChatState.EXPIRE_END;
@@ -71,7 +81,7 @@ export class RedisService implements OnModuleInit {
 
       return;
     } catch (e) {
-      throw new InternalServerErrorException("레디스 Expire 구독에 실패 했습니다.");
+      throw new InternalServerErrorException("레디스 Expire 구독에 실패 했습니다.", e);
     }
   }
 
@@ -96,30 +106,37 @@ export class RedisService implements OnModuleInit {
       console.log("삭제 된 redis chatId :", key);
       return;
     } catch (e) {
-      throw new InternalServerErrorException("redis chatId key 삭제 실패");
+      throw new InternalServerErrorException("redis chatId key 삭제 실패", e);
     }
   }
 
   // Redis Geo Add Logic
   async updateUserLocation(userId: number, lon: number, lat: number) {
-    const key: string = "user_locations";
-    const uniqueId: string = `user:${userId}`;
-
     try {
-      await this.redis.geoadd(key, lon, lat, uniqueId);
-      console.log(`key : ${key}, 유저 id : ${uniqueId}, 경도 : ${lon}, 위도 : ${lat}`);
+      const member: string = `user:${userId}`;
+      await this.redis.geoadd(this.locationsKey, lon, lat, member);
+      console.log(`key : ${this.locationsKey}, 유저 id : ${member}, 경도 : ${lon}, 위도 : ${lat}`);
     } catch (e) {
-      throw new InternalServerErrorException("redis 위, 경도 업데이트 실패");
+      throw new InternalServerErrorException("redis 위, 경도 업데이트 실패", e);
     }
   }
 
   // Redis Geospatial Logic
   async findNearRedisbyUsers(lon: number, lat: number, radius: number) {
     try {
-      const key: string = "user_locations";
-      return await this.redis.georadius(key, lon, lat, radius, "km", "WITHCOORD", "WITHDIST");
+      return await this.redis.georadius(this.locationsKey, lon, lat, radius, "km", "WITHCOORD", "WITHDIST");
     } catch (e) {
-      throw new InternalServerErrorException("redis 유저 반경 탐색 실패");
+      throw new InternalServerErrorException("redis 유저 반경 탐색 실패", e);
+    }
+  }
+
+  // 유저 계정 삭제 시 멤버 삭제
+  async deleteMember(userId: number) {
+    try {
+      const member: string = `user:${userId}`;
+      await this.redis.zrem(this.locationsKey, member);
+    } catch (e) {
+      throw new InternalServerErrorException("redis 멤버 삭제 실패", e);
     }
   }
 }

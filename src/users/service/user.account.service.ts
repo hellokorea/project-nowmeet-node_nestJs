@@ -15,6 +15,7 @@ import { UpdateIntroduceDto, UpdateJobDto, UpdatePreferenceDto } from "../dtos/r
 import { RecognizeService } from "../../recognize/recognize.service";
 import { ChatsRepository } from "./../../chat/database/repository/chat.repository";
 import { ChatMessagesRepository } from "./../../chat/database/repository/chat.message.repository";
+import { RedisService } from "src/redis/redis.service";
 
 @Injectable()
 export class UserAccountService {
@@ -26,7 +27,8 @@ export class UserAccountService {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
     private readonly connection: Connection,
-    private readonly awsService: AwsService
+    private readonly awsService: AwsService,
+    private readonly redisService: RedisService
   ) {}
 
   async getMyUserInfo(req: UserRequestDto) {
@@ -198,6 +200,8 @@ export class UserAccountService {
 
     try {
       await this.connection.transaction(async (txManager) => {
+        await this.redisService.deleteMember(user.id);
+
         await this.chatMessagesRepository.deleteMsgDataByUserId(txManager, loggedId);
 
         await this.chatsRepository.deleteChatDataByUserId(txManager, loggedId);

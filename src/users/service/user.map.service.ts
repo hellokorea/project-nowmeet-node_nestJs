@@ -7,7 +7,6 @@ import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { MatchProfileService } from "src/match/service/match.profile.service";
 import { RedisService } from "src/redis/redis.service";
-import { User } from "../database/entity/users.entity";
 
 @Injectable()
 export class UserMapService {

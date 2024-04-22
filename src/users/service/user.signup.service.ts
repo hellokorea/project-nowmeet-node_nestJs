@@ -16,9 +16,13 @@ export class UserSignupService {
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
     const headrsAuth = (request.headers as { authorization?: string }).authorization;
-    const token = headrsAuth.split(" ")[1];
-    const decoded = jwt.decode(token);
 
+    console.log("request.headers :", request.headers);
+    console.log("headrsAuth : ", headrsAuth);
+    const token = headrsAuth.split(" ")[1];
+    console.log("token :", token);
+
+    const decoded = jwt.decode(token);
     const issuer = (decoded as jwt.JwtPayload).iss;
 
     if (!issuer) {
