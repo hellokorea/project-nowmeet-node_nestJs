@@ -56,6 +56,8 @@ export class UserSignupService {
       }
     }
 
+    console.log("issuer :", issuer);
+
     const isExistNickname = await this.usersRepository.findOneByNickname(nickname);
 
     if (isExistNickname) {
