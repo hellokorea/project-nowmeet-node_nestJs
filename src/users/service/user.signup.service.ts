@@ -15,11 +15,11 @@ export class UserSignupService {
     // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =  body;
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
-    const headrsAuth = (request.headers as { authorization?: string }).authorization;
+    const headersAuth = (request.headers as { authorization?: string }).authorization;
 
     console.log("request.headers :", request.headers);
-    console.log("headrsAuth : ", headrsAuth);
-    const token = headrsAuth.split(" ")[1];
+    console.log("headrsAuth : ", headersAuth);
+    const token = headersAuth.split(" ")[1];
     console.log("token :", token);
 
     const decoded = jwt.decode(token);
