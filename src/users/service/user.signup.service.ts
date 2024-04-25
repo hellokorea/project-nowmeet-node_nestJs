@@ -19,6 +19,7 @@ export class UserSignupService {
     let email: string;
     let sub: string;
 
+    // 리팩토링 필요
     const OSinfoParser = JSON.parse(bodyData.OSinfo);
 
     console.log("OSinfoParser :", OSinfoParser);
@@ -41,6 +42,7 @@ export class UserSignupService {
         const randomAlg1 = Date.now().toString().slice(0, 5);
         const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
         email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();
+        console.log("bodyData IOS:", email);
       } else {
         //Don't Hide
         email = appleEmail;
@@ -78,7 +80,11 @@ export class UserSignupService {
         profileImages: userFilesKeys,
       });
 
-      return users;
+      return {
+        users,
+        idToken: OSinfoParser.idToken,
+        identityToken: OSinfoParser.identityToken,
+      };
     } catch (e) {
       console.error("signup :", e);
       throw new InternalServerErrorException("회원 가입에 실패 했습니다.");
