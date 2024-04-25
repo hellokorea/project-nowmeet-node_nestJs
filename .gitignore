@@ -2,6 +2,7 @@ node_modules
 AppleSecretKey.p8
 FirebaseAdminKey.json
 .DS_Store
+.prettierignore
 
 # Logs
 logs
