@@ -1,6 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
-import { UserCreateDto } from "../dtos/request/users.create.dto";
-import * as jwt from "jsonwebtoken";
+import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { UsersRepository } from "../database/repository/users.repository";
 import { AwsService } from "src/aws.service";
 
@@ -11,39 +9,26 @@ export class UserSignupService {
     private readonly awsService: AwsService
   ) {}
 
-  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>, request: Request) {
-    // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =  body;
+  async createUser(body: any, files: Array<Express.Multer.File>, request: Request) {
+    // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =body;
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
-    const headersAuth = (request.headers as { authorization?: string }).authorization;
-
-    console.log("request.headers :", request.headers);
-    console.log("headrsAuth : ", headersAuth);
-    const token = headersAuth.split(" ")[1];
-    console.log("token :", token);
-
-    const decoded = jwt.decode(token);
-    const issuer = (decoded as jwt.JwtPayload).iss;
-
-    if (!issuer) {
-      throw new UnauthorizedException("유효하지 않는 토큰 발급자 입니다.");
-    }
+    console.log("body :", body);
+    const bodyData = body;
+    console.log("bodyData :", bodyData);
 
     let email: string;
     let sub: string;
 
     // Google user
-    if (issuer.includes("accounts.google.com")) {
-      email = (decoded as jwt.JwtPayload).email;
+    if (bodyData.OS === "android") {
+      email = bodyData.OSINFO.email;
     }
 
     // Apple user
-    if (issuer.includes("appleid.apple.com")) {
-      sub = (decoded as jwt.JwtPayload).sub;
-
-      const appleEmail = (decoded as jwt.JwtPayload).email;
-
-      console.log(`apple Email : \n ${appleEmail}`);
+    if (bodyData.OS === "ios") {
+      sub = bodyData.OSINFO.user;
+      const appleEmail = bodyData.OSINFO.email;
 
       if (appleEmail === null) {
         //Hide
@@ -55,8 +40,6 @@ export class UserSignupService {
         email = appleEmail;
       }
     }
-
-    console.log("issuer :", issuer);
 
     const isExistNickname = await this.usersRepository.findOneByNickname(nickname);
 

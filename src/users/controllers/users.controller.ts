@@ -12,7 +12,6 @@ import {
   Delete,
 } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
-import { UserCreateDto } from "../dtos/request/users.create.dto";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
@@ -28,7 +27,6 @@ import { GoogleGuard, CustomJwtGuards } from "src/auth/jwt/jwt.guard";
 import { UserSignupService } from "../service/user.signup.service";
 import { UserMapService } from "../service/user.map.service";
 import { UserAccountService } from "../service/user.account.service";
-import { request } from "http";
 
 @ApiBearerAuth()
 @Controller("users")
@@ -44,7 +42,7 @@ export class UsersController {
   @ApiOperation({ summary: "회원가입" })
   @UseInterceptors(FilesInterceptor("profileImages"))
   @Post("signup")
-  createUser(@Body() body: UserCreateDto, @UploadedFiles() files: Array<Express.Multer.File>, @Req() request: Request) {
+  createUser(@Body() body: any, @UploadedFiles() files: Array<Express.Multer.File>, @Req() request: Request) {
     return this.userSignupService.createUser(body, files, request);
   }
 
