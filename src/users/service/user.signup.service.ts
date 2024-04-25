@@ -19,19 +19,22 @@ export class UserSignupService {
     let email: string;
     let sub: string;
 
-    console.log("OSinfo : ", bodyData.OSinfo);
-    console.log("OSinfo.user : ", bodyData.OSinfo.user);
+    const OSinfoParser = JSON.parse(bodyData.OSinfo);
 
-    if (bodyData.OSinfo.idToken) {
+    console.log("OSinfoParser :", OSinfoParser);
+
+    if (OSinfoParser.idToken) {
+      console.log("--- 구글 사용 유저 ---");
       // Google user
-      email = bodyData.OSinfo.user.email;
+      email = OSinfoParser.user.email;
       console.log("bodyData Google:", email);
     }
 
-    if (bodyData.OSinfo.identityToken) {
+    if (OSinfoParser.identityToken) {
+      console.log("--- 애플 사용 유저 ---");
       // Apple user
-      sub = bodyData.OSinfo.user;
-      const appleEmail = bodyData.OSinfo.email;
+      sub = OSinfoParser.user;
+      const appleEmail = OSinfoParser.email;
 
       if (appleEmail === null) {
         //Hide
