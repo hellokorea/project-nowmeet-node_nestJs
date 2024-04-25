@@ -22,13 +22,14 @@ export class UserSignupService {
 
     // Google user
     if (bodyData.OS === "android") {
-      email = bodyData.OSINFO.email;
+      email = bodyData.OSinfo.email;
+      console.log("bodyData :", email);
     }
 
     // Apple user
     if (bodyData.OS === "ios") {
-      sub = bodyData.OSINFO.user;
-      const appleEmail = bodyData.OSINFO.email;
+      sub = bodyData.OSinfo.user;
+      const appleEmail = bodyData.OSinfo.email;
 
       if (appleEmail === null) {
         //Hide
@@ -38,6 +39,7 @@ export class UserSignupService {
       } else {
         //Don't Hide
         email = appleEmail;
+        console.log("bodyData IOS:", email);
       }
     }
 
