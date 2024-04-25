@@ -22,13 +22,13 @@ export class UserSignupService {
     console.log("OSinfo : ", bodyData.OSinfo);
     console.log("OSinfo.user : ", bodyData.OSinfo.user);
 
-    if (!bodyData.OSinfo.user) {
+    if (bodyData.OSinfo.idToken) {
       // Google user
       email = bodyData.OSinfo.user.email;
       console.log("bodyData Google:", email);
     }
 
-    if (bodyData.OSinfo.user) {
+    if (bodyData.OSinfo.identityToken) {
       // Apple user
       sub = bodyData.OSinfo.user;
       const appleEmail = bodyData.OSinfo.email;
