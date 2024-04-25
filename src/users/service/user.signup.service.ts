@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { UsersRepository } from "../database/repository/users.repository";
 import { AwsService } from "src/aws.service";
+import { UserCreateDto } from "../dtos/request/users.create.dto";
 
 @Injectable()
 export class UserSignupService {
@@ -9,7 +10,7 @@ export class UserSignupService {
     private readonly awsService: AwsService
   ) {}
 
-  async createUser(body: any, files: Array<Express.Multer.File>, request: Request) {
+  async createUser(body: UserCreateDto, files: Array<Express.Multer.File>, request: Request) {
     // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =body;
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
@@ -19,20 +20,16 @@ export class UserSignupService {
     let email: string;
     let sub: string;
 
-    // 리팩토링 필요
     const OSinfoParser = JSON.parse(bodyData.OSinfo);
 
     console.log("OSinfoParser :", OSinfoParser);
 
     if (OSinfoParser.idToken) {
-      console.log("--- 구글 사용 유저 ---");
       // Google user
       email = OSinfoParser.user.email;
-      console.log("bodyData Google:", email);
     }
 
     if (OSinfoParser.identityToken) {
-      console.log("--- 애플 사용 유저 ---");
       // Apple user
       sub = OSinfoParser.user;
       const appleEmail = OSinfoParser.email;
@@ -42,11 +39,9 @@ export class UserSignupService {
         const randomAlg1 = Date.now().toString().slice(0, 5);
         const randomAlg2 = Math.floor(Math.random() * 89999 + 10000);
         email = (randomAlg1 + randomAlg2 + "@icloud.com").toString();
-        console.log("bodyData IOS:", email);
       } else {
         //Don't Hide
         email = appleEmail;
-        console.log("bodyData IOS:", email);
       }
     }
 
