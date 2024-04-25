@@ -22,7 +22,7 @@ export class UserSignupService {
 
     // Google user
     if (bodyData.OS === "android") {
-      email = bodyData.OSinfo.email;
+      email = bodyData.OSinfo.user.email;
       console.log("bodyData :", email);
     }
 

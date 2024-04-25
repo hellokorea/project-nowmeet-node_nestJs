@@ -17,10 +17,7 @@ export class CustomJwtGuards implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    console.log("Guard request :", request);
     const authHeader = request.headers.authorization;
-
-    console.log("Guard authHeader :", authHeader);
 
     if (!authHeader) {
       throw new UnauthorizedException("Authorization header is missing");
@@ -31,8 +28,6 @@ export class CustomJwtGuards implements CanActivate {
       throw new UnauthorizedException("Bearer token is missing");
     }
 
-    console.log("Guard token :", token);
-
     const decoded = jwt.decode(token);
     if (!decoded || typeof decoded !== "object") {
       throw new UnauthorizedException("Invalid token");
@@ -42,8 +37,6 @@ export class CustomJwtGuards implements CanActivate {
     if (!issuer) {
       throw new UnauthorizedException("Issuer is missing in token");
     }
-
-    console.log("Guard issuer :", issuer);
 
     try {
       if (issuer.includes("accounts.google.com")) {
