@@ -43,12 +43,14 @@ paw : 12345
 ## ☑️ 프로젝트 핵심 기능
 
 <img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/e3021c61-5d7a-4b50-b05b-8f985a8d1ad8" width="250" heigth="100%">)
+- 현재 내 주변에 있는 이성의 프로필을 바로 조회할 수 있습니다.
 
-> - 현재 내 주변에 있는 이성의 프로필을 바로 조회할 수 있습니다.
->   <img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/5dc9cea4-53ba-4b48-9e98-ce76fc97d0d0" width="250" heigth="100%">)
-> - 유저 프로필 조회 후 좋아요를 전송 할 수 있습니다.
->   <img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/049b1c84-83b2-49fc-9fac-3675f561ccbd" width="250" heigth="100%">)
-> - 수락, 거절을 통해 매칭 결과를 결정합니다.
->   <img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/71eeac5c-09c5-48fd-9d70-5216d622e466" width="250" heigth="100%">)
->   <img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/edb6f772-86c7-49d3-a453-9c85b9255cc2" width="250" heigth="100%">)
+<img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/5dc9cea4-53ba-4b48-9e98-ce76fc97d0d0" width="250" heigth="100%">)
+- 유저 프로필 조회 후 좋아요를 전송 할 수 있습니다.
+
+<img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/049b1c84-83b2-49fc-9fac-3675f561ccbd" width="250" heigth="100%">)
+- 수락, 거절을 통해 매칭 결과를 결정합니다.
+
+<img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/71eeac5c-09c5-48fd-9d70-5216d622e466" width="250" heigth="100%">)
+<img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/edb6f772-86c7-49d3-a453-9c85b9255cc2" width="250" heigth="100%">)
 > - 매칭 성사 시 채팅방이 생기고, 대화 열기를 통해 채팅을 할 수 있습니다.
