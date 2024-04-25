@@ -13,21 +13,23 @@ export class UserSignupService {
     // let { email, nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude, sub, fcmToken } =body;
     let { nickname, sex, birthDate, tall, job, introduce, preference, longitude, latitude } = body;
 
-    console.log("body :", body);
     const bodyData = body;
     console.log("bodyData :", bodyData);
 
     let email: string;
     let sub: string;
 
-    // Google user
-    if (bodyData.OS === "android") {
+    console.log("OSinfo : ", bodyData.OSinfo);
+    console.log("OSinfo.user : ", bodyData.OSinfo.user);
+
+    if (!bodyData.OSinfo.user) {
+      // Google user
       email = bodyData.OSinfo.user.email;
-      console.log("bodyData :", email);
+      console.log("bodyData Google:", email);
     }
 
-    // Apple user
-    if (bodyData.OS === "ios") {
+    if (bodyData.OSinfo.user) {
+      // Apple user
       sub = bodyData.OSinfo.user;
       const appleEmail = bodyData.OSinfo.email;
 
