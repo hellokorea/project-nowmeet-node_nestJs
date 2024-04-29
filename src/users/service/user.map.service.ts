@@ -35,28 +35,19 @@ export class UserMapService {
         isTokenPromise,
       ]);
 
-      // redis에서 조회
       const redisSearch = await this.redisService.findNearRedisbyUsers(lonNumber, latNumber, this.SEARCH_BOUNDARY);
-      console.log("redis 서치 : ", redisSearch);
-
       const userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
 
-      console.log("ids : ", userIds);
-
-      // redis 리턴된 userIds로 유저 정보 검색
       let nearbyUsers = await this.usersRepository.findByUserIds(userIds);
-
       nearbyUsers = nearbyUsers.filter((nearbyUser) => !nearbyUser.ghostMode && nearbyUser.id !== loggedId);
 
       console.log("nearbyUsers :", nearbyUsers);
 
-      // 나 밖에 없거나 redis에 데이터가 없을 때
       if (!nearbyUsers.length) {
         nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
         console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
       }
 
-      //
       const responseUserPromises = nearbyUsers.map(async (user) => {
         const nearbyUsersMatchStatus = await this.matchProfileService.getMatchStatus(user.id, loggedId);
         const userInfo = new UserProfileResponseDto(user);
@@ -69,15 +60,8 @@ export class UserMapService {
       const responseUserList = await Promise.all(responseUserPromises);
 
       const filteredResponseUserList = responseUserList.filter(
-        (responseUser) =>
-          user.nickname !== responseUser.nickname && responseUser.ghostMode === false && user.sex !== responseUser.sex
+        (responseUser) => user.nickname !== responseUser.nickname && user.sex !== responseUser.sex
       );
-
-      console.log("filteredResponseUserList :", filteredResponseUserList);
-
-      if (!filteredResponseUserList.length) {
-        return null;
-      }
 
       const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
       const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
@@ -92,11 +76,13 @@ export class UserMapService {
         currentIndex += numProfileImages;
       });
 
+      const nearUsers = filteredResponseUserList.length > 0 ? filteredResponseUserList : null;
+
       return {
         myId: user.id,
         myLongitude: user.longitude,
         myLatitude: user.latitude,
-        nearbyUsers: filteredResponseUserList,
+        nearbyUsers: nearUsers,
       };
     } catch (e) {
       console.error("refreshLocation error :", e);
