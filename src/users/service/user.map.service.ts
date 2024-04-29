@@ -64,35 +64,26 @@ export class UserMapService {
           user.nickname !== responseUser.nickname && user.sex !== responseUser.sex && !responseUser.ghostMode
       );
 
-      let nearUsers;
+      if (filteredResponseUserList.length > 0) {
+        const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
+        const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
 
-      if (!filteredResponseUserList.length) {
-        nearUsers = null;
-        return;
+        let currentIndex = 0;
+
+        filteredResponseUserList.forEach((user) => {
+          const numProfileImages = user.profileImages.length;
+          const userUrls = preSignedUrl.slice(currentIndex, currentIndex + numProfileImages);
+
+          user.PreSignedUrl = userUrls;
+          currentIndex += numProfileImages;
+        });
       }
-
-      const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
-      const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
-
-      let currentIndex = 0;
-
-      filteredResponseUserList.forEach((user) => {
-        const numProfileImages = user.profileImages.length;
-        const userUrls = preSignedUrl.slice(currentIndex, currentIndex + numProfileImages);
-
-        user.PreSignedUrl = userUrls;
-        currentIndex += numProfileImages;
-      });
-
-      nearUsers = filteredResponseUserList;
-
-      console.log("nearUsers :", nearUsers);
 
       return {
         myId: user.id,
         myLongitude: user.longitude,
         myLatitude: user.latitude,
-        nearbyUsers: nearUsers,
+        nearbyUsers: filteredResponseUserList,
       };
     } catch (e) {
       console.error("refreshLocation error :", e);
