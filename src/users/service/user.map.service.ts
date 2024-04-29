@@ -26,27 +26,20 @@ export class UserMapService {
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     const fcmtoken = request.headers["fcmtoken"];
-    let tokenSavePromise;
-
-    if (fcmtoken) {
-      tokenSavePromise = this.recognizeService.saveFcmToken(user.id, fcmtoken);
-    }
+    let tokenSavePromise = fcmtoken ? this.recognizeService.saveFcmToken(user.id, fcmtoken) : null;
 
     try {
-      const updatePromise = [
+      await Promise.all([
         this.redisService.updateUserLocation(user.id, lonNumber, latNumber),
         this.usersRepository.updateUserLocation(user.id, lonNumber, latNumber),
-      ];
-
-      if (tokenSavePromise) {
-        updatePromise.push(tokenSavePromise);
-      }
-
-      await Promise.all(updatePromise);
+        tokenSavePromise,
+      ]);
 
       // redis에서 조회
       const redisSearch = await this.redisService.findNearRedisbyUsers(lonNumber, latNumber, this.SEARCH_BOUNDARY);
       const userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
+
+      if (!userIds.length) return null;
 
       console.log("ids : ", userIds);
 
@@ -57,7 +50,11 @@ export class UserMapService {
 
       // 필터링
       let nearbyUsers = getUsersByRedis.filter((nearbyUser) => {
-        nearbyUser.ghostMode === false && user.sex !== nearbyUser.sex;
+        const isDifferentNickname = user.nickname !== nearbyUser.nickname;
+        const isNotGhostMode = !nearbyUser.ghostMode;
+        const isDifferentSex = user.sex !== nearbyUser.sex;
+
+        return isDifferentNickname && isNotGhostMode && isDifferentSex;
       });
 
       // null이면 mysql 조회해서 또 없으면 null 아니면 mysql로 조회
