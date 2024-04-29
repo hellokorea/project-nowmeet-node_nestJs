@@ -60,14 +60,15 @@ export class UserMapService {
       const responseUserList = await Promise.all(responseUserPromises);
 
       const filteredResponseUserList = responseUserList.filter(
-        (responseUser) => user.nickname !== responseUser.nickname && user.sex !== responseUser.sex
+        (responseUser) =>
+          user.nickname !== responseUser.nickname && user.sex !== responseUser.sex && !responseUser.ghostMode
       );
 
       let nearUsers;
 
       if (!filteredResponseUserList.length) {
         nearUsers = null;
-        return null;
+        return;
       }
 
       const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
