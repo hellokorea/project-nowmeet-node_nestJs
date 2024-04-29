@@ -41,8 +41,6 @@ export class UserMapService {
       let nearbyUsers = await this.usersRepository.findByUserIds(userIds);
       nearbyUsers = nearbyUsers.filter((nearbyUser) => !nearbyUser.ghostMode && nearbyUser.id !== loggedId);
 
-      console.log("nearbyUsers :", nearbyUsers);
-
       if (!nearbyUsers.length) {
         nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
         console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
@@ -78,6 +76,8 @@ export class UserMapService {
           currentIndex += numProfileImages;
         });
       }
+
+      console.log("내 주변 유저 : ", filteredResponseUserList);
 
       return {
         myId: user.id,
