@@ -63,6 +63,13 @@ export class UserMapService {
         (responseUser) => user.nickname !== responseUser.nickname && user.sex !== responseUser.sex
       );
 
+      let nearUsers;
+
+      if (!filteredResponseUserList.length) {
+        nearUsers = null;
+        return null;
+      }
+
       const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
       const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
 
@@ -76,7 +83,7 @@ export class UserMapService {
         currentIndex += numProfileImages;
       });
 
-      const nearUsers = filteredResponseUserList.length > 0 ? filteredResponseUserList : null;
+      nearUsers = filteredResponseUserList;
 
       return {
         myId: user.id,
