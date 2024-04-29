@@ -85,6 +85,8 @@ export class UserMapService {
 
       nearUsers = filteredResponseUserList;
 
+      console.log("nearUsers :", nearUsers);
+
       return {
         myId: user.id,
         myLongitude: user.longitude,
