@@ -26,32 +26,49 @@ export class UserMapService {
     const { lonNumber, latNumber } = await this.validatePosition(lon, lat);
 
     const fcmtoken = request.headers["fcmtoken"];
+    let tokenSavePromise;
 
     if (fcmtoken) {
-      await this.recognizeService.saveFcmToken(user.id, fcmtoken);
+      tokenSavePromise = this.recognizeService.saveFcmToken(user.id, fcmtoken);
     }
 
     try {
-      // 둘다 업데이트
-      await this.redisService.updateUserLocation(user.id, lonNumber, latNumber);
-      await this.usersRepository.updateUserLocation(user.id, lonNumber, latNumber);
+      const updatePromise = [
+        this.redisService.updateUserLocation(user.id, lonNumber, latNumber),
+        this.usersRepository.updateUserLocation(user.id, lonNumber, latNumber),
+      ];
+
+      if (tokenSavePromise) {
+        updatePromise.push(tokenSavePromise);
+      }
+
+      await Promise.all(updatePromise);
 
       // redis에서 조회
       const redisSearch = await this.redisService.findNearRedisbyUsers(lonNumber, latNumber, this.SEARCH_BOUNDARY);
-      console.log("redis 서치 : ", redisSearch);
-
       const userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
 
       console.log("ids : ", userIds);
 
       // redis 리턴된 userIds로 유저 정보 검색
-      let nearbyUsers = await this.usersRepository.findByUserIds(userIds);
+      const getUsersByRedis = await this.usersRepository.findByUserIds(userIds);
 
-      // 나 밖에 없거나 redis에 데이터가 없을 때
+      console.log("필터링 전 :", getUsersByRedis);
+
+      // 필터링
+      let nearbyUsers = getUsersByRedis.filter((nearbyUser) => {
+        nearbyUser.ghostMode === false && user.sex !== nearbyUser.sex;
+      });
+
+      // null이면 mysql 조회해서 또 없으면 null 아니면 mysql로 조회
       if (!nearbyUsers.length) {
         nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
-        console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
+        if (!nearbyUsers.length) {
+          return null;
+        }
       }
+
+      console.log("필터링 후 -----! :", nearbyUsers);
 
       //
       const responseUserPromises = nearbyUsers.map(async (user) => {
@@ -65,21 +82,12 @@ export class UserMapService {
 
       const responseUserList = await Promise.all(responseUserPromises);
 
-      const filteredResponseUserList = responseUserList.filter(
-        (responseUser) =>
-          user.nickname !== responseUser.nickname && responseUser.ghostMode === false && user.sex !== responseUser.sex
-      );
-
-      if (!filteredResponseUserList.length) {
-        return null;
-      }
-
-      const profilesKey = filteredResponseUserList.map((users) => users.profileImages);
+      const profilesKey = responseUserList.map((users) => users.profileImages);
       const preSignedUrl = await this.awsService.createPreSignedUrl(profilesKey.flat());
 
       let currentIndex = 0;
 
-      filteredResponseUserList.forEach((user) => {
+      responseUserList.forEach((user) => {
         const numProfileImages = user.profileImages.length;
         const userUrls = preSignedUrl.slice(currentIndex, currentIndex + numProfileImages);
 
@@ -91,7 +99,7 @@ export class UserMapService {
         myId: user.id,
         myLongitude: user.longitude,
         myLatitude: user.latitude,
-        nearbyUsers: filteredResponseUserList,
+        nearbyUsers: responseUserList,
       };
     } catch (e) {
       console.error("refreshLocation error :", e);
