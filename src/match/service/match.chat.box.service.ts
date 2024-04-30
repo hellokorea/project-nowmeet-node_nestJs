@@ -26,6 +26,10 @@ export class MatchBoxService {
     const receiverProfileImages = matched.map((data) => data.receiver.profileImages);
     const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfileImages.flat());
 
+    const startIndices = receiverProfileImages.map((_, idx) =>
+      receiverProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)
+    );
+
     const sendBox = matched
       .filter((matchData) => matchData.status !== MatchState.MATCH && matchData.status !== MatchState.EXPIRE)
       .map((matchData, idx) => ({
@@ -34,8 +38,9 @@ export class MatchBoxService {
         receiverId: matchData.receiver.id,
         receiverNickname: matchData.receiver.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-        profileImages:
-          preSignedUrl[receiverProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)],
+        profileImages: {
+          PreSignedUrl: preSignedUrl[startIndices[idx]],
+        },
       }));
 
     if (!sendBox.length) {
@@ -58,6 +63,10 @@ export class MatchBoxService {
     const senderProfileImages = matched.map((data) => data.sender.profileImages);
     const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfileImages.flat());
 
+    const startIndices = senderProfileImages.map((_, idx) =>
+      senderProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)
+    );
+
     const receiveBox = matched
       .filter((matchData) => matchData.status === MatchState.PENDING)
       .map((matchData, idx) => ({
@@ -66,7 +75,9 @@ export class MatchBoxService {
         senderId: matchData.sender.id,
         senderNickname: matchData.sender.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-        profileImages: preSignedUrl[senderProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)],
+        profileImages: {
+          PreSignedUrl: preSignedUrl[startIndices[idx]],
+        },
       }));
 
     if (!receiveBox.length) {
