@@ -34,10 +34,8 @@ export class MatchBoxService {
         receiverId: matchData.receiver.id,
         receiverNickname: matchData.receiver.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-        profileImages: {
-          ProfileImages: matchData.receiver.profileImages,
-          PreSignedUrl: preSignedUrl[idx],
-        },
+        profileImages:
+          preSignedUrl[receiverProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)],
       }));
 
     if (!sendBox.length) {
@@ -68,10 +66,7 @@ export class MatchBoxService {
         senderId: matchData.sender.id,
         senderNickname: matchData.sender.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
-        profileImages: {
-          ProfileImages: matchData.sender.profileImages,
-          PreSignedUrl: preSignedUrl[idx],
-        },
+        profileImages: preSignedUrl[senderProfileImages.slice(0, idx).reduce((acc, images) => acc + images.length, 0)],
       }));
 
     if (!receiveBox.length) {
