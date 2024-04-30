@@ -23,12 +23,12 @@ export class MatchBoxService {
     if (!matched.length) {
       return null;
     }
-    const receiverProfiles = matched.map((data) => data.receiver.profileImages);
-    const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfiles.flat());
+    const receiverProfileImages = matched.map((data) => data.receiver.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(receiverProfileImages.flat());
 
     const sendBox = matched
       .filter((matchData) => matchData.status !== MatchState.MATCH && matchData.status !== MatchState.EXPIRE)
-      .map((matchData) => ({
+      .map((matchData, idx) => ({
         matchId: matchData.id,
         matchStatus: matchData.status,
         receiverId: matchData.receiver.id,
@@ -36,7 +36,7 @@ export class MatchBoxService {
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
         profileImages: {
           ProfileImages: matchData.receiver.profileImages,
-          PreSignedUrl: preSignedUrl,
+          PreSignedUrl: preSignedUrl[idx],
         },
       }));
 
@@ -57,12 +57,12 @@ export class MatchBoxService {
       return null;
     }
 
-    const senderProfiles = matched.map((data) => data.sender.profileImages);
-    const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfiles.flat());
+    const senderProfileImages = matched.map((data) => data.sender.profileImages);
+    const preSignedUrl = await this.awsService.createPreSignedUrl(senderProfileImages.flat());
 
     const receiveBox = matched
       .filter((matchData) => matchData.status === MatchState.PENDING)
-      .map((matchData) => ({
+      .map((matchData, idx) => ({
         matchId: matchData.id,
         matchStatus: matchData.status,
         senderId: matchData.sender.id,
@@ -70,7 +70,7 @@ export class MatchBoxService {
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
         profileImages: {
           ProfileImages: matchData.sender.profileImages,
-          PreSignedUrl: preSignedUrl,
+          PreSignedUrl: preSignedUrl[idx],
         },
       }));
 
