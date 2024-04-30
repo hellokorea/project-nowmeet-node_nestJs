@@ -8,7 +8,7 @@ import { RedisService } from "src/redis/redis.service";
 @Injectable()
 export class ChatService {
   private PROD_TIMER: number = 24 * 60 * 60 * 1000;
-  private TEST_TIMER: number = 60 * 1000;
+  private TEST_TIMER: number = 180 * 1000;
 
   constructor(
     private readonly chatsRepository: ChatsRepository,
@@ -23,7 +23,7 @@ export class ChatService {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
     }
 
-    const expireTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    const expireTime = moment().add(this.TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const createChatRoom = await this.chatsRepository.createChatRoom(matchId, senderId, receiverId, expireTime);
     const createDevChatRoom = await this.chatsRepository.createDevChatRoom(matchId, senderId, receiverId); // Dev
@@ -38,7 +38,7 @@ export class ChatService {
 
   async openChat(matchId: number) {
     const chatRoom = await this.chatsRepository.findOneChatRoomsByMatchId(matchId);
-    chatRoom.disconnectTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    chatRoom.disconnectTime = moment().add(this.TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
     chatRoom.status = ChatState.OPEN;
     const openChatRoom = await this.chatsRepository.saveChatData(chatRoom);
 

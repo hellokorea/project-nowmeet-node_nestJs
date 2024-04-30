@@ -11,7 +11,7 @@ export class RedisService implements OnModuleInit {
   private publisher: Redis;
 
   private PROD_TIME = 24 * 60 * 60 * 1000;
-  private TEST_TIME = 120;
+  private TEST_TIME = 180;
 
   private isDevMode = process.env.MODE === "dev";
   private redisUrlKey = this.isDevMode ? "DEV_REDIS_URL" : "PROD_REDIS_URL";
