@@ -39,9 +39,12 @@ export class MatchBoxService {
         receiverNickname: matchData.receiver.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
         profileImages: {
+          ProfileImages: matchData.receiver.profileImages,
           PreSignedUrl: preSignedUrl[startIndices[idx]],
         },
       }));
+
+    console.log(sendBox);
 
     if (!sendBox.length) {
       return null;
@@ -76,9 +79,12 @@ export class MatchBoxService {
         senderNickname: matchData.sender.nickname,
         expireMatch: moment(matchData.expireMatch).format("YYYY-MM-DD HH:mm:ss"),
         profileImages: {
+          ProfileImages: matchData.sender.profileImages,
           PreSignedUrl: preSignedUrl[startIndices[idx]],
         },
       }));
+
+    console.log(receiveBox);
 
     if (!receiveBox.length) {
       return null;
