@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards, UseInterceptors } from "@nestjs/common";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { PushService } from "../service/firebase.push.service";
-import { CustomJwtGuards } from "src/auth/jwt/jwt.guard";
+import { CustomJwtGuards, GoogleGuard } from "src/auth/jwt/jwt.guard";
 import { ReqPushNotificationDto } from "../dtos/firebase.push.dto";
 import { ApiOperation } from "@nestjs/swagger";
 
