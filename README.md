@@ -24,7 +24,7 @@ paw : 12345
 
 ## ⚒️ 시스템 아키텍처
 
-<img src = "https://github.com/hellokorea/project-nowmeet-node/assets/115388726/1ec32782-fd72-4848-8523-42fbf4e2a7e4" width="800" heigth="100%">)
+<img src = "https://github.com/hellokorea/project-nowmeet-node-public/assets/115388726/4dc66646-4748-4ab0-9d0d-e7f43b081a6f" width="800" heigth="100%">)
 
 <br>
 
