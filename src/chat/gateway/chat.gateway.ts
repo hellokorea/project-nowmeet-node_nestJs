@@ -16,6 +16,8 @@ import { socketMessageReqDto } from "../dtos/request/chat.socekr.message.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 import { ChatsRepository } from "../database/repository/chat.repository";
+import { MatchChatService } from "src/match/service/match.chat.service";
+import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -37,7 +39,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
     @Inject(forwardRef(() => RecognizeService))
-    private readonly recognizeService: RecognizeService
+    private readonly recognizeService: RecognizeService,
+    private readonly matchChatService: MatchChatService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -90,6 +93,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("request_chat_list")
+  async handleRequestChatList(client: Socket) {
+    const token = client.handshake?.auth?.token;
+    const user = await this.recognizeService.verifyWebSocketToken(token);
+    const userRequest = { user: { id: user.id } } as UserRequestDto;
+
+    console.log("채팅방 리스트에 접속한 현재 유저 ", user);
+
+    try {
+      const chatList = await this.matchChatService.getChatRoomsAllList(userRequest);
+      console.log("request_chat_list", chatList);
+
+      chatList.forEach((chat) => {
+        client.join(chat.chatId.toString());
+      });
+
+      client.emit("request_chat_list", chatList);
+    } catch (e) {
+      console.error(e);
+      throw new NotFoundException("채팅방 리스트 조회에 실패 했습니다.");
+    }
+  }
+
+  async notifyNewMessage(chatId: number, messageCount: number) {
+    const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
+
+    if (!chat) {
+      return;
+    }
+
+    const countUpdateData = { chatId: chat.id, messageCount };
+
+    this.server.to(chat.id.toString()).emit("message_count_update", countUpdateData);
+  }
+
   @SubscribeMessage("message")
   async handleMessage(@MessageBody() msg: socketMessageReqDto, @ConnectedSocket() client: Socket) {
     const token = client.handshake?.auth?.token;
@@ -105,6 +143,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const savedMessage = await this.chatMessagesRepository.saveChatMsgData(user, chatRoom, msg.message, msg.date);
 
+      chatRoom.messageCount += 1;
+      await this.chatsRepository.saveChatData(chatRoom);
+
       const messageData = {
         id: savedMessage.id,
         chatRoomId: savedMessage.chatRoom.id,
@@ -115,6 +156,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       };
 
       this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
+      this.notifyNewMessage(chatRoom.id, chatRoom.messageCount);
     } catch (e) {
       console.error("handleMessage :", e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");
@@ -122,7 +164,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // System Message Common Logic
-  async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
+  private async combineMessageToClient(chatMessage: ChatMessage[], status: string) {
     try {
       const regularmessages = chatMessage.map((msg) => {
         return {

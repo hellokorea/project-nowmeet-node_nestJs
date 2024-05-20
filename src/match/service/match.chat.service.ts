@@ -67,6 +67,7 @@ export class MatchChatService {
         me,
         matchUserId,
         lastMessage: lastMessage,
+        messageCount: chat.messageCount,
         matchUserNickname: oppUser.nickname,
         chatStatus: chat.status,
         preSignedUrl,
@@ -83,6 +84,9 @@ export class MatchChatService {
     const user = await this.recognizeService.validateUser(loggedId);
 
     const findChat = await this.recognizeService.verifyFindChatRoom(chatId, loggedId);
+
+    findChat.messageCount = 0;
+    await this.chatsRepository.saveChatData(findChat);
 
     let chathUserId: number;
 
@@ -110,6 +114,7 @@ export class MatchChatService {
       matchId: findChat.matchId,
       chatStatus: findChat.status,
       message,
+      messageCount: findChat.messageCount,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       myNickname: user.nickname,

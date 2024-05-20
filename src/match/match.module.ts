@@ -25,7 +25,7 @@ import { RedisModule } from "src/redis/redis.module";
     forwardRef(() => AppModule),
     forwardRef(() => RedisModule),
   ],
-  exports: [MatchService, MatchProfileService, MatchRepository],
+  exports: [MatchService, MatchProfileService, MatchRepository, MatchChatService],
   controllers: [MatchController],
   providers: [MatchService, MatchProfileService, MatchChatService, MatchBoxService, MatchRepository],
 })
