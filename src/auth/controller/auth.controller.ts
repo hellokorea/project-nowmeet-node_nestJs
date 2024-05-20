@@ -3,7 +3,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { AuthService } from "../service/auth.service";
 import { GoogleRequest } from "../dtos/request/auth.googleuser.dto";
-import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiBody, ApiExcludeEndpoint, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { IsUserRequsetDto } from "../dtos/response/auth.isUser.dto";
 import { AuthJwtService } from "./../service/auth.jwt.service";
 
@@ -25,24 +25,26 @@ export class AuthController {
   }
 
   //*----Jwt Logic
-  @ApiBody({ description: "code input", type: String })
   @Post("getRefreshToken/google")
+  @ApiExcludeEndpoint()
   makeNewIdTokenGoogle(@Body("code") code: string) {
     return this.authJwtService.makeNewIdTokenGoogle(code);
   }
 
-  @ApiBody({ description: "Authcode input", type: String })
   @Post("getRefreshToken/apple")
+  @ApiExcludeEndpoint()
   makeNewIdTokenApple(@Body("authCode") authCode: string) {
     return this.authJwtService.makeNewIdTokenApple(authCode);
   }
 
   //!----Revoke Logic
   @Get("google")
+  @ApiExcludeEndpoint()
   @UseGuards(AuthGuard("google"))
   async googleLogin(@Req() req: Request) {}
 
   @Get("google/callback")
+  @ApiExcludeEndpoint()
   @UseGuards(AuthGuard("google"))
   googleLoginCallback(@Req() req: GoogleRequest) {
     return this.authService.googleLogin(req);

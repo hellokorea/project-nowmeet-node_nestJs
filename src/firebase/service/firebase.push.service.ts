@@ -110,6 +110,7 @@ export class PushService implements OnModuleInit {
           nickname,
           ...(chatId && { chatId: chatId.toString() }),
           ...(senderNickname && { senderNickname }),
+          // isRead
         },
         apns: {
           payload: {

@@ -14,7 +14,7 @@ import {
 import { SuccessInterceptor } from "src/common/interceptors/success.interceptor";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { UserRequestDto } from "../dtos/request/users.request.dto";
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { RefreshLocationUserResDto } from "../dtos/response/user.locationResponse.dto";
 import {
   UpdateIntroduceDto,
@@ -145,6 +145,7 @@ export class UsersController {
   //* delete test api
   @Delete("delete/test")
   @UseGuards(CustomJwtGuards)
+  @ApiExcludeEndpoint()
   deleteMatchChats(@Req() req: UserRequestDto) {
     return this.userAccountService.deleteMatchChats(req);
   }
