@@ -10,6 +10,11 @@ export class ChatMessagesRepository {
   constructor(@InjectRepository(ChatMessage) private chatMessagesRepository: Repository<ChatMessage>) {}
 
   async findChatMsgByChatId(roomId: number): Promise<ChatMessage[]> {
+    if (isNaN(roomId)) {
+      console.error("Invalid chat ID:", roomId);
+      throw new Error("유효하지 않은 채팅방 ID입니다.");
+    }
+
     return await this.chatMessagesRepository.find({
       where: { chatRoom: { id: roomId } },
       relations: ["sender", "chatRoom"],

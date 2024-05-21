@@ -33,6 +33,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
             database: this.configService.get<string>(hostDb),
             entities: [User, Match, DevMatch, ChatRoom, DevChatRoom, ChatMessage],
             synchronize: true, // 개발 환경에서만 true로 설정
+            logging: ["query", "error"],
           });
         }, this.DELAY_TIME);
       });

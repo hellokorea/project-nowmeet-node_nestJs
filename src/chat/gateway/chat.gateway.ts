@@ -51,6 +51,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    const numericRoomId = Number(roomId);
+    if (isNaN(numericRoomId)) {
+      console.error("Invalid room ID:", roomId);
+      throw new NotFoundException("유효하지 않은 채팅방 ID입니다.");
+    }
+
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
