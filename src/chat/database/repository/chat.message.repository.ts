@@ -21,7 +21,15 @@ export class ChatMessagesRepository {
     });
   }
 
-  async saveChatMsgData(user: User, chatRoom: ChatRoom, content: string, createdAt: string): Promise<ChatMessage> {
+  async txsaveChatMsgData(
+    txManager: EntityManager,
+    user: User,
+    chatRoom: ChatRoom,
+    content: string,
+    createdAt: string
+  ): Promise<ChatMessage> {
+    const chatMessageRepository = txManager.getRepository(ChatMessage);
+
     const savedMessage = new ChatMessage();
     savedMessage.sender = user;
     savedMessage.chatRoom = chatRoom;
@@ -29,7 +37,7 @@ export class ChatMessagesRepository {
     savedMessage.createdAt = createdAt;
 
     console.log("디비에 저장하는 메시지 데이터 :", savedMessage);
-    return this.chatMessagesRepository.save(savedMessage);
+    return chatMessageRepository.save(savedMessage);
   }
 
   async findOneLastMessage(roomId: number): Promise<ChatMessage> {

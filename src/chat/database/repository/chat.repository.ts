@@ -37,6 +37,11 @@ export class ChatsRepository {
     return await this.chatsRoomRepository.findOne({ where: { id: chatId }, relations: ["message"] });
   }
 
+  async txFindOneChatRoomsByChatId(txManager: EntityManager, chatId: number): Promise<ChatRoom> {
+    const chatsRoomRepository = txManager.getRepository(ChatRoom);
+    return await chatsRoomRepository.findOne({ where: { id: chatId }, relations: ["message"] });
+  }
+
   async findOneChatRoomsByMatchId(matchId: number): Promise<ChatRoom> {
     return await this.chatsRoomRepository.findOne({ where: { matchId: matchId } });
   }
@@ -68,7 +73,19 @@ export class ChatsRepository {
 
   //*---Save Logic
   async saveChatData(chat: ChatRoom): Promise<ChatRoom> {
-    return this.chatsRoomRepository.save(chat);
+    return await this.chatsRoomRepository.save(chat);
+  }
+
+  async txIncrementMessageCount(txManager: EntityManager, chatId: number) {
+    const chatRoom = await txManager
+      .getRepository(ChatRoom)
+      .createQueryBuilder("chatRoom")
+      .setLock("pessimistic_write")
+      .where("id = :id", { id: chatId })
+      .getOne();
+
+    chatRoom.messageCount += 1;
+    await txManager.save(chatRoom);
   }
 
   //*---Delete Logic

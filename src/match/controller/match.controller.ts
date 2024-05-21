@@ -88,12 +88,12 @@ export class MatchController {
   }
 
   //*----Chat Logic
-  @ApiResponse({ type: ChatAllListResponseDto, isArray: true })
-  @ApiOperation({ summary: "나의 채팅 리스트 모두 조회 " })
-  @Get("me/chatBox/all")
-  getChatRommsList(@Req() req: UserRequestDto) {
-    return this.matchChatService.getChatRoomsAllList(req);
-  }
+  // @ApiResponse({ type: ChatAllListResponseDto, isArray: true })
+  // @ApiOperation({ summary: "나의 채팅 리스트 모두 조회 " })
+  // @Get("me/chatBox/all")
+  // getChatRommsList(@Req() req: UserRequestDto) {
+  //   return this.matchChatService.getChatRoomsAllList(req);
+  // }
 
   @ApiResponse({ type: ChatRoomResponseDto })
   @ApiOperation({ summary: "해당 채팅방으로 입장" })
