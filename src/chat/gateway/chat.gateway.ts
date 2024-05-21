@@ -138,6 +138,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
+    console.log("채팅 메시지 chatRoomId :", chatRoom.id);
+
     if (!chatRoom) {
       throw new NotFoundException("존재하지 않는 채팅방 입니다");
     }
@@ -157,8 +159,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         createdAt: moment(savedMessage.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       };
 
+      console.log("채팅 메시지 messageData :", messageData);
+
       this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-      this.chatListGateway.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);
+      // this.chatListGateway.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);
     } catch (e) {
       console.error("handleMessage :", e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");

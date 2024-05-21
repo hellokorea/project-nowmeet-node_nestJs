@@ -23,8 +23,8 @@ export class MatchChatService {
     private readonly redisService: RedisService
   ) {}
 
-  async getChatRoomsAllList(userId: number) {
-    const user = await this.recognizeService.validateUser(userId);
+  async getChatRoomsAllList(req: UserRequestDto) {
+    const user = await this.recognizeService.validateUser(req.user.id);
 
     const findChats = await this.chatsRepository.findChatsByUserId(user.id);
 
