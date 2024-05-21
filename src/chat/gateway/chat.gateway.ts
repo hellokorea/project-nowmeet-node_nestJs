@@ -124,6 +124,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const countUpdateData = { chatId: chat.id, messageCount };
+    console.log("countUpdateData", countUpdateData);
 
     this.server.to(chat.id.toString()).emit("message_count_update", countUpdateData);
   }
