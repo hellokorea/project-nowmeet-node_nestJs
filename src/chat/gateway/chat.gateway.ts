@@ -102,8 +102,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("request_chat_list")
   async handleRequestChatList(client: Socket) {
     const token = client.handshake?.auth?.token;
+    console.log("채팅 리스트 토큰", token);
     console.log("챗 리스트 요청 했드앙!~!!");
     const user = await this.recognizeService.verifyWebSocketToken(token);
+
+    if (isNaN(user.id)) {
+      console.error("Invalid user ID:", user.id);
+      throw new NotFoundException("유효하지 않은 사용자 ID입니다.");
+    }
 
     console.log("채팅방 리스트에 접속한 현재 유저 ", user);
 
