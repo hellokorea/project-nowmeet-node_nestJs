@@ -45,6 +45,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
+
+    if (!roomId) {
+      console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
+      return;
+    }
+
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
@@ -105,11 +111,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("채팅 리스트 토큰", token);
     console.log("챗 리스트 요청 했드앙!~!!");
     const user = await this.recognizeService.verifyWebSocketToken(token);
-
-    if (isNaN(user.id)) {
-      console.error("Invalid user ID:", user.id);
-      throw new NotFoundException("유효하지 않은 사용자 ID입니다.");
-    }
 
     console.log("채팅방 리스트에 접속한 현재 유저 ", user);
 

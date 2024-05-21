@@ -23,17 +23,7 @@ export class MatchChatService {
   ) {}
 
   async getChatRoomsAllList(userId: number) {
-    if (isNaN(userId)) {
-      console.error("Invalid user ID:", userId);
-      throw new NotFoundException("유효하지 않은 사용자 ID입니다.");
-    }
-
     const user = await this.recognizeService.validateUser(userId);
-
-    if (isNaN(user.id)) {
-      console.error("Invalid user ID:", user.id);
-      throw new NotFoundException("유효하지 않은 사용자 ID입니다.");
-    }
 
     const findChats = await this.chatsRepository.findChatsByUserId(user.id);
 
@@ -55,11 +45,6 @@ export class MatchChatService {
       if (user.id === chat.receiverId || user.id === chat.senderId) {
         me = user.id;
         matchUserId = user.id === chat.receiverId ? chat.senderId : chat.receiverId;
-
-        if (isNaN(matchUserId)) {
-          console.error("Invalid match user ID:", matchUserId);
-          throw new NotFoundException("유효하지 않은 매칭 사용자 ID입니다.");
-        }
       }
 
       const oppUser = await this.usersRepository.findOneById(matchUserId);
