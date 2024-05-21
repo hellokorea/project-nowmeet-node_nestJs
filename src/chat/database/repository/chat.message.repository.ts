@@ -28,6 +28,7 @@ export class ChatMessagesRepository {
       content,
       createdAt,
     };
+    console.log("디비에 저장하는 메시지 데이터 :", savedMessage);
     return this.chatMessagesRepository.save(savedMessage);
   }
 

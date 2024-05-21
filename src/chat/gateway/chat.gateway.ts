@@ -59,6 +59,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new BadGatewayException("roomId가 존재하지 않습니다.");
     }
 
+    console.log("채팅방 입장 roomId", roomId);
+    console.log(typeof roomId);
+
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
@@ -92,6 +95,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!roomId) {
       throw new BadGatewayException("roomId가 존재하지 않습니다.");
     }
+
+    console.log("채팅방 나가기 roomId", roomId);
+    console.log(typeof roomId);
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
@@ -132,6 +138,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new BadGatewayException("roomId 존재하지 않아서, 메시지 전송에 실패 했습니다.");
     }
 
+    console.log("채팅 메시지 roomId :", roomId);
+    console.log(typeof roomId);
+
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
@@ -152,9 +161,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderNickname: savedMessage.sender.nickname,
         createdAt: moment(savedMessage.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       };
-      console.log("채팅 메시지", roomId);
-      console.log("채팅 메시지 챗룸 id", savedMessage.chatRoom.id);
-      console.log(savedMessage);
 
       this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
       this.chatListGateway.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);

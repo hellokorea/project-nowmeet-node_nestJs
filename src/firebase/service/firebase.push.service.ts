@@ -135,7 +135,6 @@ export class PushService implements OnModuleInit {
 
     try {
       const user = await this.usersRepository.findOneByNickname(nickname);
-      console.log(body);
 
       if (!user || !user.fcmToken) {
         throw new InternalServerErrorException("User or FCM token not found");
@@ -147,8 +146,6 @@ export class PushService implements OnModuleInit {
 
       const accessToken = await this.getAccessToken();
 
-      console.log("accessToken :", accessToken);
-
       const response = await fetch(process.env.FCMFETCH, {
         method: "POST",
         headers: {
@@ -157,8 +154,6 @@ export class PushService implements OnModuleInit {
         },
         body: JSON.stringify(payload),
       });
-
-      console.log(payload);
 
       if (!response.ok) {
         throw new Error(`Error sending message: ${response.statusText}`);
