@@ -4,6 +4,7 @@ import { ChatMessagesRepository } from "../database/repository/chat.message.repo
 import * as moment from "moment";
 import { ChatState } from "../database/entity/chat.entity";
 import { RedisService } from "src/redis/redis.service";
+import { ChatListGateway } from "../gateway/chat.list.gateway";
 
 @Injectable()
 export class ChatService {
@@ -13,7 +14,8 @@ export class ChatService {
   constructor(
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly chatListGateway: ChatListGateway
   ) {}
 
   async createChatRoom(matchId: number, senderId: number, receiverId: number) {
@@ -32,6 +34,9 @@ export class ChatService {
     await this.chatsRepository.saveDevChatData(createDevChatRoom); // Dev
 
     await this.redisService.publishChatStatus(newChatRooms.id, newChatRooms.status);
+
+    await this.chatListGateway.notifynewChatRoom(newChatRooms, senderId);
+    await this.chatListGateway.notifynewChatRoom(newChatRooms, receiverId);
 
     return newChatRooms;
   }

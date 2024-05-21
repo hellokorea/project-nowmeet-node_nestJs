@@ -22,7 +22,7 @@ import { socketMessageReqDto } from "../dtos/request/chat.socekr.message.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 import { ChatsRepository } from "../database/repository/chat.repository";
-import { MatchChatService } from "src/match/service/match.chat.service";
+import { ChatListGateway } from "./chat.list.gateway";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -45,7 +45,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatMessagesRepository: ChatMessagesRepository,
     @Inject(forwardRef(() => RecognizeService))
     private readonly recognizeService: RecognizeService,
-    private readonly matchChatService: MatchChatService
+    private readonly chatListGateway: ChatListGateway
   ) {}
 
   async handleConnection(client: Socket) {
@@ -56,8 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     if (!roomId) {
-      console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
-      return;
+      throw new BadGatewayException("roomId가 존재하지 않습니다.");
     }
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -90,9 +89,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomId = null;
     }
 
-    if (roomId === null) {
-      console.log(`Client disconnected: ${client.id}, but no roomId found.`);
-      return;
+    if (!roomId) {
+      throw new BadGatewayException("roomId가 존재하지 않습니다.");
     }
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -119,46 +117,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage("request_chat_list")
-  async handleRequestChatList(client: Socket) {
-    const token = client.handshake?.auth?.token;
-    const user = await this.recognizeService.verifyWebSocketToken(token);
-
-    try {
-      const chatList = await this.matchChatService.getChatRoomsAllList(user.id);
-      console.log("request_chat_list", chatList);
-
-      if (!Array.isArray(chatList) || chatList.length === 0) {
-        return null;
-      }
-
-      chatList.forEach((chat) => {
-        if (chat && chat.chatId) {
-          client.join(chat.chatId.toString());
-          console.log(`Client joined room: ${chat.chatId}`);
-        }
-      });
-
-      client.emit("request_chat_list", chatList);
-    } catch (e) {
-      console.error(e);
-      throw new NotFoundException("채팅방 리스트 조회에 실패 했습니다.");
-    }
-  }
-
-  async notifyNewMessage(chatId: number, messageCount: number, content: string) {
-    const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
-
-    if (!chat) {
-      return;
-    }
-
-    const countUpdateData = { chatId: chat.id, messageCount, content };
-    console.log("countUpdateData", countUpdateData);
-
-    this.server.to(chat.id.toString()).emit("message_count_update", countUpdateData);
-  }
-
   @SubscribeMessage("message")
   async handleMessage(@MessageBody() msg: socketMessageReqDto, @ConnectedSocket() client: Socket) {
     const token = client.handshake?.auth?.token;
@@ -172,7 +130,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!roomId) {
       throw new BadGatewayException("roomId 존재하지 않아서, 메시지 전송에 실패 했습니다.");
-      return;
     }
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -197,7 +154,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       };
 
       this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-      this.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);
+      this.chatListGateway.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);
     } catch (e) {
       console.error("handleMessage :", e);
       throw new InternalServerErrorException("메시지 저장 도중 오류 발생 했습니다");

@@ -13,6 +13,7 @@ import { ChatService } from "./service/chat.service";
 import { ChatMessagesRepository } from "./database/repository/chat.message.repository";
 import { ChatsRepository } from "./database/repository/chat.repository";
 import { RedisModule } from "src/redis/redis.module";
+import { ChatListGateway } from "./gateway/chat.list.gateway";
 
 @Module({
   imports: [
@@ -23,8 +24,15 @@ import { RedisModule } from "src/redis/redis.module";
     forwardRef(() => RecognizeModule),
     forwardRef(() => RedisModule),
   ],
-  exports: [ChatService, ChatMessagesRepository, ChatsRepository],
+  exports: [ChatService, ChatMessagesRepository, ChatsRepository, ChatListGateway],
   controllers: [],
-  providers: [ChatGateway, ChatStatusUpdaterService, ChatService, ChatMessagesRepository, ChatsRepository],
+  providers: [
+    ChatGateway,
+    ChatListGateway,
+    ChatStatusUpdaterService,
+    ChatService,
+    ChatMessagesRepository,
+    ChatsRepository,
+  ],
 })
 export class ChatModule {}

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ChatState } from "src/chat/database/entity/chat.entity";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/database/repository/users.repository";
@@ -16,6 +16,7 @@ export class MatchChatService {
     private readonly usersRepository: UsersRepository,
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
+    @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly recognizeService: RecognizeService,
     private readonly awsService: AwsService,
