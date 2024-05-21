@@ -50,9 +50,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     let roomId = client.handshake.query.roomId;
-    console.log("connect", client.handshake.query);
-    console.log("connect", roomId);
-    console.log("connect", typeof roomId);
 
     if (roomId === "null") {
       roomId = null;
@@ -61,12 +58,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!roomId) {
       console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
       return;
-    }
-
-    const numericRoomId = Number(roomId);
-    if (isNaN(numericRoomId)) {
-      console.error("Invalid room ID:", roomId);
-      throw new NotFoundException("유효하지 않은 채팅방 ID입니다.");
     }
 
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -131,18 +122,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("request_chat_list")
   async handleRequestChatList(client: Socket) {
     const token = client.handshake?.auth?.token;
-    console.log("채팅 리스트 토큰", token);
-    console.log("챗 리스트 요청 했드앙!~!!");
     const user = await this.recognizeService.verifyWebSocketToken(token);
-
-    console.log("채팅방 리스트에 접속한 현재 유저 ", user);
 
     try {
       const chatList = await this.matchChatService.getChatRoomsAllList(user.id);
       console.log("request_chat_list", chatList);
 
+      if (!Array.isArray(chatList) || chatList.length === 0) {
+        return null;
+      }
+
       chatList.forEach((chat) => {
-        client.join(chat.chatId.toString());
+        if (chat && chat.chatId) {
+          client.join(chat.chatId.toString());
+          console.log(`Client joined room: ${chat.chatId}`);
+        }
       });
 
       client.emit("request_chat_list", chatList);
