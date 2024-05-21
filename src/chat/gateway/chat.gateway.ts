@@ -45,6 +45,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
+    console.log("connect", client.handshake.query);
+    console.log("connect", roomId);
+    console.log("connect", typeof roomId);
 
     if (roomId === null) {
       console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
