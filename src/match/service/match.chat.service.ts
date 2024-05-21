@@ -22,9 +22,8 @@ export class MatchChatService {
     private readonly redisService: RedisService
   ) {}
 
-  async getChatRoomsAllList(req: UserRequestDto) {
-    const loggedId = req.user.id;
-    const user = await this.recognizeService.validateUser(loggedId);
+  async getChatRoomsAllList(userId: number) {
+    const user = await this.recognizeService.validateUser(userId);
 
     const findChats = await this.chatsRepository.findChatsByUserId(user.id);
 
@@ -34,8 +33,8 @@ export class MatchChatService {
 
     const chatListFilter = findChats.filter((chat) => {
       return (
-        (loggedId === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
-        (loggedId === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
+        (user.id === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
+        (user.id === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
       );
     });
 
@@ -43,9 +42,9 @@ export class MatchChatService {
       let me: number;
       let matchUserId: number;
 
-      if (loggedId === chat.receiverId || loggedId === chat.senderId) {
-        me = loggedId;
-        matchUserId = loggedId === chat.receiverId ? chat.senderId : chat.receiverId;
+      if (user.id === chat.receiverId || user.id === chat.senderId) {
+        me = user.id;
+        matchUserId = user.id === chat.receiverId ? chat.senderId : chat.receiverId;
       }
 
       const oppUser = await this.usersRepository.findOneById(matchUserId);
