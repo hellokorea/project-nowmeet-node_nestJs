@@ -147,8 +147,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const savedMessage = await this.chatMessagesRepository.saveChatMsgData(user, chatRoom, msg.message, msg.date);
 
-      chatRoom.messageCount += 1;
-      await this.chatsRepository.saveChatData(chatRoom);
+      // chatRoom.messageCount += 1;
+      // await this.chatsRepository.saveChatData(chatRoom);
 
       const messageData = {
         id: savedMessage.id,
