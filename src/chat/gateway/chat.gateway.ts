@@ -46,7 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId;
 
-    if (!roomId) {
+    if (roomId === null) {
       console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
       return;
     }
@@ -82,12 +82,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: Socket) {
     const roomId = client.handshake.query.roomId;
-    const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
-    if (!roomId) {
+    if (roomId === null) {
       console.log(`Client disconnected: ${client.id}, but no roomId found.`);
       return;
     }
+
+    const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
       console.log(`ChatRoom not found for roomId: ${roomId}`);
@@ -154,6 +155,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
     const roomId = client.handshake.query.roomId;
+
+    if (roomId === null) {
+      console.log("roomId가 없어서 메시지 로직 커넥션 로직 발생 안함");
+      return;
+    }
+
     const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
     if (!chatRoom) {
