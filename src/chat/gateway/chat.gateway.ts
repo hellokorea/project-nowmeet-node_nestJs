@@ -10,14 +10,19 @@ import {
 import { Server, Socket } from "socket.io";
 import { ChatState } from "../database/entity/chat.entity";
 import { ChatMessage } from "../database/entity/chat.message.entity";
-import { InternalServerErrorException, NotFoundException, Inject, forwardRef } from "@nestjs/common";
+import {
+  InternalServerErrorException,
+  NotFoundException,
+  Inject,
+  forwardRef,
+  BadGatewayException,
+} from "@nestjs/common";
 import * as moment from "moment-timezone";
 import { socketMessageReqDto } from "../dtos/request/chat.socekr.message.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 import { ChatsRepository } from "../database/repository/chat.repository";
 import { MatchChatService } from "src/match/service/match.chat.service";
-import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -44,12 +49,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    const roomId = client.handshake.query.roomId;
+    let roomId = client.handshake.query.roomId;
     console.log("connect", client.handshake.query);
     console.log("connect", roomId);
     console.log("connect", typeof roomId);
 
-    if (roomId === null) {
+    if (roomId === "null") {
+      roomId = null;
+    }
+
+    if (!roomId) {
       console.log("roomId가 없어서 핸들 커넥션 로직 발생 안함");
       return;
     }
@@ -84,7 +93,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    const roomId = client.handshake.query.roomId;
+    let roomId = client.handshake.query.roomId;
+
+    if (roomId === "null") {
+      roomId = null;
+    }
 
     if (roomId === null) {
       console.log(`Client disconnected: ${client.id}, but no roomId found.`);
@@ -157,10 +170,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
-    const roomId = client.handshake.query.roomId;
+    let roomId = client.handshake.query.roomId;
 
-    if (roomId === null) {
-      console.log("roomId가 없어서 메시지 로직 커넥션 로직 발생 안함");
+    if (roomId === "null") {
+      roomId = null;
+    }
+
+    if (!roomId) {
+      throw new BadGatewayException("roomId 존재하지 않아서, 메시지 전송에 실패 했습니다.");
       return;
     }
 
