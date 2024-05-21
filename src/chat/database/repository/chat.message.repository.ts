@@ -22,12 +22,12 @@ export class ChatMessagesRepository {
   }
 
   async saveChatMsgData(user: User, chatRoom: ChatRoom, content: string, createdAt: string): Promise<ChatMessage> {
-    const savedMessage = {
-      sender: user,
-      chatRoom: chatRoom,
-      content,
-      createdAt,
-    };
+    const savedMessage = new ChatMessage();
+    savedMessage.sender = user;
+    savedMessage.chatRoom = chatRoom;
+    savedMessage.content = content;
+    savedMessage.createdAt = createdAt;
+
     console.log("디비에 저장하는 메시지 데이터 :", savedMessage);
     return this.chatMessagesRepository.save(savedMessage);
   }
