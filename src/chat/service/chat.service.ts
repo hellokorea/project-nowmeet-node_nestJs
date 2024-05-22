@@ -35,8 +35,7 @@ export class ChatService {
 
     await this.redisService.publishChatStatus(newChatRooms.id, newChatRooms.status);
 
-    await this.chatListGateway.notifynewChatRoom(newChatRooms, senderId);
-    await this.chatListGateway.notifynewChatRoom(newChatRooms, receiverId);
+    await this.chatListGateway.notifynewChatRoom(newChatRooms);
 
     return newChatRooms;
   }

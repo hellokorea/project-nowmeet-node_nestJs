@@ -9,6 +9,7 @@ import { ChatService } from "./../../chat/service/chat.service";
 import { ChatsRepository } from "./../../chat/database/repository/chat.repository";
 import { ChatMessagesRepository } from "./../../chat/database/repository/chat.message.repository";
 import { RedisService } from "src/redis/redis.service";
+import { ChatListGateway } from "src/chat/gateway/chat.list.gateway";
 
 @Injectable()
 export class MatchChatService {
@@ -20,7 +21,9 @@ export class MatchChatService {
     private readonly chatService: ChatService,
     private readonly recognizeService: RecognizeService,
     private readonly awsService: AwsService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    @Inject(forwardRef(() => ChatListGateway))
+    private readonly chatListGateway: ChatListGateway
   ) {}
 
   async getChatRoomsAllList(userId: number) {
@@ -185,6 +188,8 @@ export class MatchChatService {
 
       await this.redisService.deleteChatKey(chat.id);
 
+      await this.chatListGateway.notifyExitChatRoom(chat.status, currentUser.id);
+
       return {
         message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,
       };
@@ -200,6 +205,7 @@ export class MatchChatService {
     const chat = await this.recognizeService.verifyFindChatRoom(chatId, user.id);
     try {
       await this.chatService.removeUserChatRoom(chat.id);
+      await this.chatListGateway.notifyDeleteChatRoom(chat.id, user.id);
 
       return {
         message: `matchId : ${chat.matchId}번으로 이루어진 chatId: ${chat.id}번이 삭제 되었습니다.`,

@@ -10,7 +10,8 @@ import { NotFoundException, Inject, forwardRef } from "@nestjs/common";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatsRepository } from "../database/repository/chat.repository";
 import { MatchChatService } from "src/match/service/match.chat.service";
-import { ChatRoom } from "../database/entity/chat.entity";
+import { ChatRoom, ChatState } from "../database/entity/chat.entity";
+import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
 
 @WebSocketGateway({ namespace: "chatList" })
 export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -31,8 +32,39 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log("챗 리스트 소켓 연결 끊김");
   }
 
-  async notifynewChatRoom(chatRoom: ChatRoom, userId: number) {
-    this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
+  async notifynewChatRoom(chatRoom: ChatRoom) {
+    const userIds = [chatRoom.receiverId, chatRoom.senderId];
+
+    userIds.forEach((userId) => {
+      console.log("new_chat_room userId : ", userId);
+      this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
+    });
+  }
+
+  async notifyExitChatRoom(chatStatus: string, userId: number) {
+    console.log("exit_chat_room userId : ", userId);
+    this.server.to(userId.toString()).emit("exit_chat_room", chatStatus);
+  }
+
+  async notifyDeleteChatRoom(chatId: number, userId: number) {
+    console.log("delete_chat_room userId : ", userId);
+    this.server.to(userId.toString()).emit("delete_chat_room", chatId);
+  }
+
+  async notifyNewMessage(chatId: number, senderId: number, messageCount: number, lastMessage: string) {
+    const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
+
+    if (!chat) {
+      return;
+    }
+
+    let receiverId: number = senderId === chat.senderId ? chat.receiverId : chat.senderId;
+
+    const messageUpdate = { chatId: chat.id, messageCount, lastMessage };
+    console.log("countUpdateData", messageUpdate);
+    console.log("message_update", receiverId);
+
+    this.server.to(receiverId.toString()).emit("message_update", messageUpdate);
   }
 
   @SubscribeMessage("request_chat_list")
@@ -62,18 +94,5 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
       console.error(e);
       throw new NotFoundException("채팅방 리스트 조회에 실패 했습니다.");
     }
-  }
-
-  async notifyNewMessage(chatId: number, messageCount: number, content: string) {
-    const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
-
-    if (!chat) {
-      return;
-    }
-
-    const countUpdateData = { chatId: chat.id, messageCount, content };
-    console.log("countUpdateData", countUpdateData);
-
-    this.server.to(chat.id.toString()).emit("message_count_update", countUpdateData);
   }
 }

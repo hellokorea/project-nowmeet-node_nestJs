@@ -169,7 +169,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         console.log("채팅 메시지 messageData :", messageData);
 
         this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-        this.chatListGateway.notifyNewMessage(chatRoom.id, chatRoom.messageCount, savedMessage.content);
+        this.chatListGateway.notifyNewMessage(
+          chatRoom.id,
+          savedMessage.sender.id,
+          chatRoom.messageCount,
+          savedMessage.content
+        );
       });
     } catch (e) {
       console.error("handleMessage :", e);
