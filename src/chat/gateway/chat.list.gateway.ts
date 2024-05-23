@@ -32,39 +32,49 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log("챗 리스트 소켓 연결 끊김");
   }
 
+  async notifyStatusChatRoom(chatRoom: ChatRoom) {
+    const userIds = [chatRoom.receiverId, chatRoom.senderId];
+    const status = chatRoom.status;
+
+    userIds.forEach((userId) => {
+      this.server.to(userId.toString()).emit("status_chat_room", status);
+      console.log("status_chat_room userId : ", userId.toString());
+      console.log("status_chat_room chatRoom : ", chatRoom);
+    });
+  }
   async notifynewChatRoom(chatRoom: ChatRoom) {
     const userIds = [chatRoom.receiverId, chatRoom.senderId];
 
     userIds.forEach((userId) => {
-      console.log("new_chat_room userId : ", userId);
       this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
+      console.log("new_chat_room userId : ", userId.toString());
+      console.log("new_chat_room chatRoom : ", chatRoom);
     });
   }
 
   async notifyExitChatRoom(chatStatus: string, userId: number) {
-    console.log("exit_chat_room userId : ", userId);
     this.server.to(userId.toString()).emit("exit_chat_room", chatStatus);
+    console.log("exit_chat_room userId : ", userId);
   }
 
   async notifyDeleteChatRoom(chatId: number, userId: number) {
-    console.log("delete_chat_room userId : ", userId);
     this.server.to(userId.toString()).emit("delete_chat_room", chatId);
+    console.log("delete_chat_room userId : ", userId);
   }
 
-  async notifyNewMessage(chatId: number, senderId: number, messageCount: number, lastMessage: string) {
+  async notifyNewMessage(chatId: number, receiverId: number, lastMessage: string) {
     const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
 
     if (!chat) {
       return;
     }
 
-    let receiverId: number = senderId === chat.senderId ? chat.receiverId : chat.senderId;
-
-    const messageUpdate = { chatId: chat.id, messageCount, lastMessage };
-    console.log("countUpdateData", messageUpdate);
-    console.log("message_update", receiverId);
+    const messageUpdate = { chatId: chat.id, isRead: chat.isRead, lastMessage };
 
     this.server.to(receiverId.toString()).emit("message_update", messageUpdate);
+
+    console.log("countUpdateData", messageUpdate);
+    console.log("message_update", receiverId);
   }
 
   @SubscribeMessage("request_chat_list")

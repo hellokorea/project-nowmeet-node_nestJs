@@ -25,6 +25,7 @@ import { ChatsRepository } from "../database/repository/chat.repository";
 import { ChatListGateway } from "./chat.list.gateway";
 import { EntityManager } from "typeorm";
 import { InjectEntityManager } from "@nestjs/typeorm";
+import { UsersRepository } from "src/users/database/repository/users.repository";
 
 @WebSocketGateway({ namespace: "chats" })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -48,28 +49,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(forwardRef(() => RecognizeService))
     private readonly recognizeService: RecognizeService,
     private readonly chatListGateway: ChatListGateway,
-    @InjectEntityManager() private entityManager: EntityManager
+    @InjectEntityManager() private entityManager: EntityManager,
+    private readonly usersRepository: UsersRepository
   ) {}
 
   async handleConnection(client: Socket) {
     let roomId = client.handshake.query.roomId;
     console.log("채팅방 입장 roomId", roomId);
 
-    if (roomId === "null") {
-      roomId = null;
-    }
-
-    if (!roomId) {
-      throw new BadGatewayException("roomId가 존재하지 않습니다.");
-    }
-
-    const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
-
-    if (!chatRoom) {
-      throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    if (!roomId || roomId === "null") {
+      console.error("Invalid room ID:", roomId);
+      client.disconnect();
+      return;
     }
 
     try {
+      const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
+
+      if (!chatRoom) {
+        client.disconnect();
+        throw new NotFoundException("존재하지 않는 채팅방 입니다");
+      }
+
       client.join(roomId);
       console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
       console.log(`ChatRoom Socket Connect! rommId : ${roomId}`);
@@ -82,30 +83,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(chatRoom.id.toString()).emit("message_list", emitMessage);
     } catch (e) {
       console.error("handleConnection :", e);
+      client.disconnect();
       throw new NotFoundException("채팅방 입장에 실패 했습니다");
     }
   }
 
   async handleDisconnect(client: Socket) {
     let roomId = client.handshake.query.roomId;
-    console.log("채팅방 나가기 roomId", roomId);
 
-    if (roomId === "null") {
-      roomId = null;
-    }
-
-    if (!roomId) {
-      throw new BadGatewayException("roomId가 존재하지 않습니다.");
-    }
-
-    const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
-
-    if (!chatRoom) {
-      console.log(`ChatRoom not found for roomId: ${roomId}`);
+    if (!roomId || roomId === "null") {
+      console.log("룸 아이디가 null이므로 종료");
+      client.disconnect();
       return;
     }
 
     try {
+      const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
+
+      if (!chatRoom) {
+        client.disconnect();
+        throw new NotFoundException("존재하지 않는 채팅방 입니다");
+      }
+
       console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
       console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
 
@@ -118,6 +117,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(chatRoom.id.toString()).emit("status", chatRoom.status);
     } catch (e) {
       console.error("handleDisconnect :", e);
+      client.disconnect();
       throw new NotFoundException("채팅방 종료에 실패 했습니다");
     }
   }
@@ -125,6 +125,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("message")
   async handleMessage(@MessageBody() msg: socketMessageReqDto, @ConnectedSocket() client: Socket) {
     const token = client.handshake?.auth?.token;
+
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
     let roomId = client.handshake.query.roomId;
@@ -147,34 +148,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           throw new NotFoundException("존재하지 않는 채팅방 입니다");
         }
 
+        let receiverId: number = user.id === chatRoom.senderId ? chatRoom.receiverId : chatRoom.senderId;
+
+        const receiver = await this.usersRepository.txfindOneById(txManager, receiverId);
+
         const savedMessage = await this.chatMessagesRepository.txsaveChatMsgData(
           txManager,
           user,
+          receiver,
           chatRoom,
           msg.message,
           msg.date
         );
-
-        await this.chatsRepository.txIncrementMessageCount(txManager, chatRoom.id);
 
         const messageData = {
           id: savedMessage.id,
           chatRoomId: savedMessage.chatRoom.id,
           content: savedMessage.content,
           senderId: savedMessage.sender.id,
+          receiverId: savedMessage.receiver.id,
           senderNickname: savedMessage.sender.nickname,
           createdAt: moment(savedMessage.createdAt).format("YYYY-MM-DD HH:mm:ss"),
         };
 
-        console.log("채팅 메시지 messageData :", messageData);
-
         this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-        this.chatListGateway.notifyNewMessage(
-          chatRoom.id,
-          savedMessage.sender.id,
-          chatRoom.messageCount,
-          savedMessage.content
-        );
+
+        const clientsInRoom = await this.server.in(roomId).fetchSockets();
+        console.log("clientsInRoom : ", clientsInRoom);
+
+        // if (chatUserNickname) {
+        //   await this.chatsRepository.txisReadStatusUpdateFalse(txManager, chatRoom.id);
+        // } else {
+        //   await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
+        // }
+
+        this.chatListGateway.notifyNewMessage(chatRoom.id, savedMessage.receiver.id, savedMessage.content);
       });
     } catch (e) {
       console.error("handleMessage :", e);

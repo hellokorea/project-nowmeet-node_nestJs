@@ -76,16 +76,36 @@ export class ChatsRepository {
     return await this.chatsRoomRepository.save(chat);
   }
 
-  async txIncrementMessageCount(txManager: EntityManager, chatId: number) {
-    const chatRoom = await txManager
-      .getRepository(ChatRoom)
-      .createQueryBuilder("chatRoom")
-      .setLock("pessimistic_write")
-      .where("id = :id", { id: chatId })
-      .getOne();
+  async txisReadStatusUpdateFalse(txManager: EntityManager, chatId: number) {
+    const chatsRoomRepository = txManager.getRepository(ChatRoom);
+    const chat = await chatsRoomRepository.findOne({
+      where: { id: chatId },
+    });
 
-    chatRoom.messageCount += 1;
-    await txManager.save(chatRoom);
+    chat.isRead = false;
+
+    return await txManager.save(chat);
+  }
+
+  async txisReadStatusUpdateTrue(txManager: EntityManager, chatId: number) {
+    const chatsRoomRepository = txManager.getRepository(ChatRoom);
+    const chat = await chatsRoomRepository.findOne({
+      where: { id: chatId },
+    });
+
+    chat.isRead = true;
+
+    return await txManager.save(chat);
+  }
+
+  async isReadStatusUpdateTrue(chatId: number) {
+    const chat = await this.chatsRoomRepository.findOne({
+      where: { id: chatId },
+    });
+
+    chat.isRead = true;
+
+    return await this.chatsRoomRepository.save(chat);
   }
 
   //*---Delete Logic

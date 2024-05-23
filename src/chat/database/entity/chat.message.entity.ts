@@ -15,6 +15,10 @@ export class ChatMessage {
   @JoinColumn({ name: "senderId" })
   sender: User;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "receiverId" })
+  receiver: User;
+
   @Column()
   content: string;
 

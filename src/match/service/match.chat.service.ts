@@ -1,5 +1,5 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { ChatState } from "src/chat/database/entity/chat.entity";
+import { ChatRoom, ChatState } from "src/chat/database/entity/chat.entity";
 import { UserRequestDto } from "src/users/dtos/request/users.request.dto";
 import { UsersRepository } from "src/users/database/repository/users.repository";
 import { RecognizeService } from "../../recognize/recognize.service";
@@ -60,23 +60,18 @@ export class MatchChatService {
 
       const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
 
-      let lastMessageData = await this.chatMessagesRepository.findOneLastMessage(chat.id);
+      const lastMessageData = await this.chatMessagesRepository.findOneLastMessage(chat.id);
+      const isCurrentUserSenderId = await this.chatMessagesRepository.findOneLastMessageSenderId(chat.id);
 
-      let lastMessage: string;
-
-      if (!lastMessageData) {
-        lastMessage = "";
-      } else {
-        lastMessage = lastMessageData.content;
-      }
+      const readStatus = isCurrentUserSenderId === null ? true : user.id === isCurrentUserSenderId;
 
       return {
         chatId: chat.id,
         matchId: chat.matchId,
         me,
         matchUserId,
-        lastMessage: lastMessage,
-        messageCount: chat.messageCount,
+        lastMessage: lastMessageData ? lastMessageData.content : "",
+        isRead: readStatus,
         matchUserNickname: oppUser.nickname,
         chatStatus: chat.status,
         preSignedUrl,
@@ -94,9 +89,6 @@ export class MatchChatService {
 
     const findChat = await this.recognizeService.verifyFindChatRoom(chatId, loggedId);
 
-    findChat.messageCount = 0;
-    await this.chatsRepository.saveChatData(findChat);
-
     let chathUserId: number;
 
     loggedId === findChat.receiverId ? (chathUserId = findChat.senderId) : (chathUserId = findChat.receiverId);
@@ -106,6 +98,12 @@ export class MatchChatService {
     const expireTime = moment(findChat.expireTime).format("YYYY-MM-DD HH:mm:ss");
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
     const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(findChat.id);
+
+    const isCurrentUserSenderId = await this.chatMessagesRepository.findOneLastMessageSenderId(findChat.id);
+
+    if (user.id !== isCurrentUserSenderId && !findChat.isRead) {
+      await this.chatsRepository.isReadStatusUpdateTrue(findChat.id);
+    }
 
     const message = messagesArray.map((msg) => {
       return {
@@ -123,7 +121,7 @@ export class MatchChatService {
       matchId: findChat.matchId,
       chatStatus: findChat.status,
       message,
-      messageCount: findChat.messageCount,
+      isRead: findChat.isRead,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       myNickname: user.nickname,
@@ -158,6 +156,8 @@ export class MatchChatService {
     try {
       const openStatusChatRoom = await this.chatService.openChat(findChat.matchId);
 
+      await this.chatListGateway.notifyStatusChatRoom(findChat);
+
       return {
         chatId: openStatusChatRoom.id,
         matchId: openStatusChatRoom.matchId,
@@ -189,6 +189,7 @@ export class MatchChatService {
       await this.redisService.deleteChatKey(chat.id);
 
       await this.chatListGateway.notifyExitChatRoom(chat.status, currentUser.id);
+      await this.chatListGateway.notifyStatusChatRoom(chat);
 
       return {
         message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,

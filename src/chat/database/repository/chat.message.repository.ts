@@ -16,9 +16,24 @@ export class ChatMessagesRepository {
     });
   }
 
+  async findOneChatMsgByChatId(roomId: number): Promise<ChatMessage> {
+    return await this.chatMessagesRepository.findOne({
+      where: { chatRoom: { id: roomId } },
+    });
+  }
+
+  async txfindOneChatMsgByChatId(txManager: EntityManager, roomId: number): Promise<ChatMessage> {
+    const chatMessageRepository = txManager.getRepository(ChatMessage);
+
+    return await chatMessageRepository.findOne({
+      where: { chatRoom: { id: roomId } },
+    });
+  }
+
   async txsaveChatMsgData(
     txManager: EntityManager,
-    user: User,
+    sender: User,
+    receiver: User,
     chatRoom: ChatRoom,
     content: string,
     createdAt: string
@@ -26,7 +41,8 @@ export class ChatMessagesRepository {
     const chatMessageRepository = txManager.getRepository(ChatMessage);
 
     const savedMessage = new ChatMessage();
-    savedMessage.sender = user;
+    savedMessage.sender = sender;
+    savedMessage.receiver = receiver;
     savedMessage.chatRoom = chatRoom;
     savedMessage.content = content;
     savedMessage.createdAt = createdAt;
@@ -41,6 +57,18 @@ export class ChatMessagesRepository {
       order: { createdAt: "DESC" },
     };
     return await this.chatMessagesRepository.findOne(option);
+  }
+
+  async findOneLastMessageSenderId(roomId: number): Promise<number | boolean> {
+    const lastMessage = await this.chatMessagesRepository.findOne({
+      where: { chatRoom: { id: roomId } },
+      order: { createdAt: "DESC" },
+      relations: ["sender"],
+    });
+
+    if (!lastMessage) return null;
+
+    return lastMessage.sender.id;
   }
 
   async removeChatMessage(chatMsgs: ChatMessage[]) {

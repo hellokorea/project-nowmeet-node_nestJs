@@ -20,6 +20,15 @@ export class UsersRepository {
     return await this.usersRepository.findOne(option);
   }
 
+  async txfindOneById(txManager: EntityManager, id: number): Promise<User | null> {
+    const usersRepository = txManager.getRepository(User);
+
+    const option: FindOneOptions<User> = {
+      where: { id },
+    };
+    return await usersRepository.findOne(option);
+  }
+
   async findByUserIds(ids: number[]): Promise<User[] | null> {
     return await this.usersRepository.find({
       where: {
