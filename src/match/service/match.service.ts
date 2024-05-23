@@ -95,8 +95,10 @@ export class MatchService {
 
   async matchAccept(matchId: number, req: UserRequestDto) {
     const updateMatch = await this.updateMatchStatus(matchId, req, MatchState.MATCH);
+    const userId = req.user.id;
 
     const chatRoom = await this.chatService.createChatRoom(
+      userId,
       updateMatch.matchId,
       updateMatch.senderId,
       updateMatch.receiverId

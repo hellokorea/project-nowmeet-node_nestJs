@@ -39,17 +39,14 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     userIds.forEach((userId) => {
       this.server.to(userId.toString()).emit("status_chat_room", status);
       console.log("status_chat_room userId : ", userId.toString());
-      console.log("status_chat_room chatRoom : ", chatRoom);
+      console.log("status_chat_room chatRoomStatus : ", status);
     });
   }
-  async notifynewChatRoom(chatRoom: ChatRoom) {
-    const userIds = [chatRoom.receiverId, chatRoom.senderId];
 
-    userIds.forEach((userId) => {
-      this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
-      console.log("new_chat_room userId : ", userId.toString());
-      console.log("new_chat_room chatRoom : ", chatRoom);
-    });
+  async notifyNewChatRoom(chatRoom: ChatRoom, userId: number) {
+    this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
+    console.log("new_chat_room userId : ", userId.toString());
+    console.log("new_chat_room chatRoom : ", chatRoom);
   }
 
   async notifyExitChatRoom(chatStatus: string, userId: number) {

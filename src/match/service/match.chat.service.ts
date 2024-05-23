@@ -156,8 +156,6 @@ export class MatchChatService {
     try {
       const openStatusChatRoom = await this.chatService.openChat(findChat.matchId);
 
-      await this.chatListGateway.notifyStatusChatRoom(findChat);
-
       return {
         chatId: openStatusChatRoom.id,
         matchId: openStatusChatRoom.matchId,

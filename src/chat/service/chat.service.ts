@@ -4,6 +4,7 @@ import { ChatMessagesRepository } from "../database/repository/chat.message.repo
 import * as moment from "moment";
 import { ChatState } from "../database/entity/chat.entity";
 import { RedisService } from "src/redis/redis.service";
+import { UsersRepository } from "src/users/database/repository/users.repository";
 import { ChatListGateway } from "../gateway/chat.list.gateway";
 
 @Injectable()
@@ -15,11 +16,13 @@ export class ChatService {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
     private readonly redisService: RedisService,
+    private readonly usersRepository: UsersRepository,
     private readonly chatListGateway: ChatListGateway
   ) {}
 
-  async createChatRoom(matchId: number, senderId: number, receiverId: number) {
+  async createChatRoom(userId: number, matchId: number, senderId: number, receiverId: number) {
     const findChat = await this.chatsRepository.findOneChatRoomsByMatchId(matchId);
+    const currentUser = await this.usersRepository.findOneById(userId);
 
     if (findChat) {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
@@ -35,7 +38,9 @@ export class ChatService {
 
     await this.redisService.publishChatStatus(newChatRooms.id, newChatRooms.status);
 
-    await this.chatListGateway.notifynewChatRoom(newChatRooms);
+    let oppUserId = currentUser.id === senderId ? receiverId : senderId;
+
+    await this.chatListGateway.notifyNewChatRoom(newChatRooms, oppUserId);
 
     return newChatRooms;
   }

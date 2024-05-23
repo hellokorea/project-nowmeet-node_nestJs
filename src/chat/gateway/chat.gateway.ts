@@ -102,7 +102,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!chatRoom) {
         client.disconnect();
-        throw new NotFoundException("존재하지 않는 채팅방 입니다");
+        return;
       }
 
       console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
