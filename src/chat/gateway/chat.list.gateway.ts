@@ -25,11 +25,12 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   async handleConnection(client: Socket) {
-    console.log("챗 리스트 소켓 연결");
+    console.log("챗 리스트 소켓 연결", client.id);
   }
 
   async handleDisconnect(client: Socket) {
-    console.log("챗 리스트 소켓 연결 끊김");
+    client.disconnect();
+    console.log("챗 리스트 소켓 연결 끊김", client.id);
   }
 
   async notifyStatusChatRoom(chatRoom: ChatRoom) {
@@ -92,7 +93,7 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
       chatList.forEach((chat) => {
         if (chat && chat.chatId) {
           client.join(chat.chatId.toString());
-          console.log(`Client joined room: ${chat.chatId}`);
+          console.log(`채팅 리스트 입장 roomIds: ${chat.chatId}`);
         }
       });
 
