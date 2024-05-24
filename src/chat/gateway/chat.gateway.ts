@@ -56,7 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    let roomId = client.handshake.query.roomId;
+    let roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
@@ -194,9 +194,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         };
 
         this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-
-        const clientsInRoom = await this.server.in(roomId).fetchSockets();
-        console.log("clientsInRoom : ", clientsInRoom);
 
         if (this.chatInRoomUsers.has(chatRoom.id) && this.chatInRoomUsers.get(chatRoom.id).size === 2) {
           await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
