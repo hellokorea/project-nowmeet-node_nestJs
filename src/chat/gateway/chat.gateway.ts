@@ -56,17 +56,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
+    setTimeout(() => {
+      const testId = client.handshake?.query?.roomId;
+      console.log("채팅방 입장 testId", testId);
+      console.log("채팅방 입장 test data :", client.handshake);
+    }, 2000);
+
     const roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
-    console.log("채팅방 입장 data :", client.handshake);
-    console.log("채팅방 입장 roomId", roomId);
-
-    if (!roomId || roomId === "null") {
-      console.error("Invalid room ID:", roomId);
-      client.disconnect();
-      return;
-    }
+    // console.log("채팅방 입장 data :", client.handshake);
+    // console.log("채팅방 입장 roomId", roomId);
 
     try {
       const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -102,12 +102,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
-
-    if (!roomId || roomId === "null") {
-      client.disconnect();
-      console.log("룸 아이디가 null이므로 종료");
-      return;
-    }
 
     try {
       const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
@@ -152,12 +146,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake?.query?.roomId;
 
     console.log("채팅 메시지 roomId :", roomId);
-
-    if (!roomId || roomId === "null") {
-      console.error("Invalid room ID:", roomId);
-      client.disconnect();
-      return;
-    }
 
     try {
       await this.entityManager.transaction(async (txManager) => {
