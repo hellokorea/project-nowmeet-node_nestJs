@@ -83,6 +83,63 @@ export class MatchChatService {
     return chatList;
   }
 
+  async TestgetChatRoomsAllList(req: UserRequestDto) {
+    const user = await this.recognizeService.validateUser(req.user.id);
+
+    const findChats = await this.chatsRepository.findChatsByUserId(user.id);
+
+    if (!findChats.length) {
+      return null;
+    }
+
+    const chatListFilter = findChats.filter((chat) => {
+      return (
+        (user.id === chat.senderId && chat.status !== ChatState.SENDER_EXIT) ||
+        (user.id === chat.receiverId && chat.status !== ChatState.RECEIVER_EXIT)
+      );
+    });
+
+    const chatListPromises = chatListFilter.map(async (chat) => {
+      let me: number;
+      let matchUserId: number;
+
+      if (user.id === chat.receiverId || user.id === chat.senderId) {
+        me = user.id;
+        matchUserId = user.id === chat.receiverId ? chat.senderId : chat.receiverId;
+      }
+
+      const oppUser = await this.usersRepository.findOneById(matchUserId);
+
+      if (!oppUser) {
+        console.error("Opposing user not found:", matchUserId);
+        throw new NotFoundException("상대방 사용자를 찾을 수 없습니다.");
+      }
+
+      const preSignedUrl = await this.awsService.createPreSignedUrl(oppUser.profileImages);
+
+      const lastMessageData = await this.chatMessagesRepository.findOneLastMessage(chat.id);
+      const isCurrentUserSenderId = await this.chatMessagesRepository.findOneLastMessageSenderId(chat.id);
+
+      const readStatus = isCurrentUserSenderId === null ? true : user.id === isCurrentUserSenderId;
+
+      return {
+        chatId: chat.id,
+        matchId: chat.matchId,
+        me,
+        matchUserId,
+        lastMessage: lastMessageData ? lastMessageData.content : "",
+        isRead: readStatus,
+        matchUserNickname: oppUser.nickname,
+        chatStatus: chat.status,
+        preSignedUrl,
+      };
+    });
+
+    const chatList = await Promise.all(chatListPromises);
+
+    return chatList;
+  }
+
   async getUserChatRoom(chatId: number, req: UserRequestDto) {
     const loggedId = req.user.id;
     const user = await this.recognizeService.validateUser(loggedId);
