@@ -59,10 +59,10 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log("exit_chat_room userId : ", userId);
   }
 
-  async notifyDeleteChatRoom(chatId: number, userId: number) {
-    this.server.to(userId.toString()).emit("delete_chat_room", chatId);
-    console.log("delete_chat_room userId : ", userId);
-  }
+  // async notifyDeleteChatRoom(chatId: number, userId: number) {
+  //   this.server.to(userId.toString()).emit("delete_chat_room", chatId);
+  //   console.log("delete_chat_room userId : ", userId);
+  // }
 
   async notifyNewMessage(chatId: number, receiverId: number, lastMessage: string) {
     const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);
@@ -79,7 +79,7 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log("message_update", receiverId);
   }
 
-  @SubscribeMessage("request_chat_list")
+  @SubscribeMessage("notify_chat_info")
   async handleRequestChatList(client: Socket) {
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
@@ -88,7 +88,7 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
       const chatList = await this.matchChatService.getChatRoomsAllList(user.id);
 
       if (!Array.isArray(chatList) || chatList.length === 0) {
-        return;
+        return null;
       }
 
       client.join(user.id.toString());
@@ -100,8 +100,14 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
         }
       });
 
-      client.emit("request_chat_list", chatList);
-      console.log("request_chat_list", chatList);
+      const chatInfoList = chatList.map((chat) => ({
+        lastMessage: chat.lastMessage,
+        isRead: chat.isRead,
+        status: chat.chatStatus,
+      }));
+
+      client.emit("notify_chat_info", chatInfoList);
+      console.log("notify_chat_info", chatInfoList);
     } catch (e) {
       console.error(e);
       throw new NotFoundException("채팅방 리스트 조회에 실패 했습니다.");

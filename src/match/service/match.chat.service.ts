@@ -261,7 +261,6 @@ export class MatchChatService {
     const chat = await this.recognizeService.verifyFindChatRoom(chatId, user.id);
     try {
       await this.chatService.removeUserChatRoom(chat.id);
-      await this.chatListGateway.notifyDeleteChatRoom(chat.id, user.id);
 
       return {
         message: `matchId : ${chat.matchId}번으로 이루어진 chatId: ${chat.id}번이 삭제 되었습니다.`,
