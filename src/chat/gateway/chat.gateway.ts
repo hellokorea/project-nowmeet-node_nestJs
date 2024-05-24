@@ -56,57 +56,59 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    let roomId = client.handshake?.query?.roomId;
-    const token = client.handshake?.auth?.token;
-    const user = await this.recognizeService.verifyWebSocketToken(token);
-    console.log("채팅방 입장 쿼리 :", client.handshake);
-    console.log("채팅방 입장 roomId", roomId);
+    const roomId = client.handshake?.query?.roomId;
+    console.log("테스트 쿼리", client.handshake.query);
+    console.log("테스트 룸아이디", roomId);
+    // const token = client.handshake?.auth?.token;
+    // const user = await this.recognizeService.verifyWebSocketToken(token);
+    // console.log("채팅방 입장 쿼리 :", client.handshake.query);
+    // console.log("채팅방 입장 roomId", roomId);
 
-    if (!roomId || roomId === "null") {
-      console.error("Invalid room ID:", roomId);
-      client.disconnect();
-      return;
-    }
+    // if (!roomId || roomId === "null") {
+    //   console.error("Invalid room ID:", roomId);
+    //   client.disconnect();
+    //   return;
+    // }
 
-    try {
-      const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
+    // try {
+    //   const chatRoom = await this.chatsRepository.findOneChatRoomsByChatId(Number(roomId));
 
-      if (!chatRoom) {
-        client.disconnect();
-        throw new NotFoundException("존재하지 않는 채팅방 입니다");
-      }
+    //   if (!chatRoom) {
+    //     client.disconnect();
+    //     throw new NotFoundException("존재하지 않는 채팅방 입니다");
+    //   }
 
-      if (!this.chatInRoomUsers.has(chatRoom.id)) {
-        this.chatInRoomUsers.set(chatRoom.id, new Set());
-      }
+    //   if (!this.chatInRoomUsers.has(chatRoom.id)) {
+    //     this.chatInRoomUsers.set(chatRoom.id, new Set());
+    //   }
 
-      this.chatInRoomUsers.get(chatRoom.id).add(user.id);
+    //   this.chatInRoomUsers.get(chatRoom.id).add(user.id);
 
-      client.join(roomId);
-      console.log(`채팅방에 연결 된 clientId : ${client.id}`);
-      console.log(`채팅방에 연결 된 rommId : ${roomId}`);
+    //   client.join(roomId);
+    //   console.log(`채팅방에 연결 된 clientId : ${client.id}`);
+    //   console.log(`채팅방에 연결 된 rommId : ${roomId}`);
 
-      const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(chatRoom.id);
-      const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
+    //   const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(chatRoom.id);
+    //   const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      console.log(emitMessage);
+    //   console.log(emitMessage);
 
-      this.server.to(chatRoom.id.toString()).emit("message_list", emitMessage);
-    } catch (e) {
-      console.error("handleConnection :", e);
-      client.disconnect();
-      throw new NotFoundException("채팅방 입장에 실패 했습니다");
-    }
+    //   this.server.to(chatRoom.id.toString()).emit("message_list", emitMessage);
+    // } catch (e) {
+    //   console.error("handleConnection :", e);
+    //   client.disconnect();
+    //   throw new NotFoundException("채팅방 입장에 실패 했습니다");
+    // }
   }
 
   async handleDisconnect(client: Socket) {
-    let roomId = client.handshake.query.roomId;
+    const roomId = client.handshake.query.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
     if (!roomId || roomId === "null") {
-      console.log("룸 아이디가 null이므로 종료");
       client.disconnect();
+      console.log("룸 아이디가 null이므로 종료");
       return;
     }
 
