@@ -56,7 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    const roomId = client.handshake?.auth?.roomId;
+    const roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
     console.log("채팅방 입장 data :", client.handshake);
@@ -89,9 +89,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(chatRoom.id);
       const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
 
-      console.log(emitMessage);
-
       this.server.to(chatRoom.id.toString()).emit("message_list", emitMessage);
+      console.log("emitMessage", emitMessage);
     } catch (e) {
       console.error("handleConnection :", e);
       client.disconnect();
@@ -100,7 +99,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    const roomId = client.handshake?.auth?.roomId;
+    const roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
@@ -150,7 +149,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
-    const roomId = client.handshake?.auth?.roomId;
+    const roomId = client.handshake?.query?.roomId;
 
     console.log("채팅 메시지 roomId :", roomId);
 
