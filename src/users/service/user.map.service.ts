@@ -77,8 +77,6 @@ export class UserMapService {
         });
       }
 
-      console.log("내 주변 유저 : ", filteredResponseUserList);
-
       return {
         myId: user.id,
         myLongitude: user.longitude,

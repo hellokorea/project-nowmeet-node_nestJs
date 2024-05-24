@@ -6,6 +6,7 @@ import { MatchState } from "../database/entity/match.entity";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatService } from "./../../chat/service/chat.service";
 import { ChatsRepository } from "./../../chat/database/repository/chat.repository";
+import { ChatListGateway } from "src/chat/gateway/chat.list.gateway";
 
 @Injectable()
 export class MatchService {
@@ -14,7 +15,8 @@ export class MatchService {
     private readonly usersRepository: UsersRepository,
     private readonly chatsRepository: ChatsRepository,
     private readonly chatService: ChatService,
-    private readonly recognizeService: RecognizeService
+    private readonly recognizeService: RecognizeService,
+    private readonly chatListGateway: ChatListGateway
   ) {}
 
   async sendLike(receiverNickname: string, req: UserRequestDto) {
@@ -45,7 +47,6 @@ export class MatchService {
 
     const newMatchData = await this.matchRepository.createMatch(loggedId, receiverId);
 
-    console.log(user.nickname);
     return {
       matchId: newMatchData.id,
       me: newMatchData.sender.id,
@@ -116,6 +117,8 @@ export class MatchService {
       chatStatus: chatRoom.status,
       matchId: chatRoom.matchId,
     };
+
+    await this.chatListGateway.notifyNewChatRoom(chatRoom);
 
     return {
       match: acceptUpdateMatch,

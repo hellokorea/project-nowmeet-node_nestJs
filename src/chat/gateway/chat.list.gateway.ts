@@ -10,8 +10,7 @@ import { NotFoundException, Inject, forwardRef } from "@nestjs/common";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { ChatsRepository } from "../database/repository/chat.repository";
 import { MatchChatService } from "src/match/service/match.chat.service";
-import { ChatRoom, ChatState } from "../database/entity/chat.entity";
-import { ChatMessagesRepository } from "../database/repository/chat.message.repository";
+import { ChatRoom } from "../database/entity/chat.entity";
 
 @WebSocketGateway({ namespace: "chatList" })
 export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -25,12 +24,11 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   async handleConnection(client: Socket) {
-    console.log("챗 리스트 소켓 연결", client.id);
+    console.log("챗 리스트 소켓 연결 client.id : ", client.id);
   }
 
   async handleDisconnect(client: Socket) {
-    client.disconnect();
-    console.log("챗 리스트 소켓 연결 끊김", client.id);
+    console.log("챗 리스트 소켓 연결 끊김 client.id : ", client.id);
   }
 
   async notifyStatusChatRoom(chatRoom: ChatRoom) {
@@ -44,10 +42,16 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     });
   }
 
-  async notifyNewChatRoom(chatRoom: ChatRoom, userId: number) {
-    this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
-    console.log("new_chat_room userId : ", userId.toString());
-    console.log("new_chat_room chatRoom : ", chatRoom);
+  async notifyNewChatRoom(
+    chatRoom: ChatRoom //, userId: number
+  ) {
+    const userIds = [chatRoom.receiverId, chatRoom.senderId];
+
+    userIds.forEach((userId) => {
+      this.server.to(userId.toString()).emit("new_chat_room", chatRoom);
+      console.log("new_chat_room userId : ", userId.toString());
+      console.log("new_chat_room chatRoom : ", chatRoom);
+    });
   }
 
   async notifyExitChatRoom(chatStatus: string, userId: number) {
@@ -82,7 +86,6 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     try {
       const chatList = await this.matchChatService.getChatRoomsAllList(user.id);
-      console.log("request_chat_list", chatList);
 
       if (!Array.isArray(chatList) || chatList.length === 0) {
         return;
@@ -93,11 +96,12 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
       chatList.forEach((chat) => {
         if (chat && chat.chatId) {
           client.join(chat.chatId.toString());
-          console.log(`채팅 리스트 입장 roomIds: ${chat.chatId}`);
+          console.log(`채팅 리스트에 연결 된 roomIds: ${chat.chatId}`);
         }
       });
 
       client.emit("request_chat_list", chatList);
+      console.log("request_chat_list", chatList);
     } catch (e) {
       console.error(e);
       throw new NotFoundException("채팅방 리스트 조회에 실패 했습니다.");

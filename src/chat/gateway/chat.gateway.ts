@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { ChatRoom, ChatState } from "../database/entity/chat.entity";
+import { ChatState } from "../database/entity/chat.entity";
 import { ChatMessage } from "../database/entity/chat.message.entity";
 import {
   InternalServerErrorException,
@@ -43,6 +43,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
   };
 
+  private chatInRoomUsers = new Map<number, Set<number>>();
+
   constructor(
     private readonly chatsRepository: ChatsRepository,
     private readonly chatMessagesRepository: ChatMessagesRepository,
@@ -55,6 +57,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     let roomId = client.handshake.query.roomId;
+    const token = client.handshake?.auth?.token;
+    const user = await this.recognizeService.verifyWebSocketToken(token);
+
     console.log("채팅방 입장 roomId", roomId);
 
     if (!roomId || roomId === "null") {
@@ -71,9 +76,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new NotFoundException("존재하지 않는 채팅방 입니다");
       }
 
+      if (!this.chatInRoomUsers.has(chatRoom.id)) {
+        this.chatInRoomUsers.set(chatRoom.id, new Set());
+      }
+
+      this.chatInRoomUsers.get(chatRoom.id).add(user.id);
+
       client.join(roomId);
-      console.log(`ChatRoom Socket Connect! clientId : ${client.id}`);
-      console.log(`ChatRoom Socket Connect! rommId : ${roomId}`);
+      console.log(`채팅방에 연결 된 clientId : ${client.id}`);
+      console.log(`채팅방에 연결 된 rommId : ${roomId}`);
 
       const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(chatRoom.id);
       const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
@@ -90,6 +101,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: Socket) {
     let roomId = client.handshake.query.roomId;
+    const token = client.handshake?.auth?.token;
+    const user = await this.recognizeService.verifyWebSocketToken(token);
 
     if (!roomId || roomId === "null") {
       console.log("룸 아이디가 null이므로 종료");
@@ -102,11 +115,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!chatRoom) {
         client.disconnect();
-        return;
+        throw new NotFoundException("존재하지 않는 채팅방 입니다");
       }
 
-      console.log(`ChatRoom Socket Disconnect! clientId : ${client.id}`);
-      console.log(`ChatRoom Socket Disconnect! roomId : ${roomId}`);
+      const usersInRoom = this.chatInRoomUsers.get(chatRoom.id);
+
+      if (usersInRoom) {
+        usersInRoom.delete(user.id);
+        if (usersInRoom.size === 0) {
+          this.chatInRoomUsers.delete(chatRoom.id);
+        }
+      }
+
+      console.log(`채팅방에 연결이 끊긴 clientId : ${client.id}`);
+      console.log(`채팅방에 연결이 끊긴 roomId : ${roomId}`);
 
       const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(chatRoom.id);
       const emitMessage = await this.combineMessageToClient(messagesArray, chatRoom.status);
@@ -176,13 +198,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const clientsInRoom = await this.server.in(roomId).fetchSockets();
         console.log("clientsInRoom : ", clientsInRoom);
 
-        // if (chatUserNickname) {
-        //   await this.chatsRepository.txisReadStatusUpdateFalse(txManager, chatRoom.id);
-        // } else {
-        //   await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
-        // }
+        if (this.chatInRoomUsers.has(chatRoom.id) && this.chatInRoomUsers.get(chatRoom.id).size === 2) {
+          await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
+        } else {
+          await this.chatsRepository.txisReadStatusUpdateFalse(txManager, chatRoom.id);
+        }
 
         this.chatListGateway.notifyNewMessage(chatRoom.id, savedMessage.receiver.id, savedMessage.content);
+        console.log("chatInRoomUsers :", this.chatInRoomUsers);
       });
     } catch (e) {
       console.error("handleMessage :", e);

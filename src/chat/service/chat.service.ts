@@ -22,7 +22,7 @@ export class ChatService {
 
   async createChatRoom(userId: number, matchId: number, senderId: number, receiverId: number) {
     const findChat = await this.chatsRepository.findOneChatRoomsByMatchId(matchId);
-    const currentUser = await this.usersRepository.findOneById(userId);
+    // const currentUser = await this.usersRepository.findOneById(userId);
 
     if (findChat) {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
@@ -38,9 +38,9 @@ export class ChatService {
 
     await this.redisService.publishChatStatus(newChatRooms.id, newChatRooms.status);
 
-    let oppUserId = currentUser.id === senderId ? receiverId : senderId;
+    // let oppUserId = currentUser.id === senderId ? receiverId : senderId;
 
-    await this.chatListGateway.notifyNewChatRoom(newChatRooms, oppUserId);
+    // await this.chatListGateway.notifyNewChatRoom(newChatRooms, oppUserId);
 
     return newChatRooms;
   }
