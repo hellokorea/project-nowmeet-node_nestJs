@@ -56,9 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    const roomId = client.handshake?.query?.roomId;
-    // console.log('테스트 쿼리',client.handshake.query);
-    // console.log('테스트 쿼리', roomId);
+    const roomId = client.handshake?.auth?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
     console.log("채팅방 입장 data :", client.handshake);
@@ -102,7 +100,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    const roomId = client.handshake.query.roomId;
+    const roomId = client.handshake?.auth?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
@@ -152,16 +150,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const user = await this.recognizeService.verifyWebSocketToken(token);
 
-    let roomId = client.handshake.query.roomId;
+    const roomId = client.handshake?.auth?.roomId;
 
     console.log("채팅 메시지 roomId :", roomId);
 
-    if (roomId === "null") {
-      roomId = null;
-    }
-
-    if (!roomId) {
-      throw new BadGatewayException("roomId 존재하지 않아서, 메시지 전송에 실패 했습니다.");
+    if (!roomId || roomId === "null") {
+      console.error("Invalid room ID:", roomId);
+      client.disconnect();
+      return;
     }
 
     try {
