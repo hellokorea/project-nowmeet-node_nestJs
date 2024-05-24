@@ -59,7 +59,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
     const user = await this.recognizeService.verifyWebSocketToken(token);
-
+    console.log("채팅방 입장 쿼리 :", client.handshake);
     console.log("채팅방 입장 roomId", roomId);
 
     if (!roomId || roomId === "null") {
