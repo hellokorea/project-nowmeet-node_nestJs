@@ -46,7 +46,6 @@ export class MatchProfileService {
       PreSignedUrl: preSignedUrl,
     };
   }
-
   async getMatchStatus(oppUserId: number, loggedId: number) {
     const isMatch = await this.matchRepository.findOneMatchByUserIds(oppUserId, loggedId);
     const isChats = await this.chatsRepository.findChatsByUserIds(oppUserId, loggedId);
