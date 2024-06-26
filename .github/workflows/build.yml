@@ -10,7 +10,7 @@ env:
 # psuh event
 on:
   push:
-    branches: [develop]
+    branches: [ver_1.0.0]
 
 jobs:
   build_and_deploy:
