@@ -10,13 +10,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { ChatState } from "../database/entity/chat.entity";
 import { ChatMessage } from "../database/entity/chat.message.entity";
-import {
-  InternalServerErrorException,
-  NotFoundException,
-  Inject,
-  forwardRef,
-  BadGatewayException,
-} from "@nestjs/common";
+import { InternalServerErrorException, NotFoundException, Inject, forwardRef } from "@nestjs/common";
 import * as moment from "moment-timezone";
 import { socketMessageReqDto } from "../dtos/request/chat.socekr.message.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
@@ -43,7 +37,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     [ChatState.DISCONNECT_END]: "채팅방 사용 시간이 만료되어 종료 되었습니다",
   };
 
-  private chatInRoomUsers = new Map<number, Set<number>>();
+  // private chatInRoomUsers = new Map<number, Set<number>>();
 
   constructor(
     private readonly chatsRepository: ChatsRepository,
@@ -58,7 +52,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     const roomId = client.handshake?.query?.roomId;
     const token = client.handshake?.auth?.token;
-    const user = await this.recognizeService.verifyWebSocketToken(token);
+    // const user = await this.recognizeService.verifyWebSocketToken(token);
+
     console.log("채팅방 입장 data :", client.handshake);
     console.log("채팅방 입장 roomId", roomId);
 
@@ -70,11 +65,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new NotFoundException("존재하지 않는 채팅방 입니다");
       }
 
-      if (!this.chatInRoomUsers.has(chatRoom.id)) {
-        this.chatInRoomUsers.set(chatRoom.id, new Set());
-      }
+      // if (!this.chatInRoomUsers.has(chatRoom.id)) {
+      //   this.chatInRoomUsers.set(chatRoom.id, new Set());
+      // }
 
-      this.chatInRoomUsers.get(chatRoom.id).add(user.id);
+      // this.chatInRoomUsers.get(chatRoom.id).add(user.id);
 
       client.join(roomId);
       console.log(`채팅방에 연결 된 clientId : ${client.id}`);
@@ -105,14 +100,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const usersInRoom = this.chatInRoomUsers.get(chatRoom.id);
+      // const usersInRoom = this.chatInRoomUsers.get(chatRoom.id);
 
-      if (usersInRoom) {
-        usersInRoom.delete(user.id);
-        if (usersInRoom.size === 0) {
-          this.chatInRoomUsers.delete(chatRoom.id);
-        }
-      }
+      // if (usersInRoom) {
+      //   usersInRoom.delete(user.id);
+      //   if (usersInRoom.size === 0) {
+      //     this.chatInRoomUsers.delete(chatRoom.id);
+      //   }
+      // }
 
       console.log(`채팅방에 연결이 끊긴 clientId : ${client.id}`);
       console.log(`채팅방에 연결이 끊긴 roomId : ${roomId}`);
@@ -169,16 +164,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         };
 
         this.server.to(messageData.chatRoomId.toString()).emit("message", messageData);
-
-        if (this.chatInRoomUsers.has(chatRoom.id) && this.chatInRoomUsers.get(chatRoom.id).size === 2) {
-          await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
-        } else {
-          await this.chatsRepository.txisReadStatusUpdateFalse(txManager, chatRoom.id);
-        }
-
-        this.chatListGateway.notifyNewMessage(chatRoom.id, savedMessage.receiver.id, savedMessage.content);
-        console.log("chatInRoomUsers :", this.chatInRoomUsers);
-        console.log("message", savedMessage.content);
+        // if (this.chatInRoomUsers.has(chatRoom.id) && this.chatInRoomUsers.get(chatRoom.id).size === 2) {
+        //   await this.chatsRepository.txisReadStatusUpdateTrue(txManager, chatRoom.id);
+        // } else {
+        //   await this.chatsRepository.txisReadStatusUpdateFalse(txManager, chatRoom.id);
+        // }
+        // this.chatListGateway.notifyNewMessage(chatRoom.id, savedMessage.receiver.id, savedMessage.content);
       });
     } catch (e) {
       console.error("handleMessage :", e);

@@ -28,7 +28,7 @@ export class ScheduleService {
     return;
   }
 
-  @Cron(CronExpression.EVERY_3_HOURS)
+  @Cron(CronExpression.EVERY_6_HOURS)
   async checkAndExpireMatches() {
     try {
       const matchesToExpire = await this.matchRepository.findExpiredMatches();

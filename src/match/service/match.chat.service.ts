@@ -156,11 +156,11 @@ export class MatchChatService {
     const disconnectTime = moment(findChat.disconnectTime).format("YYYY-MM-DD HH:mm:ss");
     const messagesArray = await this.chatMessagesRepository.findChatMsgByChatId(findChat.id);
 
-    const isCurrentUserSenderId = await this.chatMessagesRepository.findOneLastMessageSenderId(findChat.id);
+    // const isCurrentUserSenderId = await this.chatMessagesRepository.findOneLastMessageSenderId(findChat.id);
 
-    if (user.id !== isCurrentUserSenderId && !findChat.isRead) {
-      await this.chatsRepository.isReadStatusUpdateTrue(findChat.id);
-    }
+    // if (user.id !== isCurrentUserSenderId && !findChat.isRead) {
+    //   await this.chatsRepository.isReadStatusUpdateTrue(findChat.id);
+    // }
 
     const message = messagesArray.map((msg) => {
       return {
@@ -178,7 +178,7 @@ export class MatchChatService {
       matchId: findChat.matchId,
       chatStatus: findChat.status,
       message,
-      isRead: findChat.isRead,
+      // isRead: findChat.isRead,
       chathUserId,
       chatUserNickname: opponentUser.nickname,
       myNickname: user.nickname,
@@ -243,8 +243,8 @@ export class MatchChatService {
 
       await this.redisService.deleteChatKey(chat.id);
 
-      await this.chatListGateway.notifyExitChatRoom(chat.status, currentUser.id);
-      await this.chatListGateway.notifyStatusChatRoom(chat);
+      // await this.chatListGateway.notifyExitChatRoom(chat.status, currentUser.id);
+      // await this.chatListGateway.notifyStatusChatRoom(chat);
 
       return {
         message: `nickname : ${currentUser.nickname} 유저가 채팅방을 나가 chatId : ${chatId}번  채팅이 종료 되었습니다. `,

@@ -28,7 +28,7 @@ export class ChatService {
       throw new BadRequestException("이미 해당 매칭의 채팅방이 존재합니다");
     }
 
-    const expireTime = moment().add(this.TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    const expireTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
 
     const createChatRoom = await this.chatsRepository.createChatRoom(matchId, senderId, receiverId, expireTime);
     const createDevChatRoom = await this.chatsRepository.createDevChatRoom(matchId, senderId, receiverId); // Dev
@@ -47,7 +47,7 @@ export class ChatService {
 
   async openChat(matchId: number) {
     const chatRoom = await this.chatsRepository.findOneChatRoomsByMatchId(matchId);
-    chatRoom.disconnectTime = moment().add(this.TEST_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
+    chatRoom.disconnectTime = moment().add(this.PROD_TIMER, "milliseconds").tz("Asia/Seoul").toDate();
     chatRoom.status = ChatState.OPEN;
     const openChatRoom = await this.chatsRepository.saveChatData(chatRoom);
 

@@ -59,10 +59,10 @@ export class ChatListGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log("exit_chat_room userId : ", userId);
   }
 
-  // async notifyDeleteChatRoom(chatId: number, userId: number) {
-  //   this.server.to(userId.toString()).emit("delete_chat_room", chatId);
-  //   console.log("delete_chat_room userId : ", userId);
-  // }
+  async notifyDeleteChatRoom(chatId: number, userId: number) {
+    this.server.to(userId.toString()).emit("delete_chat_room", chatId);
+    console.log("delete_chat_room userId : ", userId);
+  }
 
   async notifyNewMessage(chatId: number, receiverId: number, lastMessage: string) {
     const chat = await this.chatsRepository.findOneChatRoomsByChatId(chatId);

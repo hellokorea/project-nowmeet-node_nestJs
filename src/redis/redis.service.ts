@@ -90,8 +90,8 @@ export class RedisService implements OnModuleInit {
     const key = `chat:${chatId}`;
 
     try {
-      await this.redis.setex(key, this.TEST_TIME, status);
-      console.log("레디스 키 세팅 :", key, status, this.TEST_TIME);
+      await this.redis.setex(key, this.PROD_TIME, status);
+      console.log("레디스 키 세팅 :", key, status, this.PROD_TIME);
     } catch (e) {
       throw new InternalServerErrorException("publishChatStatus 실패", e);
     }

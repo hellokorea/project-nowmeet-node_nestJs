@@ -118,7 +118,7 @@ export class MatchService {
       matchId: chatRoom.matchId,
     };
 
-    await this.chatListGateway.notifyNewChatRoom(chatRoom);
+    // await this.chatListGateway.notifyNewChatRoom(chatRoom);
 
     return {
       match: acceptUpdateMatch,
