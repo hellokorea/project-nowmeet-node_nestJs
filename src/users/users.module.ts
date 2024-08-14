@@ -15,6 +15,7 @@ import { UserMapService } from "./service/user.map.service";
 import { RecognizeModule } from "src/recognize/recognize.module";
 import { FirebaseModule } from "src/firebase/firebase.module";
 import { RedisModule } from "../redis/redis.module";
+import { UserBlockService } from "./service/user.block.service";
 
 @Module({
   imports: [
@@ -30,8 +31,8 @@ import { RedisModule } from "../redis/redis.module";
     forwardRef(() => FirebaseModule),
     forwardRef(() => RedisModule),
   ],
-  exports: [UsersRepository],
+  exports: [UsersRepository, UserBlockService],
   controllers: [UsersController],
-  providers: [UserAccountService, UserSignupService, UserMapService, UsersRepository],
+  providers: [UserAccountService, UserSignupService, UserMapService, UsersRepository, UserBlockService],
 })
 export class UsersModule {}

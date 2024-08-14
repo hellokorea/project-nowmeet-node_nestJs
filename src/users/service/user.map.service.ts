@@ -7,6 +7,7 @@ import { GhostModeDto } from "../dtos/request/user.ghostMode.dto";
 import { RecognizeService } from "src/recognize/recognize.service";
 import { MatchProfileService } from "src/match/service/match.profile.service";
 import { RedisService } from "src/redis/redis.service";
+import { UserBlockService } from "./user.block.service";
 
 @Injectable()
 export class UserMapService {
@@ -17,7 +18,8 @@ export class UserMapService {
     private readonly awsService: AwsService,
     private readonly recognizeService: RecognizeService,
     private readonly matchProfileService: MatchProfileService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly userBlockService: UserBlockService
   ) {}
 
   async refreshUserLocation(lon: string, lat: string, req: UserRequestDto, request: Request) {
@@ -36,15 +38,26 @@ export class UserMapService {
       ]);
 
       const redisSearch = await this.redisService.findNearRedisbyUsers(lonNumber, latNumber, this.SEARCH_BOUNDARY);
-      const userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
+      let userIds = redisSearch.map((item) => parseInt(item[0].replace("user:", ""))).filter((id) => id !== user.id);
+
+      userIds = (
+        await Promise.all(
+          userIds.map(async (id) => ({
+            id,
+            blocked: await this.userBlockService.isUserBlocked(loggedId, id),
+          }))
+        )
+      )
+        .filter((item) => !item.blocked)
+        .map((item) => item.id);
 
       let nearbyUsers = await this.usersRepository.findByUserIds(userIds);
       nearbyUsers = nearbyUsers.filter((nearbyUser) => !nearbyUser.ghostMode && nearbyUser.id !== loggedId);
 
-      if (!nearbyUsers.length) {
-        nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
-        console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
-      }
+      // if (!nearbyUsers.length) {
+      //   nearbyUsers = await this.usersRepository.findUsersNearLocaction(lonNumber, latNumber, this.SEARCH_BOUNDARY);
+      //   console.log("레디스에 데이터가 없을 수도 있으니 mysql로 탐색!");
+      // }
 
       const responseUserPromises = nearbyUsers.map(async (user) => {
         const nearbyUsersMatchStatus = await this.matchProfileService.getMatchStatus(user.id, loggedId);
@@ -76,7 +89,6 @@ export class UserMapService {
           currentIndex += numProfileImages;
         });
       }
-
       return {
         myId: user.id,
         myLongitude: user.longitude,
@@ -102,7 +114,7 @@ export class UserMapService {
 
     // redis 위도 값 범위
     if (lonNumber < -180 || lonNumber > 180 || latNumber < -85.05112878 || latNumber > 85.05112878) {
-      throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < lon < 180 / -90 < lan < 90");
+      throw new BadRequestException("경도 및 위도의 범위가 올바르지 않습니다. -180 < lon < 180 / -85 < lan < 85");
     }
 
     return { lonNumber, latNumber };

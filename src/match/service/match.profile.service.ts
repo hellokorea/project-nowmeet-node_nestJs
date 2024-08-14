@@ -7,8 +7,8 @@ import { MatchRepository } from "../database/repository/match.repository";
 import { AwsService } from "src/aws.service";
 import { UsersRepository } from "src/users/database/repository/users.repository";
 import { RecognizeService } from "src/recognize/recognize.service";
-import { ChatGateway } from "src/chat/gateway/chat.gateway";
 import { ChatsRepository } from "./../../chat/database/repository/chat.repository";
+import { UserBlockService } from "src/users/service/user.block.service";
 
 @Injectable()
 export class MatchProfileService {
@@ -17,7 +17,8 @@ export class MatchProfileService {
     private readonly matchRepository: MatchRepository,
     private readonly chatsRepository: ChatsRepository,
     private readonly awsService: AwsService,
-    private readonly recognizeService: RecognizeService
+    private readonly recognizeService: RecognizeService,
+    private readonly userBlockService: UserBlockService
   ) {}
 
   async getUserProfile(nickname: string, req: UserRequestDto) {
@@ -46,6 +47,29 @@ export class MatchProfileService {
       PreSignedUrl: preSignedUrl,
     };
   }
+
+  async blockUser(nickname: string, req: UserRequestDto) {
+    const loggedId = req.user.id;
+    await this.recognizeService.validateUser(loggedId);
+
+    const oppUser = await this.usersRepository.findOneByNickname(nickname);
+
+    const result: Boolean = await this.userBlockService.createBlockUser(loggedId, oppUser.id);
+
+    return result ? true : "이미 차단 된 유저 입니다.";
+  }
+
+  // async blockUserDelete(nickname: string, req: UserRequestDto) {
+  //   const loggedId = req.user.id;
+  //   await this.recognizeService.validateUser(loggedId);
+
+  //   const oppUser = await this.usersRepository.findOneByNickname(nickname);
+
+  //   const result: Boolean = await this.userBlockService.deleteBlockUser(loggedId, oppUser.id);
+
+  //   return result ? true : "이미 차단 해제 된 유저 입니다.";
+  // }
+
   async getMatchStatus(oppUserId: number, loggedId: number) {
     const isMatch = await this.matchRepository.findOneMatchByUserIds(oppUserId, loggedId);
     const isChats = await this.chatsRepository.findChatsByUserIds(oppUserId, loggedId);

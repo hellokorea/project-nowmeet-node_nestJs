@@ -47,6 +47,22 @@ export class MatchController {
     return this.matchProfileService.getUserProfile(nickname, req);
   }
 
+  @ApiResponse({ type: Boolean })
+  @ApiOperation({ summary: "유저 차단" })
+  @ApiParam({ name: "nickname", description: "유저 닉네임 입력", type: String })
+  @Post("profile/:nickname/block")
+  blockUser(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
+    return this.matchProfileService.blockUser(nickname, req);
+  }
+
+  // @ApiResponse({ type: Boolean })
+  // @ApiOperation({ summary: "유저 차단 해제" })
+  // @ApiParam({ name: "nickname", description: "유저 닉네임 입력", type: String })
+  // @Post("profile/:nickname/block/delete")
+  // blockUserDelete(@Param("nickname") nickname: string, @Req() req: UserRequestDto) {
+  //   return this.matchProfileService.blockUserDelete(nickname, req);
+  // }
+
   //*----Match Logic
   @ApiResponse({ type: SendLikeResponseDto })
   @ApiOperation({ summary: "유저 좋아요 전송" })
