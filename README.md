@@ -3,18 +3,6 @@
 - 실시간 위치를 기반으로 이성과 채팅하는 데이팅 앱
   <br>
 
-## 📄 프로젝트 관련 문서
-
-| [🔑 API Specification](https://nowmeet.org/docs) | [⏸️ Platform AOS / 5월 예정] | [⏸️ Platform IOS / 5월 예정] |
-| :----------------------------------------------: | :--------------------------: | :--------------------------- |
-
-<details><summary>API Swagger Auth</summary>
-id : nowmeet
-<br>
-paw : 12345
-</details>
-<br>
-
 ## 🦁 프로젝트 팀원 구성
 
 |                                                                      김정동                                                                      |                                                       [김기열](https://github.com/kyday)                                                        |                                                                     김서우                                                                      |
